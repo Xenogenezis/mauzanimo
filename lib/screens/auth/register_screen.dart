@@ -86,14 +86,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
               Center(
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: RichText(text: TextSpan(
-                    text: 'Already have an account? ',
-                    style: TextStyle(color: AppTheme.textDark.withOpacity(0.6)),
-                    children: const [TextSpan(text: 'Sign In',
-                      style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold))],
-                  )),
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: RichText(
+                    text: TextSpan(
+                      text: 'Already have an account? ',
+                      style: TextStyle(color: AppTheme.textDark.withOpacity(0.6)),
+                      children: const [
+                        TextSpan(
+                          text: 'Sign In',
+                          style: TextStyle(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],

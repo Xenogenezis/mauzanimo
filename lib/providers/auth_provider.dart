@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../repositories/auth_repository.dart';
 import '../models/user_profile.dart';
+import '../utils/result.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
@@ -41,14 +42,19 @@ class AuthProvider extends ChangeNotifier {
     _isProfileLoading = true;
     notifyListeners();
 
-    try {
-      _userProfile = await _authRepository.getUserProfile(uid);
-    } catch (e) {
-      // Profile not found is okay
-    } finally {
-      _isProfileLoading = false;
-      notifyListeners();
-    }
+    final result = await _authRepository.getUserProfile(uid);
+    result.when(
+      success: (profile) {
+        _userProfile = profile;
+      },
+      failure: (message) {
+        // Profile not found is okay
+        _userProfile = null;
+      },
+    );
+
+    _isProfileLoading = false;
+    notifyListeners();
   }
 
   // Sign in with email and password
@@ -57,22 +63,21 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      await _authRepository.signIn(email, password);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } on FirebaseAuthException catch (e) {
-      _error = e.message;
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    } catch (e) {
-      _error = 'An unexpected error occurred';
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    final result = await _authRepository.signIn(email, password);
+    final success = result.when(
+      success: (credential) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      failure: (message) {
+        _error = message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+    return success;
   }
 
   // Register with email and password
@@ -81,22 +86,21 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      await _authRepository.register(email, password, name, phone: phone);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } on FirebaseAuthException catch (e) {
-      _error = e.message;
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    } catch (e) {
-      _error = 'An unexpected error occurred';
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    final result = await _authRepository.register(email, password, name, phone: phone);
+    final success = result.when(
+      success: (credential) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      failure: (message) {
+        _error = message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+    return success;
   }
 
   // Sign out
@@ -104,14 +108,18 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
-      await _authRepository.signOut();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    final result = await _authRepository.signOut();
+    result.when(
+      success: (_) {
+        // Success
+      },
+      failure: (message) {
+        _error = message;
+      },
+    );
+
+    _isLoading = false;
+    notifyListeners();
   }
 
   // Send password reset email
@@ -120,22 +128,21 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      await _authRepository.sendPasswordReset(email);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } on FirebaseAuthException catch (e) {
-      _error = e.message;
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    } catch (e) {
-      _error = 'An unexpected error occurred';
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    final result = await _authRepository.sendPasswordReset(email);
+    final success = result.when(
+      success: (_) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      failure: (message) {
+        _error = message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+    return success;
   }
 
   // Clear error

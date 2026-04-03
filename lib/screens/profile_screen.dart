@@ -49,8 +49,9 @@ class ProfileScreen extends StatelessWidget {
                 ]),
               ),
               const SizedBox(height: 16),
-              GestureDetector(
+              InkWell(
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPetsScreen())),
+                borderRadius: BorderRadius.circular(16),
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),

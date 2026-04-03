@@ -74,19 +74,56 @@ bool _isLoading = false;
     final granted = await _requestCameraPermission();
     if (!granted) return;
     final picked = await _picker.pickImage(source: ImageSource.camera, imageQuality: 70, maxWidth: 1200);
-    if (picked != null) setState(() => _selectedImage = picked);
+    if (picked != null) {
+      final file = File(picked.path);
+      final bytes = await file.readAsBytes();
+      if (bytes.length > 500 * 1024) {
+        if (mounted) _showSizeError(context);
+        return;
+      }
+      setState(() => _selectedImage = picked);
+    }
   }
 
   Future<void> _pickFromGallery() async {
     final granted = await _requestGalleryPermission();
     if (!granted) return;
     final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70, maxWidth: 1200);
-    if (picked != null) setState(() => _selectedImage = picked);
+    if (picked != null) {
+      final file = File(picked.path);
+      final bytes = await file.readAsBytes();
+      if (bytes.length > 500 * 1024) {
+        if (mounted) _showSizeError(context);
+        return;
+      }
+      setState(() => _selectedImage = picked);
+    }
   }
 
   String _t(BuildContext context, String en, String fr) {
     final lang = Provider.of<LanguageProvider>(context, listen: false).lang;
     return lang == 'fr' ? fr : en;
+  }
+
+  void _showSizeError(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_t(
+          context,
+          'Image too large (max 500KB). Please choose a smaller image.',
+          'Image trop volumineuse (max 500KB). Veuillez choisir une image plus petite.',
+        )),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: _t(context, 'Dismiss', 'Fermer'),
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
   }
 
   void _showImageOptions() {
@@ -211,8 +248,9 @@ bool _isLoading = false;
       const SizedBox(height: 24),
       Text(_t(context, 'Pet Photo', 'Photo de l\'animal'), style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
-      GestureDetector(
+      InkWell(
         onTap: _showImageOptions,
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           width: double.infinity,
           height: 200,
@@ -255,26 +293,43 @@ bool _isLoading = false;
       const SizedBox(height: 16),
       Text(_t(context, 'Type', 'Type'), style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
-      Row(children: _types.map((t) => GestureDetector(
-        onTap: () => setState(() => _type = t),
-        child: Container(margin: const EdgeInsets.only(right: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: _type == t ? AppTheme.primary : AppTheme.lightGrey,
-            borderRadius: BorderRadius.circular(20)),
-          child: Text(t[0].toUpperCase() + t.substring(1),
-            style: TextStyle(color: _type == t ? Colors.white : AppTheme.textDark, fontWeight: FontWeight.w500))))).toList()),
+      Wrap(
+        spacing: 8,
+        children: _types.map((t) => ChoiceChip(
+          label: Text(t[0].toUpperCase() + t.substring(1)),
+          selected: _type == t,
+          onSelected: (selected) {
+            if (selected) setState(() => _type = t);
+          },
+          selectedColor: AppTheme.primary,
+          labelStyle: TextStyle(
+            color: _type == t ? Colors.white : AppTheme.textDark,
+            fontWeight: FontWeight.w500,
+          ),
+          backgroundColor: AppTheme.lightGrey,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        )).toList(),
+      ),
       const SizedBox(height: 16),
       Text(_t(context, 'Gender', 'Sexe'), style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
-      Row(children: _genders.map((g) => GestureDetector(
-        onTap: () => setState(() => _gender = g),
-        child: Container(margin: const EdgeInsets.only(right: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: _gender == g ? AppTheme.primary : AppTheme.lightGrey,
-            borderRadius: BorderRadius.circular(20)),
-          child: Text(g, style: TextStyle(color: _gender == g ? Colors.white : AppTheme.textDark, fontWeight: FontWeight.w500))))).toList()),
+      Wrap(
+        spacing: 8,
+        children: _genders.map((g) => ChoiceChip(
+          label: Text(g),
+          selected: _gender == g,
+          onSelected: (selected) {
+            if (selected) setState(() => _gender = g);
+          },
+          selectedColor: AppTheme.primary,
+          labelStyle: TextStyle(
+            color: _gender == g ? Colors.white : AppTheme.textDark,
+            fontWeight: FontWeight.w500,
+          ),
+          backgroundColor: AppTheme.lightGrey,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        )).toList(),
+      ),
       SwitchListTile(
         title: Text(_t(context, 'Vaccinated', 'Vaccine')), value: _vaccinated,
         activeColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),

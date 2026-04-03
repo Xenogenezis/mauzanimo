@@ -63,9 +63,13 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 60),
-              GestureDetector(
+              InkWell(
                 onLongPress: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminDashboard())),
-                child: Center(child: Icon(Icons.pets, size: 80, color: AppTheme.primary)),
+                borderRadius: BorderRadius.circular(40),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(child: Icon(Icons.pets, size: 80, color: AppTheme.primary)),
+                ),
               ),
               const SizedBox(height: 16),
               Center(child: Text('MauZanimo',
@@ -96,8 +100,13 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: () => _forgotPassword(context, lang),
+                child: TextButton(
+                  onPressed: () => _forgotPassword(context, lang),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   child: Text(AppStrings.get('forgot_password', lang),
                     style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w500, fontSize: 13)),
                 ),
@@ -118,14 +127,23 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               Center(
-                child: GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterScreen())),
-                  child: RichText(text: TextSpan(
-                    text: AppStrings.get('no_account', lang) + ' ',
-                    style: TextStyle(color: AppTheme.textDark.withOpacity(0.6)),
-                    children: [TextSpan(text: AppStrings.get('sign_up', lang),
-                      style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold))],
-                  )),
+                child: TextButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterScreen())),
+                  child: RichText(
+                    text: TextSpan(
+                      text: AppStrings.get('no_account', lang) + ' ',
+                      style: TextStyle(color: AppTheme.textDark.withOpacity(0.6)),
+                      children: [
+                        TextSpan(
+                          text: AppStrings.get('sign_up', lang),
+                          style: const TextStyle(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],

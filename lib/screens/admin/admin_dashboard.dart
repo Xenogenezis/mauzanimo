@@ -63,20 +63,24 @@ class _Tile extends StatelessWidget {
   final IconData icon; final String title, subtitle; final VoidCallback onTap;
   const _Tile({required this.icon, required this.title, required this.subtitle, required this.onTap});
   @override
-  Widget build(BuildContext context) => GestureDetector(onTap: onTap, child: Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 4))]),
-    child: Row(children: [
-      Container(padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: AppTheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-        child: Icon(icon, color: AppTheme.primary)),
-      const SizedBox(width: 16),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
-        Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      ])),
-      const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-    ]),
-  ));
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(16),
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 4))]),
+      child: Row(children: [
+        Container(padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: AppTheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: AppTheme.primary)),
+        const SizedBox(width: 16),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+          Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        ])),
+        const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      ]),
+    ),
+  );
 }

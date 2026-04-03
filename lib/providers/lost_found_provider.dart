@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../repositories/lost_found_repository.dart';
 import '../models/lost_found.dart';
+import '../utils/result.dart';
 
 class LostFoundProvider extends ChangeNotifier {
   final LostFoundRepository _repository;
@@ -13,10 +14,19 @@ class LostFoundProvider extends ChangeNotifier {
 
   LostFoundProvider(this._repository) {
     // Listen to reports stream
-    _repository.getLostFoundStream().listen((reports) {
-      _reports = reports;
-      _applyFilters();
-    });
+    final result = _repository.getLostFoundStream();
+    result.when(
+      success: (stream) {
+        stream.listen((reports) {
+          _reports = reports;
+          _applyFilters();
+        });
+      },
+      failure: (message) {
+        _error = message;
+        notifyListeners();
+      },
+    );
   }
 
   // Getters
@@ -29,8 +39,16 @@ class LostFoundProvider extends ChangeNotifier {
   List<String> get filters => ['All', 'Lost', 'Found'];
 
   // Get reports stream for UI
-  Stream<List<LostFound>> get reportsStream =>
-      _repository.getLostFoundStream(typeFilter: _selectedFilter);
+  Stream<List<LostFound>> get reportsStream {
+    final result = _repository.getLostFoundStream(typeFilter: _selectedFilter);
+    return result.when(
+      success: (stream) => stream,
+      failure: (message) {
+        _error = message;
+        return Stream.value([]);
+      },
+    );
+  }
 
   // Apply filter
   void _applyFilters() {
@@ -56,17 +74,21 @@ class LostFoundProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      await _repository.addLostFound(report);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    final result = await _repository.addLostFound(report);
+    final success = result.when(
+      success: (_) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      failure: (message) {
+        _error = message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+    return success;
   }
 
   // Update a report
@@ -75,17 +97,21 @@ class LostFoundProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      await _repository.updateLostFound(report);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    final result = await _repository.updateLostFound(report);
+    final success = result.when(
+      success: (_) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      failure: (message) {
+        _error = message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+    return success;
   }
 
   // Delete a report
@@ -94,27 +120,33 @@ class LostFoundProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      await _repository.deleteLostFound(id);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    final result = await _repository.deleteLostFound(id);
+    final success = result.when(
+      success: (_) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      failure: (message) {
+        _error = message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+    return success;
   }
 
   // Get report by ID
   Future<LostFound?> getReportById(String id) async {
-    try {
-      return await _repository.getLostFoundById(id);
-    } catch (e) {
-      _error = e.toString();
-      return null;
-    }
+    final result = await _repository.getLostFoundById(id);
+    return result.when(
+      success: (report) => report,
+      failure: (message) {
+        _error = message;
+        return null;
+      },
+    );
   }
 
   // Clear error

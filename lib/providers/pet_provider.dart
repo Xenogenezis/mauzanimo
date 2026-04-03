@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../repositories/pet_repository.dart';
 import '../models/pet.dart';
+import '../utils/result.dart';
 
 class PetProvider extends ChangeNotifier {
   final PetRepository _petRepository;
@@ -14,10 +15,19 @@ class PetProvider extends ChangeNotifier {
 
   PetProvider(this._petRepository) {
     // Listen to pets stream
-    _petRepository.getPetsStream().listen((pets) {
-      _pets = pets;
-      _applyFilters();
-    });
+    final result = _petRepository.getPetsStream();
+    result.when(
+      success: (stream) {
+        stream.listen((pets) {
+          _pets = pets;
+          _applyFilters();
+        });
+      },
+      failure: (message) {
+        _error = message;
+        notifyListeners();
+      },
+    );
   }
 
   // Getters
@@ -31,7 +41,16 @@ class PetProvider extends ChangeNotifier {
   List<String> get filters => ['All', 'Dogs', 'Cats', 'Others'];
 
   // Get pets stream for UI
-  Stream<List<Pet>> get petsStream => _petRepository.getPetsStream(typeFilter: _selectedFilter);
+  Stream<List<Pet>> get petsStream {
+    final result = _petRepository.getPetsStream(typeFilter: _selectedFilter);
+    return result.when(
+      success: (stream) => stream,
+      failure: (message) {
+        _error = message;
+        return Stream.value([]);
+      },
+    );
+  }
 
   // Apply search and filter
   void _applyFilters() {
@@ -77,17 +96,21 @@ class PetProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      await _petRepository.addPet(pet);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    final result = await _petRepository.addPet(pet);
+    final success = result.when(
+      success: (_) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      failure: (message) {
+        _error = message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+    return success;
   }
 
   // Update a pet
@@ -96,17 +119,21 @@ class PetProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      await _petRepository.updatePet(pet);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    final result = await _petRepository.updatePet(pet);
+    final success = result.when(
+      success: (_) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      failure: (message) {
+        _error = message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+    return success;
   }
 
   // Delete a pet
@@ -115,32 +142,45 @@ class PetProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      await _petRepository.deletePet(id);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    final result = await _petRepository.deletePet(id);
+    final success = result.when(
+      success: (_) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      failure: (message) {
+        _error = message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+    return success;
   }
 
   // Get pet by ID
   Future<Pet?> getPetById(String id) async {
-    try {
-      return await _petRepository.getPetById(id);
-    } catch (e) {
-      _error = e.toString();
-      return null;
-    }
+    final result = await _petRepository.getPetById(id);
+    return result.when(
+      success: (pet) => pet,
+      failure: (message) {
+        _error = message;
+        return null;
+      },
+    );
   }
 
   // Get user pets stream
   Stream<List<Pet>> getUserPetsStream(String userId) {
-    return _petRepository.getUserPetsStream(userId);
+    final result = _petRepository.getUserPetsStream(userId);
+    return result.when(
+      success: (stream) => stream,
+      failure: (message) {
+        _error = message;
+        return Stream.value([]);
+      },
+    );
   }
 
   // Clear error

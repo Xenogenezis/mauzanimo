@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/adoption/adoption_inquiry_screen.dart';
@@ -143,13 +144,28 @@ class PetDetailScreen extends StatelessWidget {
 
   Widget _buildImage(String imageUrl) {
     if (imageUrl.startsWith('data:image')) {
-      // Base64 encoded image
-      final base64String = imageUrl.split(',').last;
-      return Image.memory(
-        base64Decode(base64String),
-        fit: BoxFit.cover,
-        errorBuilder: (c, e, s) => _placeholder(),
-      );
+      // Base64 encoded image with error handling
+      try {
+        final base64String = imageUrl.split(',').last;
+        // Validate base64 string
+        if (base64String.isEmpty) {
+          return _placeholder();
+        }
+        final decodedBytes = base64Decode(base64String);
+        // Validate decoded data
+        if (decodedBytes.isEmpty) {
+          return _placeholder();
+        }
+        return Image.memory(
+          decodedBytes,
+          fit: BoxFit.cover,
+          errorBuilder: (c, e, s) => _placeholder(),
+        );
+      } catch (e) {
+        // Log error for debugging
+        debugPrint('Error decoding base64 image: $e');
+        return _placeholder();
+      }
     } else {
       // Network image URL
       return Image.network(

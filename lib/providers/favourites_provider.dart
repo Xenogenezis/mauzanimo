@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../repositories/pet_repository.dart';
 import '../models/pet.dart';
+import '../utils/result.dart';
 
 class FavouritesProvider extends ChangeNotifier {
   final PetRepository _petRepository;
@@ -14,10 +15,19 @@ class FavouritesProvider extends ChangeNotifier {
   FavouritesProvider(this._petRepository, this._userId) {
     if (_userId != null) {
       // Listen to favorite IDs stream
-      _petRepository.getFavoritePetIds(_userId!).listen((ids) {
-        _favoriteIds = ids;
-        notifyListeners();
-      });
+      final result = _petRepository.getFavoritePetIds(_userId!);
+      result.when(
+        success: (stream) {
+          stream.listen((ids) {
+            _favoriteIds = ids;
+            notifyListeners();
+          });
+        },
+        failure: (message) {
+          _error = message;
+          notifyListeners();
+        },
+      );
 
       // Load favorite pets
       _loadFavoritePets();
@@ -41,14 +51,18 @@ class FavouritesProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
-      _favoritePets = await _petRepository.getFavoritePets(_userId!);
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    final result = await _petRepository.getFavoritePets(_userId!);
+    result.when(
+      success: (pets) {
+        _favoritePets = pets;
+      },
+      failure: (message) {
+        _error = message;
+      },
+    );
+
+    _isLoading = false;
+    notifyListeners();
   }
 
   // Toggle favorite status
@@ -59,19 +73,29 @@ class FavouritesProvider extends ChangeNotifier {
       return;
     }
 
-    try {
-      await _petRepository.toggleFavorite(_userId!, petId);
-      // State updates via stream listener
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
+    final result = await _petRepository.toggleFavorite(_userId!, petId);
+    result.when(
+      success: (_) {
+        // State updates via stream listener
+      },
+      failure: (message) {
+        _error = message;
+        notifyListeners();
+      },
+    );
   }
 
   // Get stream of favorite status for a specific pet
   Stream<bool> isPetFavoritedStream(String petId) {
     if (_userId == null) return Stream.value(false);
-    return _petRepository.isPetFavorited(_userId!, petId);
+    final result = _petRepository.isPetFavorited(_userId!, petId);
+    return result.when(
+      success: (stream) => stream,
+      failure: (message) {
+        _error = message;
+        return Stream.value(false);
+      },
+    );
   }
 
   // Refresh favorites

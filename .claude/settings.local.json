@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /d/GitHub/mauzanimo/*.js)",
+      "Bash(ls /d/GitHub/mauzanimo/*.js)",
+      "Bash(ls -la /d/GitHub/mauzanimo/*.js)",
+      "Bash(flutter analyze:*)",
+      "Bash(find /d/GitHub/mauzanimo/lib -name \"*.dart\" -exec wc -l {} +)",
+      "Bash(find /d/GitHub/mauzanimo -name \"*.js\" -type f -exec wc -l {} +)",
+      "Bash(ls -la *.js)",
+      "Bash(rm -f *.js)",
+      "Bash(ls *.js)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(git commit:*)",
+      "Bash(flutter pub:*)"
+    ]
+  }
+}

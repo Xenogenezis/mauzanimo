@@ -43,17 +43,21 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
             itemBuilder: (context, index) {
               final f = _filters[index];
               final isSelected = f == _filter;
-              return GestureDetector(
-                onTap: () => setState(() => _filter = f),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.orange : AppTheme.lightGrey,
-                    borderRadius: BorderRadius.circular(20)),
-                  child: Text(f, style: TextStyle(
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(f),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    if (selected) setState(() => _filter = f);
+                  },
+                  selectedColor: Colors.orange,
+                  labelStyle: TextStyle(
                     color: isSelected ? Colors.white : AppTheme.textDark,
-                    fontWeight: FontWeight.w500)),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  backgroundColor: AppTheme.lightGrey,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
               );
             },

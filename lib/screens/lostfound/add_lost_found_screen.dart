@@ -69,25 +69,43 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
     children: [
       Text('Report type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
-      Row(children: _types.map((t) => GestureDetector(
-        onTap: () => setState(() => _type = t),
-        child: Container(margin: const EdgeInsets.only(right: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: BoxDecoration(
-            color: _type == t ? (_type == 'Lost' ? Colors.red : Colors.green) : AppTheme.lightGrey,
-            borderRadius: BorderRadius.circular(20)),
-          child: Text(t, style: TextStyle(color: _type == t ? Colors.white : AppTheme.textDark, fontWeight: FontWeight.w500))))).toList()),
+      Wrap(
+        spacing: 8,
+        children: _types.map((t) => ChoiceChip(
+          label: Text(t),
+          selected: _type == t,
+          onSelected: (selected) {
+            if (selected) setState(() => _type = t);
+          },
+          selectedColor: _type == 'Lost' ? Colors.red : Colors.green,
+          labelStyle: TextStyle(
+            color: _type == t ? Colors.white : AppTheme.textDark,
+            fontWeight: FontWeight.w500,
+          ),
+          backgroundColor: AppTheme.lightGrey,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        )).toList(),
+      ),
       const SizedBox(height: 16),
       Text('Animal type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
-      Row(children: _animalTypes.map((t) => GestureDetector(
-        onTap: () => setState(() => _animalType = t),
-        child: Container(margin: const EdgeInsets.only(right: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: _animalType == t ? AppTheme.primary : AppTheme.lightGrey,
-            borderRadius: BorderRadius.circular(20)),
-          child: Text(t, style: TextStyle(color: _animalType == t ? Colors.white : AppTheme.textDark, fontWeight: FontWeight.w500))))).toList()),
+      Wrap(
+        spacing: 8,
+        children: _animalTypes.map((t) => ChoiceChip(
+          label: Text(t),
+          selected: _animalType == t,
+          onSelected: (selected) {
+            if (selected) setState(() => _animalType = t);
+          },
+          selectedColor: AppTheme.primary,
+          labelStyle: TextStyle(
+            color: _animalType == t ? Colors.white : AppTheme.textDark,
+            fontWeight: FontWeight.w500,
+          ),
+          backgroundColor: AppTheme.lightGrey,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        )).toList(),
+      ),
       const SizedBox(height: 16),
       _f(_descriptionController, 'Describe the animal', Icons.description_outlined, maxLines: 3),
       const SizedBox(height: 16),

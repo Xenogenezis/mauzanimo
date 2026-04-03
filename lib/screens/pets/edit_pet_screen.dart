@@ -97,26 +97,43 @@ class _EditPetScreenState extends State<EditPetScreen> {
           const SizedBox(height: 16),
           Text('Type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
           const SizedBox(height: 8),
-          Row(children: _types.map((t) => GestureDetector(
-            onTap: () => setState(() => _type = t),
-            child: Container(margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: _type == t ? AppTheme.primary : AppTheme.lightGrey,
-                borderRadius: BorderRadius.circular(20)),
-              child: Text(t[0].toUpperCase() + t.substring(1),
-                style: TextStyle(color: _type == t ? Colors.white : AppTheme.textDark, fontWeight: FontWeight.w500))))).toList()),
+          Wrap(
+            spacing: 8,
+            children: _types.map((t) => ChoiceChip(
+              label: Text(t[0].toUpperCase() + t.substring(1)),
+              selected: _type == t,
+              onSelected: (selected) {
+                if (selected) setState(() => _type = t);
+              },
+              selectedColor: AppTheme.primary,
+              labelStyle: TextStyle(
+                color: _type == t ? Colors.white : AppTheme.textDark,
+                fontWeight: FontWeight.w500,
+              ),
+              backgroundColor: AppTheme.lightGrey,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            )).toList(),
+          ),
           const SizedBox(height: 16),
           Text('Gender', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
           const SizedBox(height: 8),
-          Row(children: _genders.map((g) => GestureDetector(
-            onTap: () => setState(() => _gender = g),
-            child: Container(margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: _gender == g ? AppTheme.primary : AppTheme.lightGrey,
-                borderRadius: BorderRadius.circular(20)),
-              child: Text(g, style: TextStyle(color: _gender == g ? Colors.white : AppTheme.textDark, fontWeight: FontWeight.w500))))).toList()),
+          Wrap(
+            spacing: 8,
+            children: _genders.map((g) => ChoiceChip(
+              label: Text(g),
+              selected: _gender == g,
+              onSelected: (selected) {
+                if (selected) setState(() => _gender = g);
+              },
+              selectedColor: AppTheme.primary,
+              labelStyle: TextStyle(
+                color: _gender == g ? Colors.white : AppTheme.textDark,
+                fontWeight: FontWeight.w500,
+              ),
+              backgroundColor: AppTheme.lightGrey,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            )).toList(),
+          ),
           SwitchListTile(title: Text('Vaccinated'), value: _vaccinated, activeColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),
           SwitchListTile(title: Text('Sterilized'), value: _sterilized, activeColor: AppTheme.primary, onChanged: (v) => setState(() => _sterilized = v)),
           SwitchListTile(title: Text('Dewormed'), value: _dewormed, activeColor: AppTheme.primary, onChanged: (v) => setState(() => _dewormed = v)),
