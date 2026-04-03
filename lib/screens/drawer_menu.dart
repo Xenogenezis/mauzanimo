@@ -13,8 +13,6 @@ import 'package:stray_pets_mu/screens/info/volunteer_screen.dart';
 import 'package:stray_pets_mu/screens/stories/success_stories_screen.dart';
 import 'package:stray_pets_mu/screens/lostfound/lost_found_screen.dart';
 import 'package:stray_pets_mu/screens/events/events_screen.dart';
-import 'package:stray_pets_mu/screens/lostfound/lost_found_screen.dart';
-import 'package:stray_pets_mu/screens/events/events_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});

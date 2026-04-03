@@ -59,7 +59,7 @@ class _AdoptionInquiryScreenState extends State<AdoptionInquiryScreen> {
       const SizedBox(height: 24),
       Text('Inquiry Submitted!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
       const SizedBox(height: 12),
-      Text('Thank you our team will get in touch wit',
+      Text('Thank you! Our team will get in touch with you shortly.',
         textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey)),
       const SizedBox(height: 32),
       ElevatedButton(

@@ -96,15 +96,15 @@ bool _isLoading = false;
       builder: (_) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('Add photo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+          Text(_t(context, 'Add Photo', 'Ajouter une photo'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
           const SizedBox(height: 20),
           ListTile(
             leading: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(color: AppTheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.camera_alt_outlined, color: AppTheme.primary)),
-            title: Text('Take a photo'),
-            subtitle: Text('Use your camera'),
+            title: Text(_t(context, 'Take a Photo', 'Prendre une photo')),
+            subtitle: Text(_t(context, 'Use your camera', 'Utiliser votre appareil photo')),
             onTap: () { Navigator.pop(context); _pickFromCamera(); },
           ),
           ListTile(
@@ -112,8 +112,8 @@ bool _isLoading = false;
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(color: Colors.purple.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.photo_library_outlined, color: Colors.purple)),
-            title: Text('Choose from gallery'),
-            subtitle: Text('Pick an existing photo'),
+            title: Text(_t(context, 'Choose from Gallery', 'Choisir depuis la galerie')),
+            subtitle: Text(_t(context, 'Pick an existing photo', 'Selectionner une photo existante')),
             onTap: () { Navigator.pop(context); _pickFromGallery(); },
           ),
           const SizedBox(height: 8),
@@ -131,7 +131,18 @@ bool _isLoading = false;
     try {
       String imageBase64 = '';
       if (_selectedImage != null) {
-        final bytes = await File(_selectedImage!.path).readAsBytes();
+        final file = File(_selectedImage!.path);
+        final bytes = await file.readAsBytes();
+        // Check file size - 500KB limit
+        if (bytes.length > 500 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(_t(context, 'Image too large. Please select an image under 500KB.', 'Image trop grande. Veuillez selectionner une image de moins de 500KB.'))),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
         imageBase64 = 'data:image/jpeg;base64,' + base64Encode(bytes);
       }
       final user = FirebaseAuth.instance.currentUser;
@@ -164,7 +175,7 @@ bool _isLoading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('List your pet')),
+      appBar: AppBar(title: Text(_t(context, 'List Your Pet', 'Publier votre animal'))),
       body: _submitted ? _success() : _form(),
     );
   }
@@ -174,14 +185,14 @@ bool _isLoading = false;
     children: [
       const Icon(Icons.check_circle_outline, size: 100, color: AppTheme.primary),
       const SizedBox(height: 24),
-      Text('Pet listed', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+      Text(_t(context, 'Pet Listed!', 'Animal publie!'), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
       const SizedBox(height: 12),
-      Text('Your pet has been listed for adoption we',
+      Text(_t(context, 'Your pet has been listed for adoption. We hope they find a loving home soon!', 'Votre animal a ete mis en adoption. Nous esperons qu\'il trouvera un foyer aimant bientot!'),
         textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.6)),
       const SizedBox(height: 32),
       ElevatedButton(
         onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
-        child: Text('Back to Home')),
+        child: Text(_t(context, 'Back to Home', 'Retour accueil'))),
     ])));
 
   Widget _form() => SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(
@@ -193,12 +204,12 @@ bool _isLoading = false;
         child: const Row(children: [
           Icon(Icons.info_outline, color: AppTheme.primary),
           SizedBox(width: 12),
-          Expanded(child: Text('List your pet for adoption and help them',
+          Expanded(child: Text(_t(context, 'List your pet for adoption and help them find a loving home.', 'Publiez votre animal pour l\'adoption et aidez-le a trouver un foyer aimant.'),
             style: TextStyle(fontSize: 13, color: AppTheme.textDark))),
         ]),
       ),
       const SizedBox(height: 24),
-      Text('Pet photo', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+      Text(_t(context, 'Pet Photo', 'Photo de l\'animal'), style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
       GestureDetector(
         onTap: _showImageOptions,
@@ -217,9 +228,9 @@ bool _isLoading = false;
             : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Icon(Icons.add_a_photo_outlined, size: 48, color: AppTheme.primary.withOpacity(0.6)),
                 const SizedBox(height: 12),
-                Text('Tap to add a photo', style: TextStyle(color: AppTheme.primary.withOpacity(0.8), fontWeight: FontWeight.w500)),
+                Text(_t(context, 'Tap to add a photo', 'Appuyez pour ajouter une photo'), style: TextStyle(color: AppTheme.primary.withOpacity(0.8), fontWeight: FontWeight.w500)),
                 const SizedBox(height: 4),
-                Text('Camera or gallery', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                Text(_t(context, 'Camera or Gallery', 'Appareil photo ou galerie'), style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
               ]),
         ),
       ),
@@ -228,7 +239,7 @@ bool _isLoading = false;
         Center(child: TextButton.icon(
           onPressed: _showImageOptions,
           icon: const Icon(Icons.edit, size: 16),
-          label: Text('Change photo'),
+          label: Text(_t(context, 'Change Photo', 'Changer la photo')),
         )),
       ],
       const SizedBox(height: 16),
@@ -242,7 +253,7 @@ bool _isLoading = false;
       const SizedBox(height: 16),
       _f(_contactController, 'Your Contact Number', Icons.phone_outlined, keyboardType: TextInputType.phone),
       const SizedBox(height: 16),
-      Text('Type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+      Text(_t(context, 'Type', 'Type'), style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
       Row(children: _types.map((t) => GestureDetector(
         onTap: () => setState(() => _type = t),
@@ -254,7 +265,7 @@ bool _isLoading = false;
           child: Text(t[0].toUpperCase() + t.substring(1),
             style: TextStyle(color: _type == t ? Colors.white : AppTheme.textDark, fontWeight: FontWeight.w500))))).toList()),
       const SizedBox(height: 16),
-      Text('Gender', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+      Text(_t(context, 'Gender', 'Sexe'), style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
       Row(children: _genders.map((g) => GestureDetector(
         onTap: () => setState(() => _gender = g),
@@ -265,19 +276,19 @@ bool _isLoading = false;
             borderRadius: BorderRadius.circular(20)),
           child: Text(g, style: TextStyle(color: _gender == g ? Colors.white : AppTheme.textDark, fontWeight: FontWeight.w500))))).toList()),
       SwitchListTile(
-        title: Text('Vaccinated'), value: _vaccinated,
+        title: Text(_t(context, 'Vaccinated', 'Vaccine')), value: _vaccinated,
         activeColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),
       SwitchListTile(
-        title: Text('Sterilized'), value: _sterilized,
+        title: Text(_t(context, 'Sterilized', 'Sterilise')), value: _sterilized,
         activeColor: AppTheme.primary, onChanged: (v) => setState(() => _sterilized = v)),
-      SwitchListTile(title: Text('Dewormed'), value: _dewormed,
+      SwitchListTile(title: Text(_t(context, 'Dewormed', 'Vermifuge')), value: _dewormed,
         activeColor: AppTheme.primary, onChanged: (v) => setState(() => _dewormed = v)),
       const SizedBox(height: 32),
       SizedBox(width: double.infinity, child: ElevatedButton(
         onPressed: _isLoading ? null : _submit,
         child: _isLoading
           ? const CircularProgressIndicator(color: Colors.white)
-          : Text('List my pet', style: TextStyle(fontSize: 16)))),
+          : Text(_t(context, 'List My Pet', 'Publier mon animal'), style: TextStyle(fontSize: 16)))),
       const SizedBox(height: 20),
     ]));
 

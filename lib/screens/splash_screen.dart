@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stray_pets_mu/screens/onboarding_screen.dart';
 import 'package:stray_pets_mu/screens/language_select_screen.dart';
-import 'package:stray_pets_mu/screens/language_select_screen.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'home_screen.dart';
 import 'auth/login_screen.dart';

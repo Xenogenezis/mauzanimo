@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/adoption/adoption_inquiry_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -46,8 +47,7 @@ class PetDetailScreen extends StatelessWidget {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: pet['imageUrl'] != null
-                ? Image.network(pet['imageUrl'], fit: BoxFit.cover,
-                    errorBuilder: (c, e, s) => _placeholder())
+                ? _buildImage(pet['imageUrl'])
                 : _placeholder(),
             ),
           ),
@@ -139,6 +139,25 @@ class PetDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildImage(String imageUrl) {
+    if (imageUrl.startsWith('data:image')) {
+      // Base64 encoded image
+      final base64String = imageUrl.split(',').last;
+      return Image.memory(
+        base64Decode(base64String),
+        fit: BoxFit.cover,
+        errorBuilder: (c, e, s) => _placeholder(),
+      );
+    } else {
+      // Network image URL
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (c, e, s) => _placeholder(),
+      );
+    }
   }
 
   Widget _placeholder() => Container(color: AppTheme.lightGrey,
