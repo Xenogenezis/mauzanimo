@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "573750997910",
+    "project_id": "stray-pets-mu",
+    "storage_bucket": "stray-pets-mu.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:573750997910:android:83fdd4e778e17a940163b7",
+        "android_client_info": {
+          "package_name": "com.example.stray_pets_mu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "573750997910-0vnp300osgpk1u6gh6ll0jr59c20355c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoS_sDoVgwcN71xQmkU_6zIiMYGmhoJ6E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "573750997910-0vnp300osgpk1u6gh6ll0jr59c20355c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
