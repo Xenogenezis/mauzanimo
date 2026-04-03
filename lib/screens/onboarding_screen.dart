@@ -22,15 +22,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'title': lang == 'fr' ? 'Bienvenue sur MauZanimo' : 'Welcome to MauZanimo',
       'subtitle': lang == 'fr'
         ? 'Connecter les animaux errants avec des foyers aimants a travers Maurice.'
-        : 'Connecting stray pets with loving homes across Mauritius.',
+        : 'Helping owners rehome responsibly and families adopt locally across Mauritius.',
     },
     {
       'icon': Icons.search,
       'color': Colors.orange,
-      'title': lang == 'fr' ? 'Trouvez votre compagnon' : 'Find Your Companion',
+      'title': lang == 'fr' ? 'Trouver un nouveau foyer' : 'Find a New Home',
       'subtitle': lang == 'fr'
         ? 'Parcourez les chiens, chats et autres animaux cherchant un foyer.'
-        : 'Browse dogs, cats and other pets looking for a forever home.',
+        : 'Browse pets listed by caring owners looking for a loving new home.',
     },
     {
       'icon': Icons.favorite_outline,
@@ -38,7 +38,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'title': lang == 'fr' ? 'Adoptez en confiance' : 'Adopt with Confidence',
       'subtitle': lang == 'fr'
         ? 'Soumettez une demande et notre equipe vous guidera pas a pas.'
-        : 'Submit an adoption inquiry and our team will guide you step by step.',
+        : 'Apply to adopt and connect directly with the pet owner. Simple, safe and transparent.',
     },
     {
       'icon': Icons.volunteer_activism_outlined,
@@ -46,7 +46,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'title': lang == 'fr' ? 'Faites partie du changement' : 'Be Part of the Change',
       'subtitle': lang == 'fr'
         ? 'Listez votre animal, faites du benevolat, donnez ou devenez partenaire.'
-        : 'List your pet, volunteer, donate or partner with us.',
+        : 'List your pet for rehoming, volunteer, donate or become a partner.',
     },
   ];
 

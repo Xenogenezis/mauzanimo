@@ -76,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Find your perfect companion',
+                'Rehome responsibly. Adopt locally.',
                 style: TextStyle(
                   fontSize: 16,
                   color: AppTheme.textDark.withOpacity(0.6),

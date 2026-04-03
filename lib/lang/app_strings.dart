@@ -2,10 +2,10 @@ class AppStrings {
   static Map<String, Map<String, String>> translations = {
     'en': {
       'app_name': 'MauZanimo',
-      'tagline': 'Find your perfect companion',
+      'tagline': 'Rehome responsibly. Adopt locally.',
       'powered_by': 'Powered by JCI Grand Baie',
-      'find_companion': 'Find a companion',
-      'give_home': 'Give a stray pet a loving home',
+      'find_companion': 'Find your pet a loving home',
+      'give_home': 'Rehome responsibly. Adopt locally.',
       'search_pets': 'Search pets...',
       'all': 'All',
       'dogs': 'Dogs',
@@ -156,10 +156,10 @@ class AppStrings {
     },
     'fr': {
       'app_name': 'MauZanimo',
-      'tagline': 'Trouvez votre compagnon ideal',
+      'tagline': 'Adoption responsable. Localement.',
       'powered_by': 'Propulse par JCI Grand Baie',
-      'find_companion': 'Trouver un compagnon',
-      'give_home': 'Donnez un foyer a un animal errant',
+      'find_companion': 'Trouvez un foyer pour votre animal',
+      'give_home': 'Adoption responsable. Localement.',
       'search_pets': 'Rechercher des animaux...',
       'all': 'Tous',
       'dogs': 'Chiens',
