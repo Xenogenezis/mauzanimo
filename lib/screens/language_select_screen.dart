@@ -9,53 +9,56 @@ class LanguageSelectScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final langProvider = Provider.of<LanguageProvider>(context);
-    return Scaffold(
-      backgroundColor: const Color(0xFFFDF6EC),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/images/jci_grand_baie.png', height: 100),
-              const SizedBox(height: 32),
-              const Icon(Icons.pets, size: 64, color: AppTheme.primary),
-              const SizedBox(height: 16),
-              Text('MauZanimo',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
-              const SizedBox(height: 8),
-              Text('Choose your language / Choisissez votre langue',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6))),
-              const SizedBox(height: 48),
-              _LangButton(
-                flag: 'EN',
-                label: 'English',
-                sublabel: 'Continue in English',
-                isSelected: langProvider.lang == 'en',
-                onTap: () async {
-                  if (langProvider.lang != 'en') await langProvider.toggleLanguage();
-                  if (!context.mounted) return;
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OnboardingScreen()));
-                },
+    return Consumer<LanguageProvider>(
+      builder: (context, langProvider, _) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFFDF6EC),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset('assets/images/jci_grand_baie.png', height: 100),
+                  const SizedBox(height: 32),
+                  const Icon(Icons.pets, size: 64, color: AppTheme.primary),
+                  const SizedBox(height: 16),
+                  Text('MauZanimo',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                  const SizedBox(height: 8),
+                  Text('Choose your language / Choisissez votre langue',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6))),
+                  const SizedBox(height: 48),
+                  _LangButton(
+                    flag: 'EN',
+                    label: 'English',
+                    sublabel: 'Continue in English',
+                    isSelected: langProvider.lang == 'en',
+                    onTap: () async {
+                      if (langProvider.lang != 'en') await langProvider.toggleLanguage();
+                      if (!context.mounted) return;
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OnboardingScreen()));
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _LangButton(
+                    flag: 'FR',
+                    label: 'Francais',
+                    sublabel: 'Continuer en Francais',
+                    isSelected: langProvider.lang == 'fr',
+                    onTap: () async {
+                      if (langProvider.lang != 'fr') await langProvider.toggleLanguage();
+                      if (!context.mounted) return;
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OnboardingScreen()));
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              _LangButton(
-                flag: 'FR',
-                label: 'Francais',
-                sublabel: 'Continuer en Francais',
-                isSelected: langProvider.lang == 'fr',
-                onTap: () async {
-                  if (langProvider.lang != 'fr') await langProvider.toggleLanguage();
-                  if (!context.mounted) return;
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OnboardingScreen()));
-                },
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
