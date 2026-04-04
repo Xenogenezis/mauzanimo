@@ -29,14 +29,27 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     Future.delayed(const Duration(seconds: 3), () async {
-      final prefs = await SharedPreferences.getInstance();
-      final onboardingDone = prefs.getBool('onboarding_done') ?? false;
-      final user = FirebaseAuth.instance.currentUser;
-      if (!mounted) return;
-      if (!onboardingDone) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LanguageSelectScreen()));
-      } else {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => user != null ? HomeScreen() : LoginScreen()));
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final onboardingDone = prefs.getBool('onboarding_done') ?? false;
+        final user = FirebaseAuth.instance.currentUser;
+        if (!mounted) return;
+        if (!onboardingDone) {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LanguageSelectScreen()));
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => user != null ? const HomeScreen() : const LoginScreen()),
+          );
+        }
+      } catch (e) {
+        debugPrint('Navigation error: $e');
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+        }
       }
     });
   }
