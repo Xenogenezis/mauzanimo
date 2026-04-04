@@ -163,6 +163,10 @@ class AppStrings {
       'no_event_registrations': 'You have not registered for any events yet.',
       'approved': 'Approved',
       'rejected': 'Rejected',
+      'pet_name': 'Pet Name',
+      'description': 'Description',
+      'location': 'Location',
+      'contact': 'Contact',
     },
     'fr': {
       'app_name': 'MauZanimo',
@@ -327,6 +331,10 @@ class AppStrings {
       'no_event_registrations': 'Vous n\'etes inscrit a aucun evenement.',
       'approved': 'Approuve',
       'rejected': 'Refuse',
+      'pet_name': 'Nom de l\'animal',
+      'description': 'Description',
+      'location': 'Lieu',
+      'contact': 'Contact',
     },
   };
 
