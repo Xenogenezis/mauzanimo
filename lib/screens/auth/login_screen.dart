@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
-import 'package:stray_pets_mu/lang/language_provider.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/screens/home_screen.dart';
 import 'package:stray_pets_mu/screens/admin/admin_dashboard.dart';
@@ -18,6 +18,39 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+
+  // Admin access: Tap icon 8 times
+  int _tapCount = 0;
+  DateTime? _firstTapTime;
+  static const int _requiredTaps = 8;
+  static const Duration _tapWindow = Duration(seconds: 3);
+
+  void _handleIconTap() {
+    final now = DateTime.now();
+
+    // Reset if outside time window
+    if (_firstTapTime != null && now.difference(_firstTapTime!) > _tapWindow) {
+      _tapCount = 0;
+      _firstTapTime = null;
+    }
+
+    // Start new sequence
+    if (_tapCount == 0) {
+      _firstTapTime = now;
+    }
+
+    setState(() => _tapCount++);
+
+    // Check if reached required taps
+    if (_tapCount >= _requiredTaps) {
+      _tapCount = 0;
+      _firstTapTime = null;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminDashboard()),
+      );
+    }
+  }
 
   Future<void> _forgotPassword(BuildContext context, String lang) async {
     if (_emailController.text.isEmpty) {
@@ -63,12 +96,43 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 60),
-              InkWell(
-                onLongPress: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminDashboard())),
-                borderRadius: BorderRadius.circular(40),
+              GestureDetector(
+                onTap: _handleIconTap,
                 child: Container(
                   padding: const EdgeInsets.all(16),
-                  child: Center(child: Icon(Icons.pets, size: 80, color: AppTheme.primary)),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(40),
+                    color: _tapCount > 0
+                        ? AppTheme.primary.withValues(alpha: 0.1 * (_tapCount / _requiredTaps).clamp(0.1, 1.0))
+                        : Colors.transparent,
+                  ),
+                  child: Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(Icons.pets, size: 80, color: AppTheme.primary),
+                        if (_tapCount > 0)
+                          Positioned(
+                            bottom: 0,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '$_tapCount/$_requiredTaps',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

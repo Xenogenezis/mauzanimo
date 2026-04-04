@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
-import 'package:stray_pets_mu/lang/language_provider.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
 import 'package:stray_pets_mu/screens/info/donate_screen.dart';
@@ -13,6 +13,7 @@ import 'package:stray_pets_mu/screens/info/volunteer_screen.dart';
 import 'package:stray_pets_mu/screens/stories/success_stories_screen.dart';
 import 'package:stray_pets_mu/screens/lostfound/lost_found_screen.dart';
 import 'package:stray_pets_mu/screens/events/events_screen.dart';
+import 'package:stray_pets_mu/screens/gamification/leaderboard_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -59,6 +60,13 @@ class AppDrawer extends StatelessWidget {
                   subtitle: lang == 'fr' ? 'Evenements a venir' : 'Upcoming events near you',
                   color: AppTheme.primary,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => EventsScreen())); },
+                ),
+                _DrawerTile(
+                  icon: Icons.leaderboard_outlined,
+                  title: AppStrings.get('leaderboard', lang),
+                  subtitle: lang == 'fr' ? 'Voir les meilleurs contributeurs' : 'See top contributors',
+                  color: Colors.amber,
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => LeaderboardScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.auto_stories_outlined,

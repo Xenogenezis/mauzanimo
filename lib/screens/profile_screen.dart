@@ -4,6 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
 import 'package:stray_pets_mu/screens/pets/my_pets_screen.dart';
+import 'package:stray_pets_mu/providers/gamification_provider.dart';
+import 'package:stray_pets_mu/models/user_gamification.dart';
+import 'package:stray_pets_mu/widgets/gamification/impact_ring.dart';
+import 'package:stray_pets_mu/widgets/gamification/tier_badge.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -47,6 +52,80 @@ class ProfileScreen extends StatelessWidget {
                     },
                   ),
                 ]),
+              ),
+              const SizedBox(height: 24),
+              // Gamification Section
+              Consumer<GamificationProvider>(
+                builder: (context, gamificationProvider, _) {
+                  final gamification = gamificationProvider.gamification;
+                  if (gamification == null) {
+                    return const SizedBox.shrink();
+                  }
+                  return Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          gamification.tierColor.withValues(alpha: 0.1),
+                          AppTheme.primary.withValues(alpha: 0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: gamification.tierColor.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            ImpactRing(
+                              progress: gamification.tierProgress,
+                              points: gamification.totalPoints,
+                              pointsToNext: gamification.pointsToNextTier,
+                              tierName: gamification.tierDisplayName,
+                              tierColor: gamification.tierColor,
+                              size: 100,
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  TierBadge(
+                                    tier: gamification.tier,
+                                    size: 28,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    '${gamification.totalPoints} Impact Points',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.textDark,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  if (gamification.tier != MembershipTier.guardian)
+                                    Text(
+                                      '${gamification.pointsToNextTier} points to ${UserGamification.calculateTier(gamification.totalPoints + gamification.pointsToNextTier).name}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
               InkWell(

@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'user_role.dart';
 
 class UserProfile {
   final String uid;
   final String name;
   final String email;
   final String? phone;
+  final UserRole role;
   final DateTime? createdAt;
 
   UserProfile({
@@ -12,6 +14,7 @@ class UserProfile {
     required this.name,
     required this.email,
     this.phone,
+    this.role = UserRole.adopter,
     this.createdAt,
   });
 
@@ -21,6 +24,7 @@ class UserProfile {
       name: map['name'] ?? '',
       email: map['email'] ?? '',
       phone: map['phone'],
+      role: UserRoleExtension.fromString(map['role'] as String?),
       createdAt: map['createdAt'] != null
           ? (map['createdAt'] as Timestamp).toDate()
           : null,
@@ -32,6 +36,7 @@ class UserProfile {
       'name': name,
       'email': email,
       'phone': phone,
+      'role': role.name,
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
@@ -41,6 +46,7 @@ class UserProfile {
     String? name,
     String? email,
     String? phone,
+    UserRole? role,
     DateTime? createdAt,
   }) {
     return UserProfile(
@@ -48,7 +54,14 @@ class UserProfile {
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
+      role: role ?? this.role,
       createdAt: createdAt ?? this.createdAt,
     );
   }
+
+  // Helper getters
+  bool get isAdmin => role == UserRole.admin || role == UserRole.superAdmin;
+  bool get isPartner => role == UserRole.partner;
+  bool get isVolunteer => role == UserRole.volunteer;
+  bool get canListPets => role.canAccess(UserRole.rehomer);
 }

@@ -10,10 +10,12 @@ import 'providers/pet_provider.dart';
 import 'providers/favourites_provider.dart';
 import 'providers/lost_found_provider.dart';
 import 'providers/event_provider.dart';
+import 'providers/gamification_provider.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/pet_repository.dart';
 import 'repositories/lost_found_repository.dart';
 import 'repositories/event_repository.dart';
+import 'repositories/gamification_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +28,7 @@ void main() async {
   final petRepository = PetRepository();
   final lostFoundRepository = LostFoundRepository();
   final eventRepository = EventRepository();
+  final gamificationRepository = GamificationRepository();
 
   runApp(
     MultiProvider(
@@ -36,7 +39,15 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LostFoundProvider(lostFoundRepository)),
         ChangeNotifierProvider(create: (_) => EventProvider(eventRepository)),
       ],
-      child: MauZanimoApp(authRepository: authRepository, petRepository: petRepository),
+      child: Builder(
+        builder: (context) {
+          return MauZanimoApp(
+            authRepository: authRepository,
+            petRepository: petRepository,
+            gamificationRepository: gamificationRepository,
+          );
+        },
+      ),
     ),
   );
 }
@@ -44,11 +55,13 @@ void main() async {
 class MauZanimoApp extends StatelessWidget {
   final AuthRepository authRepository;
   final PetRepository petRepository;
+  final GamificationRepository gamificationRepository;
 
   const MauZanimoApp({
     super.key,
     required this.authRepository,
     required this.petRepository,
+    required this.gamificationRepository,
   });
 
   @override
@@ -60,12 +73,18 @@ class MauZanimoApp extends StatelessWidget {
             ChangeNotifierProvider(
               create: (_) => FavouritesProvider(petRepository, authProvider.uid),
             ),
+            ChangeNotifierProvider(
+              create: (_) => GamificationProvider(
+                gamificationRepository,
+                userId: authProvider.uid,
+              )..loadGamification(),
+            ),
           ],
           child: MaterialApp(
             title: 'MauZanimo',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
-            home: SplashScreen(),
+            home: const SplashScreen(),
           ),
         );
       },
