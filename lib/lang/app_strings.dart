@@ -161,6 +161,8 @@ class AppStrings {
       'already_registered': 'You are already registered for this event.',
       'my_event_registrations': 'My Event Registrations',
       'no_event_registrations': 'You have not registered for any events yet.',
+      'approved': 'Approved',
+      'rejected': 'Rejected',
     },
     'fr': {
       'app_name': 'MauZanimo',
@@ -323,6 +325,8 @@ class AppStrings {
       'already_registered': 'Vous etes deja inscrit a cet evenement.',
       'my_event_registrations': 'Mes inscriptions aux evenements',
       'no_event_registrations': 'Vous n\'etes inscrit a aucun evenement.',
+      'approved': 'Approuve',
+      'rejected': 'Refuse',
     },
   };
 
