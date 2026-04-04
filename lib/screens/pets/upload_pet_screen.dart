@@ -180,7 +180,7 @@ bool _isLoading = false;
           setState(() => _isLoading = false);
           return;
         }
-        imageBase64 = 'data:image/jpeg;base64,' + base64Encode(bytes);
+        imageBase64 = 'data:image/jpeg;base64,${base64Encode(bytes)}';
       }
       final user = FirebaseAuth.instance.currentUser;
       await FirebaseFirestore.instance.collection('pets').add({
@@ -332,12 +332,12 @@ bool _isLoading = false;
       ),
       SwitchListTile(
         title: Text(_t(context, 'Vaccinated', 'Vaccine')), value: _vaccinated,
-        activeColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),
+        activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),
       SwitchListTile(
         title: Text(_t(context, 'Sterilized', 'Sterilise')), value: _sterilized,
-        activeColor: AppTheme.primary, onChanged: (v) => setState(() => _sterilized = v)),
+        activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _sterilized = v)),
       SwitchListTile(title: Text(_t(context, 'Dewormed', 'Vermifuge')), value: _dewormed,
-        activeColor: AppTheme.primary, onChanged: (v) => setState(() => _dewormed = v)),
+        activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _dewormed = v)),
       const SizedBox(height: 32),
       SizedBox(width: double.infinity, child: ElevatedButton(
         onPressed: _isLoading ? null : _submit,

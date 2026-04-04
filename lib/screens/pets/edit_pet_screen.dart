@@ -134,9 +134,9 @@ class _EditPetScreenState extends State<EditPetScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             )).toList(),
           ),
-          SwitchListTile(title: Text('Vaccinated'), value: _vaccinated, activeColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),
-          SwitchListTile(title: Text('Sterilized'), value: _sterilized, activeColor: AppTheme.primary, onChanged: (v) => setState(() => _sterilized = v)),
-          SwitchListTile(title: Text('Dewormed'), value: _dewormed, activeColor: AppTheme.primary, onChanged: (v) => setState(() => _dewormed = v)),
+          SwitchListTile(title: Text('Vaccinated'), value: _vaccinated, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),
+          SwitchListTile(title: Text('Sterilized'), value: _sterilized, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _sterilized = v)),
+          SwitchListTile(title: Text('Dewormed'), value: _dewormed, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _dewormed = v)),
           const SizedBox(height: 32),
           SizedBox(width: double.infinity, child: ElevatedButton(
             onPressed: _isLoading ? null : _save,

@@ -70,15 +70,17 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
               ? FirebaseFirestore.instance.collection('lostfound').orderBy('createdAt', descending: true).snapshots()
               : FirebaseFirestore.instance.collection('lostfound').where('type', isEqualTo: _filter).orderBy('createdAt', descending: true).snapshots(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting)
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator(color: Colors.orange));
+              }
               final docs = snapshot.data?.docs ?? [];
-              if (docs.isEmpty)
+              if (docs.isEmpty) {
                 return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.search_off, size: 64, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
                   Text('No reports yet', style: TextStyle(color: Colors.grey)),
                 ]));
+              }
               return ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                 itemCount: docs.length,

@@ -75,7 +75,7 @@ class _PartnerCard extends StatelessWidget {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(name, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
           const SizedBox(height: 4),
-          Text(type + ' - ' + location, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text('$type - $location', style: const TextStyle(fontSize: 12, color: Colors.grey)),
         ])),
       ]),
     );

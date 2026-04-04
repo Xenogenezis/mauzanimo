@@ -47,7 +47,7 @@ class PetRepository {
         // For production, implement proper search indexing
         final snapshot = await _firestore.collection('pets').get();
         return snapshot.docs
-            .map((doc) => Pet.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+            .map((doc) => Pet.fromMap(doc.id, doc.data()))
             .where((pet) =>
                 pet.name.toLowerCase().contains(searchLower) ||
                 pet.location.toLowerCase().contains(searchLower))
@@ -159,7 +159,7 @@ class PetRepository {
           .snapshots()
           .map((snapshot) {
         return snapshot.docs.map((doc) {
-          return Pet.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+          return Pet.fromMap(doc.id, doc.data());
         }).toList();
       });
 
@@ -254,7 +254,7 @@ class PetRepository {
       final petSnapshot = await _firestore.collection('pets').get();
       final pets = petSnapshot.docs
           .where((doc) => petIds.contains(doc.id))
-          .map((doc) => Pet.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+          .map((doc) => Pet.fromMap(doc.id, doc.data()))
           .toList();
 
       return Result.success(pets);

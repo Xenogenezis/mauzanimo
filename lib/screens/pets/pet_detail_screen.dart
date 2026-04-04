@@ -119,7 +119,7 @@ class PetDetailScreen extends StatelessWidget {
                         final phone = pet['contact'] ?? '';
                         final name = pet['name'] ?? 'this pet';
                         final message = 'Hi, I am interested in adopting ' + name + ' from MauZanimo!';
-                        final url = 'https://wa.me/' + phone.replaceAll(' ', '') + '?text=' + Uri.encodeComponent(message);
+                        final url = '${'https://wa.me/' + phone.replaceAll(' ', '')}?text=${Uri.encodeComponent(message)}';
                         if (await canLaunchUrl(Uri.parse(url))) {
                           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                         }

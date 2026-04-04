@@ -10,14 +10,16 @@ class InquiriesScreen extends StatelessWidget {
     body: StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('inquiries').orderBy('createdAt', descending: true).snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator(color: AppTheme.primary));
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade300),
             const SizedBox(height: 16),
             Text('No inquiries yet', style: TextStyle(color: Colors.grey)),
           ]));
+        }
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: snapshot.data!.docs.length,

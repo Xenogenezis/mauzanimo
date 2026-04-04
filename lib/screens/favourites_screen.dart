@@ -25,10 +25,11 @@ class FavouritesScreen extends StatelessWidget {
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance.collection('favourites').where('userId', isEqualTo: user?.uid).snapshots(),
                 builder: (context, favSnapshot) {
-                  if (favSnapshot.connectionState == ConnectionState.waiting)
+                  if (favSnapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator(color: AppTheme.primary));
+                  }
                   final docs = favSnapshot.data?.docs ?? [];
-                  if (docs.isEmpty)
+                  if (docs.isEmpty) {
                     return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Icon(Icons.favorite_outline, size: 64, color: Colors.grey.shade300),
                       const SizedBox(height: 16),
@@ -36,19 +37,22 @@ class FavouritesScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text('Tap the heart on any pet to save them here.', style: TextStyle(color: Colors.grey, fontSize: 13)),
                     ]));
+                  }
                   final petIds = docs.map((d) => (d.data() as Map<String, dynamic>)['petId'] as String).toList();
                   return FutureBuilder<QuerySnapshot>(
                     future: FirebaseFirestore.instance.collection('pets').get(),
                     builder: (context, petSnapshot) {
-                      if (petSnapshot.data == null)
+                      if (petSnapshot.data == null) {
                         return Center(child: CircularProgressIndicator(color: AppTheme.primary));
+                      }
                       final favPets = petSnapshot.data!.docs.where((d) => petIds.contains(d.id)).toList();
-                      if (favPets.isEmpty)
+                      if (favPets.isEmpty) {
                         return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                           Icon(Icons.favorite_outline, size: 64, color: Colors.grey.shade300),
                           const SizedBox(height: 16),
                           Text('No saved pets yet', style: TextStyle(color: Colors.grey)),
                         ]));
+                      }
                       return GridView.builder(
                         padding: const EdgeInsets.all(16),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

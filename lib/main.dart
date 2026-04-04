@@ -9,9 +9,11 @@ import 'providers/auth_provider.dart';
 import 'providers/pet_provider.dart';
 import 'providers/favourites_provider.dart';
 import 'providers/lost_found_provider.dart';
+import 'providers/event_provider.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/pet_repository.dart';
 import 'repositories/lost_found_repository.dart';
+import 'repositories/event_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +25,7 @@ void main() async {
   final authRepository = AuthRepository();
   final petRepository = PetRepository();
   final lostFoundRepository = LostFoundRepository();
+  final eventRepository = EventRepository();
 
   runApp(
     MultiProvider(
@@ -31,6 +34,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider(authRepository)),
         ChangeNotifierProvider(create: (_) => PetProvider(petRepository)),
         ChangeNotifierProvider(create: (_) => LostFoundProvider(lostFoundRepository)),
+        ChangeNotifierProvider(create: (_) => EventProvider(eventRepository)),
       ],
       child: MauZanimoApp(authRepository: authRepository, petRepository: petRepository),
     ),

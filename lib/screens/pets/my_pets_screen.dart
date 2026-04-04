@@ -18,15 +18,17 @@ class MyPetsScreen extends StatelessWidget {
           .where('uploadedBy', isEqualTo: user?.uid)
           .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting)
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator(color: AppTheme.primary));
+          }
           final docs = snapshot.data?.docs ?? [];
-          if (docs.isEmpty)
+          if (docs.isEmpty) {
             return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(Icons.pets, size: 64, color: Colors.grey.shade300),
               const SizedBox(height: 16),
               Text('You have not listed any pets yet', style: TextStyle(color: Colors.grey, fontSize: 16)),
             ]));
+          }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: docs.length,

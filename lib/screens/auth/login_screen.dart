@@ -131,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterScreen())),
                   child: RichText(
                     text: TextSpan(
-                      text: AppStrings.get('no_account', lang) + ' ',
+                      text: '${AppStrings.get('no_account', lang)} ',
                       style: TextStyle(color: AppTheme.textDark.withOpacity(0.6)),
                       children: [
                         TextSpan(

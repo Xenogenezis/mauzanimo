@@ -131,7 +131,7 @@ class LostFoundRepository {
           .snapshots()
           .map((snapshot) {
         return snapshot.docs.map((doc) {
-          return LostFound.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+          return LostFound.fromMap(doc.id, doc.data());
         }).toList();
       });
 
@@ -153,7 +153,7 @@ class LostFoundRepository {
       final searchLower = query.toLowerCase();
 
       final results = snapshot.docs
-          .map((doc) => LostFound.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+          .map((doc) => LostFound.fromMap(doc.id, doc.data()))
           .where((report) =>
               report.description.toLowerCase().contains(searchLower) ||
               report.location.toLowerCase().contains(searchLower) ||

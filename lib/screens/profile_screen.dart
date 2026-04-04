@@ -77,14 +77,16 @@ class ProfileScreen extends StatelessWidget {
                   .where('userId', isEqualTo: user?.uid)
                   .snapshots(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting)
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator(color: AppTheme.primary));
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return Center(child: Column(children: [
                       Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade300),
                       const SizedBox(height: 8),
                       Text('No inquiries yet', style: TextStyle(color: Colors.grey)),
                     ]));
+                  }
                   return ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),

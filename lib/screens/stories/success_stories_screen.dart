@@ -18,9 +18,10 @@ class SuccessStoriesScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('stories').orderBy('createdAt', descending: true).snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting)
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator(color: AppTheme.primary));
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(Icons.auto_stories_outlined, size: 64, color: Colors.grey.shade300),
               const SizedBox(height: 16),
@@ -28,6 +29,7 @@ class SuccessStoriesScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text('Be the first to share your adoption stor', style: TextStyle(color: Colors.grey, fontSize: 13)),
             ]));
+          }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             itemCount: snapshot.data!.docs.length,
