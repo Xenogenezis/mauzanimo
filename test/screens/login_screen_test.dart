@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
-import 'package:stray_pets_mu/lang/language_provider.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
 
 // Mock classes
 class MockLanguageProvider extends Mock implements LanguageProvider {}

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/adoption/adoption_inquiry_screen.dart';

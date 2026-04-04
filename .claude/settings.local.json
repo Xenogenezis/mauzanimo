@@ -15,7 +15,15 @@
       "Bash(git commit:*)",
       "Bash(flutter pub:*)",
       "Bash(python3:*)",
-      "Bash(pdftotext:*)"
+      "Bash(pdftotext:*)",
+      "Bash(flutter build:*)",
+      "Bash(flutter clean:*)",
+      "Bash(./gradlew --stop)",
+      "Bash(gradlew.bat --stop)",
+      "Bash(find lib:*)",
+      "WebFetch(domain:)",
+      "WebSearch",
+      "Bash(flutter test:*)"
     ]
   }
 }

@@ -4,7 +4,7 @@ import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/pets/pet_card.dart';
 import 'package:stray_pets_mu/screens/pets/pet_detail_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:stray_pets_mu/lang/language_provider.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 
 class PetListScreen extends StatefulWidget {

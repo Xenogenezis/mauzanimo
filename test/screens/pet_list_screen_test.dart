@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:stray_pets_mu/screens/pets/pet_list_screen.dart';
-import 'package:stray_pets_mu/lang/language_provider.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
 
 // Mock classes
 class MockLanguageProvider extends Mock implements LanguageProvider {}

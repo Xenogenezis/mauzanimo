@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import '../theme/app_theme.dart';
-import '../lang/app_strings.dart';
-import '../providers/language_provider.dart';
-import '../providers/event_provider.dart';
-import '../providers/auth_provider.dart';
-import '../models/event_registration.dart';
+import '../../theme/app_theme.dart';
+import '../../lang/app_strings.dart';
+import '../../providers/language_provider.dart';
+import '../../providers/event_provider.dart';
+import '../../providers/auth_provider.dart' as app_provider;
+import '../../models/event_registration.dart';
 
 class EventsScreen extends StatelessWidget {
   const EventsScreen({super.key});
@@ -15,7 +15,7 @@ class EventsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context).lang;
-    final user = Provider.of<AuthProvider>(context).user;
+    final user = Provider.of<app_provider.AuthProvider>(context).user;
 
     return Scaffold(
       appBar: AppBar(
@@ -488,7 +488,7 @@ class MyEventRegistrationsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context).lang;
-    final user = Provider.of<AuthProvider>(context).user;
+    final user = Provider.of<app_provider.AuthProvider>(context).user;
     final eventProvider = Provider.of<EventProvider>(context);
 
     if (user == null) {

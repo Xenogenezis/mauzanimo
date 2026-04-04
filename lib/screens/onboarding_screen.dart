@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
-import 'package:stray_pets_mu/lang/language_provider.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {

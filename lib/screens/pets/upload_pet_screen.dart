@@ -7,7 +7,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:provider/provider.dart';
-import 'package:stray_pets_mu/lang/language_provider.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
 
 class UploadPetScreen extends StatefulWidget {
   const UploadPetScreen({super.key});
@@ -238,11 +238,11 @@ bool _isLoading = false;
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: AppTheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-        child: const Row(children: [
-          Icon(Icons.info_outline, color: AppTheme.primary),
-          SizedBox(width: 12),
+        child: Row(children: [
+          const Icon(Icons.info_outline, color: AppTheme.primary),
+          const SizedBox(width: 12),
           Expanded(child: Text(_t(context, 'List your pet for adoption and help them find a loving home.', 'Publiez votre animal pour l\'adoption et aidez-le a trouver un foyer aimant.'),
-            style: TextStyle(fontSize: 13, color: AppTheme.textDark))),
+            style: const TextStyle(fontSize: 13, color: AppTheme.textDark))),
         ]),
       ),
       const SizedBox(height: 24),
