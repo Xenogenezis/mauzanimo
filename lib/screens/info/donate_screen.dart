@@ -132,7 +132,7 @@ class DonateScreen extends StatelessWidget {
   }
 
   Future<void> _contactForAlternativePayment(BuildContext context, String lang) async {
-    final email = 'mauzanimo@jcigrandbaie.org';
+    final email = 'jcigrandbaie@gmail.com';
     final subject = Uri.encodeComponent(
       lang == 'fr'
           ? 'Demande de don - Autres methodes de paiement'
