@@ -1,4 +1,4 @@
-package com.example.stray_pets_mu
+package com.jcigrandbaie.mauzanimo
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -8,8 +8,8 @@ class PetRepository {
   PetRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  /// Get all pets as a stream with optional type filter
-  Result<Stream<List<Pet>>> getPetsStream({String? typeFilter}) {
+  /// Get all pets as a stream with optional type filter and limit
+  Result<Stream<List<Pet>>> getPetsStream({String? typeFilter, int limit = 20}) {
     try {
       Query query = _firestore.collection('pets');
 
@@ -17,7 +17,11 @@ class PetRepository {
         query = query.where('type', isEqualTo: typeFilter.toLowerCase());
       }
 
-      final stream = query.snapshots().map((snapshot) {
+      final stream = query
+          .orderBy('createdAt', descending: true)
+          .limit(limit)
+          .snapshots()
+          .map((snapshot) {
         return snapshot.docs.map((doc) {
           return Pet.fromMap(doc.id, doc.data() as Map<String, dynamic>);
         }).toList();
@@ -27,6 +31,45 @@ class PetRepository {
     } catch (e, stackTrace) {
       return Result.failure(
         'Failed to load pets. Please try again.',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// Load more pets using cursor-based pagination
+  Future<Result<List<Pet>>> loadMorePets({
+    String? typeFilter,
+    required DocumentSnapshot startAfter,
+    int limit = 20,
+  }) async {
+    try {
+      Query query = _firestore.collection('pets');
+
+      if (typeFilter != null && typeFilter != 'All') {
+        query = query.where('type', isEqualTo: typeFilter.toLowerCase());
+      }
+
+      final snapshot = await query
+          .orderBy('createdAt', descending: true)
+          .startAfterDocument(startAfter)
+          .limit(limit)
+          .get();
+
+      final pets = snapshot.docs.map((doc) {
+        return Pet.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+      }).toList();
+
+      return Result.success(pets);
+    } on FirebaseException catch (e, stackTrace) {
+      return Result.failure(
+        'Failed to load more pets: ${e.message}',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    } catch (e, stackTrace) {
+      return Result.failure(
+        'Failed to load more pets. Please try again.',
         error: e,
         stackTrace: stackTrace,
       );
@@ -250,12 +293,16 @@ class PetRepository {
         return Result.success(<Pet>[]);
       }
 
-      // Get pets by IDs in batches if needed
-      final petSnapshot = await _firestore.collection('pets').get();
-      final pets = petSnapshot.docs
-          .where((doc) => petIds.contains(doc.id))
-          .map((doc) => Pet.fromMap(doc.id, doc.data()))
-          .toList();
+      // Use whereIn for efficient query (batches of 10, Firestore limit)
+      final List<Pet> pets = [];
+      for (var i = 0; i < petIds.length; i += 10) {
+        final batch = petIds.sublist(i, i + 10 > petIds.length ? petIds.length : i + 10);
+        final batchSnapshot = await _firestore
+            .collection('pets')
+            .where(FieldPath.documentId, whereIn: batch)
+            .get();
+        pets.addAll(batchSnapshot.docs.map((doc) => Pet.fromMap(doc.id, doc.data())));
+      }
 
       return Result.success(pets);
     } on FirebaseException catch (e, stackTrace) {

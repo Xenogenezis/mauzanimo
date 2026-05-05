@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/pets/pet_card.dart';
 import 'package:stray_pets_mu/screens/pets/pet_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
+import 'package:stray_pets_mu/providers/pet_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 
 class PetListScreen extends StatefulWidget {
@@ -14,88 +14,35 @@ class PetListScreen extends StatefulWidget {
 }
 
 class _PetListScreenState extends State<PetListScreen> {
-  String _selectedFilter = 'All';
-  String _searchQuery = '';
-  bool _isSearching = false;
-  List<DocumentSnapshot> _searchResults = [];
+  final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
 
-  List<String> get _filters => ['All', 'Dogs', 'Cats', 'Others'];
-
-  /// Perform server-side search using Firestore queries
-  Future<void> _performSearch(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        _isSearching = false;
-        _searchResults = [];
-      });
-      return;
-    }
-
-    setState(() => _isSearching = true);
-
-    try {
-      // Firestore doesn't support native full-text search
-      // We use a prefix-based search with orderBy for better performance
-      final queryLower = query.toLowerCase();
-      final queryUpper = queryLower.substring(0, queryLower.length - 1) +
-          String.fromCharCode(queryLower.codeUnitAt(queryLower.length - 1) + 1);
-
-      // Search by name (prefix match)
-      final nameQuery = await FirebaseFirestore.instance
-          .collection('pets')
-          .where('name', isGreaterThanOrEqualTo: queryLower)
-          .where('name', isLessThan: queryUpper)
-          .limit(20)
-          .get();
-
-      // Search by location (prefix match)
-      final locationQuery = await FirebaseFirestore.instance
-          .collection('pets')
-          .where('location', isGreaterThanOrEqualTo: queryLower)
-          .where('location', isLessThan: queryUpper)
-          .limit(20)
-          .get();
-
-      // Combine results and remove duplicates
-      final allDocs = {...nameQuery.docs, ...locationQuery.docs}.toList();
-
-      setState(() {
-        _searchResults = allDocs;
-        _isSearching = false;
-      });
-    } catch (e) {
-      setState(() => _isSearching = false);
-      // Fall back to showing all pets
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Search failed. Showing all pets.')),
-      );
-    }
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
   }
 
-  Stream<QuerySnapshot>? get _petStream {
-    // If searching with results, return null to use the search results instead
-    if (_searchQuery.isNotEmpty) {
-      return null;
-    }
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
 
-    // Server-side filtering with where clauses
-    if (_selectedFilter == 'All') {
-      return FirebaseFirestore.instance
-          .collection('pets')
-          .orderBy('createdAt', descending: true)
-          .snapshots();
-    } else {
-      return FirebaseFirestore.instance
-          .collection('pets')
-          .where('type', isEqualTo: _selectedFilter.toLowerCase())
-          .orderBy('createdAt', descending: true)
-          .snapshots();
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      context.read<PetProvider>().loadMore();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final lang = Provider.of<LanguageProvider>(context).lang;
+    final lang = context.watch<LanguageProvider>().lang;
+    final petProvider = context.watch<PetProvider>();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -135,27 +82,20 @@ class _PetListScreenState extends State<PetListScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
+                  controller: _searchController,
                   onChanged: (val) {
-                    setState(() => _searchQuery = val.toLowerCase());
-                    // Debounce search
-                    Future.delayed(const Duration(milliseconds: 500), () {
-                      if (mounted && _searchQuery == val.toLowerCase()) {
-                        _performSearch(_searchQuery);
-                      }
-                    });
+                    petProvider.setSearchQuery(val);
                   },
                   decoration: InputDecoration(
                     hintText: AppStrings.get('search_pets', lang),
                     border: InputBorder.none,
                     icon: Icon(Icons.search, color: AppTheme.primary),
-                    suffixIcon: _searchQuery.isNotEmpty
+                    suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 20),
                             onPressed: () {
-                              setState(() {
-                                _searchQuery = '';
-                                _searchResults = [];
-                              });
+                              _searchController.clear();
+                              petProvider.setSearchQuery('');
                             },
                           )
                         : null,
@@ -171,19 +111,17 @@ class _PetListScreenState extends State<PetListScreen> {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _filters.length,
+            itemCount: petProvider.filters.length,
             itemBuilder: (context, index) {
-              final filter = _filters[index];
-              final isSelected = filter == _selectedFilter;
+              final filter = petProvider.filters[index];
+              final isSelected = filter == petProvider.selectedFilter;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
                   label: Text(filter),
                   selected: isSelected,
                   onSelected: (selected) {
-                    if (selected) {
-                      setState(() => _selectedFilter = filter);
-                    }
+                    if (selected) petProvider.setFilter(filter);
                   },
                   selectedColor: AppTheme.primary,
                   labelStyle: TextStyle(
@@ -201,110 +139,61 @@ class _PetListScreenState extends State<PetListScreen> {
         ),
         const SizedBox(height: 16),
         Expanded(
-          child: _isSearching
-              ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
-              : _searchQuery.isNotEmpty
-                  ? _buildSearchResults(lang)
-                  : _buildPetStream(lang),
+          child: petProvider.isLoading && petProvider.pets.isEmpty
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppTheme.primary))
+              : petProvider.pets.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.pets, size: 64,
+                              color: Colors.grey.shade300),
+                          const SizedBox(height: 16),
+                          Text(
+                            AppStrings.get('no_pets', lang),
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    )
+                  : GridView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.75,
+                      ),
+                      itemCount: petProvider.pets.length +
+                          (petProvider.isLoadingMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index >= petProvider.pets.length) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                                color: AppTheme.primary),
+                          );
+                        }
+                        final pet = petProvider.pets[index];
+                        return PetCard(
+                          pet: pet.toMap(),
+                          petId: pet.id,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PetDetailScreen(
+                                pet: pet.toMap(),
+                                petId: pet.id,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSearchResults(String lang) {
-    if (_searchResults.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 64, color: Colors.grey.shade300),
-            const SizedBox(height: 16),
-            Text(
-              AppStrings.get('no_pets', lang),
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.75,
-      ),
-      itemCount: _searchResults.length,
-      itemBuilder: (context, index) {
-        final pet = _searchResults[index].data() as Map<String, dynamic>;
-        final petId = _searchResults[index].id;
-        return PetCard(
-          pet: pet,
-          petId: petId,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PetDetailScreen(pet: pet, petId: petId),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPetStream(String lang) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _petStream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: CircularProgressIndicator(color: AppTheme.primary),
-          );
-        }
-
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.pets, size: 64, color: Colors.grey.shade300),
-                const SizedBox(height: 16),
-                Text(
-                  AppStrings.get('no_pets', lang),
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return GridView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.75,
-          ),
-          itemCount: snapshot.data!.docs.length,
-          itemBuilder: (context, index) {
-            final pet = snapshot.data!.docs[index].data() as Map<String, dynamic>;
-            final petId = snapshot.data!.docs[index].id;
-            return PetCard(
-              pet: pet,
-              petId: petId,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PetDetailScreen(pet: pet, petId: petId),
-                ),
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }

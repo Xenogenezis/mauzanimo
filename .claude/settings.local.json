@@ -23,7 +23,15 @@
       "Bash(find lib:*)",
       "WebFetch(domain:)",
       "WebSearch",
-      "Bash(flutter test:*)"
+      "Bash(flutter test:*)",
+      "Bash(git *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\GitHub\\\\mauzanimo\\\\lib\\\\screens\\\\adoption\" -ErrorAction SilentlyContinue)",
+      "Bash(Get-ChildItem -Path \"D:\\\\GitHub\\\\mauzanimo\\\\lib\\\\screens\\\\lostfound\" -ErrorAction SilentlyContinue)",
+      "Bash(Get-ChildItem -Path \"D:\\\\GitHub\\\\mauzanimo\\\\lib\\\\screens\\\\stories\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\GitHub\\\\mauzanimo\\\\lib\\\\screens\\\\adoption\" -ErrorAction SilentlyContinue; \"---LOSTFOUND---\"; Get-ChildItem -Path \"D:\\\\GitHub\\\\mauzanimo\\\\lib\\\\screens\\\\lostfound\" -ErrorAction SilentlyContinue; \"---STORIES---\"; Get-ChildItem -Path \"D:\\\\GitHub\\\\mauzanimo\\\\lib\\\\screens\\\\stories\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 50)",
+      "PowerShell(flutter analyze *)",
+      "Bash(python *)"
     ]
   }
 }

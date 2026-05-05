@@ -17,6 +17,8 @@ enum ImpactAction {
   shareStory, // +30 points
   volunteerHour, // +40 points
   reportLostFound, // +20 points
+  reportRescue, // +30 points
+  completeFoster, // +75 points
 }
 
 /// Record of a single impact action
@@ -360,6 +362,10 @@ class UserGamification {
         return 40;
       case ImpactAction.reportLostFound:
         return 20;
+      case ImpactAction.reportRescue:
+        return 30;
+      case ImpactAction.completeFoster:
+        return 75;
     }
   }
 

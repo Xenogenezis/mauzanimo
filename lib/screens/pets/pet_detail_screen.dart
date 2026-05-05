@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
-import 'package:stray_pets_mu/screens/adoption/adoption_inquiry_screen.dart';
+import 'package:stray_pets_mu/screens/adoption/adoption_workflow_screen.dart';
+import 'package:stray_pets_mu/screens/reviews/add_review_screen.dart';
+import 'package:stray_pets_mu/screens/foster/foster_application_screen.dart';
+import 'package:stray_pets_mu/screens/updates/pet_update_form_screen.dart';
+import 'package:stray_pets_mu/widgets/update_timeline.dart';
+import 'package:stray_pets_mu/models/pet_update.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PetDetailScreen extends StatelessWidget {
   final Map<String, dynamic> pet;
@@ -41,6 +48,17 @@ class PetDetailScreen extends StatelessWidget {
                     icon: Icon(isFav ? Icons.favorite : Icons.favorite_outline,
                       color: isFav ? Colors.red : Colors.white),
                     onPressed: _toggleFavourite,
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.share, color: Colors.white),
+                onPressed: () {
+                  final name = pet['name'] ?? 'this pet';
+                  final desc = pet['description'] ?? '';
+                  Share.share(
+                    'Check out $name on MauZanimo! $desc\n\nDownload the MauZanimo app to adopt pets in Mauritius.',
+                    subject: 'Adopt $name - MauZanimo',
                   );
                 },
               ),
@@ -100,13 +118,90 @@ class PetDetailScreen extends StatelessWidget {
                     _healthChip('Dewormed', pet['dewormed'] == true),
                       
                   ]),
+                  const SizedBox(height: 24),
+                  if (pet['adoptionFee'] != null) ...[
+                    Text('Adoption Fee', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Rs ${pet['adoptionFee']['total']?.toString() ?? '0'}',
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                          const SizedBox(height: 8),
+                          if (pet['adoptionFee']['breakdown'] != null)
+                            ...(pet['adoptionFee']['breakdown'] as Map<String, dynamic>).entries.map((e) =>
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(e.key, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                                    Text('Rs ${e.value}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          if (pet['adoptionFee']['notes'] != null) ...[
+                            const SizedBox(height: 8),
+                            Text(pet['adoptionFee']['notes'] as String,
+                              style: const TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (pet['status'] == 'adopted') ...[
+                    const SizedBox(height: 24),
+                    Text('Photo Updates', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                    const SizedBox(height: 12),
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('pet_updates')
+                          .where('petId', isEqualTo: petId)
+                          .orderBy('createdAt', descending: true)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                          final updates = snapshot.data!.docs
+                              .map((d) => PetUpdate.fromMap(d.id, d.data() as Map<String, dynamic>))
+                              .toList();
+                          return Column(children: [
+                            UpdateTimeline(updates: updates),
+                            const SizedBox(height: 8),
+                          ]);
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => PetUpdateFormScreen(petId: petId))),
+                        icon: const Icon(Icons.add_photo_alternate_outlined),
+                        label: const Text('Add Update'),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: pet['status'] == 'adopted' ? null : () =>
                         Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => AdoptionInquiryScreen(pet: pet, petId: petId))),
+                          builder: (_) => AdoptionWorkflowScreen(pet: pet, petId: petId))),
                       child: Text('Start Adoption Process', style: TextStyle(fontSize: 16)),
                     ),
                   ),
@@ -127,6 +222,42 @@ class PetDetailScreen extends StatelessWidget {
                       label: Text('Chat on WhatsApp', style: TextStyle(color: Color(0xFF25D366))),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFF25D366)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  if (pet['uploadedBy'] != null) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => AddReviewScreen(
+                            targetUserId: pet['uploadedBy'] as String,
+                            targetUserName: pet['uploadedByName'] ?? 'User',
+                          ))),
+                        icon: const Icon(Icons.star_outline, color: AppTheme.accent),
+                        label: const Text('Rate this Rehomer', style: TextStyle(color: AppTheme.accent)),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppTheme.accent),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => FosterApplicationScreen(
+                          petId: petId,
+                          petName: pet['name'] ?? '',
+                        ))),
+                      icon: const Icon(Icons.home_outlined, color: Colors.teal),
+                      label: const Text('Apply to Foster', style: TextStyle(color: Colors.teal)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.teal),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
@@ -167,10 +298,11 @@ class PetDetailScreen extends StatelessWidget {
       }
     } else {
       // Network image URL
-      return Image.network(
-        imageUrl,
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
         fit: BoxFit.cover,
-        errorBuilder: (c, e, s) => _placeholder(),
+        placeholder: (_, __) => _placeholder(),
+        errorWidget: (_, __, ___) => _placeholder(),
       );
     }
   }

@@ -50,28 +50,22 @@ class DonateScreen extends StatelessWidget {
             _InfoCard(
               icon: Icons.medical_services_outlined,
               color: Colors.red,
-              title: lang == 'fr' ? 'Soins veterinaires' : 'Veterinary Care',
-              description: lang == 'fr'
-                  ? 'Aidez a couvrir les frais medicaux des animaux secourus'
-                  : 'Help cover medical costs for rescued animals',
+              title: AppStrings.get('vet_care', lang),
+              description: AppStrings.get('vet_care_desc', lang),
             ),
             const SizedBox(height: 12),
             _InfoCard(
               icon: Icons.home_outlined,
               color: Colors.orange,
-              title: lang == 'fr' ? 'Soutien aux refuges' : 'Shelter Support',
-              description: lang == 'fr'
-                  ? 'Financez les operations et les soins des animaux'
-                  : 'Fund shelter operations and animal care',
+              title: AppStrings.get('shelter_support', lang),
+              description: AppStrings.get('shelter_support_desc', lang),
             ),
             const SizedBox(height: 12),
             _InfoCard(
               icon: Icons.campaign_outlined,
               color: AppTheme.primary,
-              title: lang == 'fr' ? 'Campagnes de sensibilisation' : 'Awareness Campaigns',
-              description: lang == 'fr'
-                  ? 'Diffusez le message sur la responsabilite des animaux de compagnie'
-                  : 'Spread the word about responsible pet ownership',
+              title: AppStrings.get('awareness_campaigns', lang),
+              description: AppStrings.get('awareness_campaigns_desc', lang),
             ),
             const SizedBox(height: 32),
             Text(

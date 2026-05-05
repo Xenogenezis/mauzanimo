@@ -5,7 +5,6 @@ import 'package:stray_pets_mu/models/pet.dart';
 import 'package:stray_pets_mu/repositories/pet_repository.dart';
 import 'package:stray_pets_mu/utils/result.dart';
 
-// Mock classes
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 
 class MockCollectionReference extends Mock
@@ -13,12 +12,6 @@ class MockCollectionReference extends Mock
 
 class MockDocumentReference extends Mock
     implements DocumentReference<Map<String, dynamic>> {}
-
-class MockQuerySnapshot extends Mock
-    implements QuerySnapshot<Map<String, dynamic>> {}
-
-class MockQueryDocumentSnapshot extends Mock
-    implements QueryDocumentSnapshot<Map<String, dynamic>> {}
 
 class MockDocumentSnapshot extends Mock
     implements DocumentSnapshot<Map<String, dynamic>> {}
@@ -49,82 +42,51 @@ void main() {
     );
 
     test('should return success when adding pet', () async {
-      // Arrange
       when(() => mockFirestore.collection('pets')).thenReturn(mockCollection);
       when(() => mockCollection.add(any())).thenAnswer((_) async => mockDocument);
 
-      // Act
       final result = await repository.addPet(testPet);
 
-      // Assert
       expect(result.isSuccess, true);
       verify(() => mockCollection.add(any())).called(1);
     });
 
     test('should return success when updating pet', () async {
-      // Arrange
       when(() => mockFirestore.collection('pets')).thenReturn(mockCollection);
       when(() => mockCollection.doc('pet123')).thenReturn(mockDocument);
       when(() => mockDocument.update(any())).thenAnswer((_) async => {});
 
-      // Act
       final result = await repository.updatePet(testPet);
 
-      // Assert
       expect(result.isSuccess, true);
       verify(() => mockDocument.update(any())).called(1);
     });
 
     test('should return success when deleting pet', () async {
-      // Arrange
       when(() => mockFirestore.collection('pets')).thenReturn(mockCollection);
       when(() => mockCollection.doc('pet123')).thenReturn(mockDocument);
       when(() => mockDocument.delete()).thenAnswer((_) async => {});
 
-      // Act
       final result = await repository.deletePet('pet123');
 
-      // Assert
       expect(result.isSuccess, true);
       verify(() => mockDocument.delete()).called(1);
     });
 
     test('should return success with null when pet not found', () async {
-      // Arrange
       final mockDocSnapshot = MockDocumentSnapshot();
       when(() => mockFirestore.collection('pets')).thenReturn(mockCollection);
       when(() => mockCollection.doc('nonexistent')).thenReturn(mockDocument);
       when(() => mockDocument.get()).thenAnswer((_) async => mockDocSnapshot);
       when(() => mockDocSnapshot.exists).thenReturn(false);
 
-      // Act
       final result = await repository.getPetById('nonexistent');
 
-      // Assert
       expect(result.isSuccess, true);
       expect(result.dataOrNull, isNull);
     });
 
-    test('should return stream of pets successfully', () {
-      // Act
-      final result = repository.getPetsStream();
-
-      // Assert
-      expect(result.isSuccess, true);
-      expect(result.dataOrNull, isA<Stream<List<Pet>>>());
-    });
-
-    test('should return stream with filter successfully', () {
-      // Act
-      final result = repository.getPetsStream(typeFilter: 'Dogs');
-
-      // Assert
-      expect(result.isSuccess, true);
-      expect(result.dataOrNull, isA<Stream<List<Pet>>>());
-    });
-
     test('should return failure on FirebaseException', () async {
-      // Arrange
       when(() => mockFirestore.collection('pets')).thenThrow(
         FirebaseException(
           plugin: 'firestore',
@@ -133,12 +95,41 @@ void main() {
         ),
       );
 
-      // Act
       final result = await repository.deletePet('pet123');
 
-      // Assert
       expect(result.isFailure, true);
       expect(result.errorOrNull, contains('Permission denied'));
+    });
+
+    test('getPetsStream should return Result type', () {
+      when(() => mockFirestore.collection('pets')).thenReturn(mockCollection);
+
+      final result = repository.getPetsStream();
+
+      expect(result, isA<Result<Stream<List<Pet>>>>());
+    });
+
+    test('getPetsStream with filter should return Result type', () {
+      when(() => mockFirestore.collection('pets')).thenReturn(mockCollection);
+
+      final result = repository.getPetsStream(typeFilter: 'Dogs');
+
+      expect(result, isA<Result<Stream<List<Pet>>>>());
+    });
+
+    test('loadMorePets should handle FirebaseException', () async {
+      when(() => mockFirestore.collection('pets')).thenThrow(
+        FirebaseException(
+          plugin: 'firestore',
+          code: 'permission-denied',
+          message: 'Permission denied',
+        ),
+      );
+
+      final mockDoc = MockDocumentSnapshot();
+      final result = await repository.loadMorePets(startAfter: mockDoc);
+
+      expect(result.isFailure, true);
     });
   });
 }

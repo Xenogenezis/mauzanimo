@@ -3,7 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/admin/add_pet_screen.dart';
 import 'package:stray_pets_mu/screens/admin/inquiries_screen.dart';
+import 'package:stray_pets_mu/screens/admin/adoption_management_screen.dart';
 import 'package:stray_pets_mu/models/user_role.dart';
+import 'package:stray_pets_mu/models/verification_badge.dart';
+import 'package:stray_pets_mu/repositories/auth_repository.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -161,6 +164,16 @@ class _OverviewTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _ActionTile(
+            icon: Icons.pets_outlined,
+            title: 'Adoption Management',
+            subtitle: 'Track adoption workflows',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdoptionManagementScreen()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ActionTile(
             icon: Icons.person_add_outlined,
             title: 'Create Admin/Partner',
             subtitle: 'Create special user accounts',
@@ -311,7 +324,8 @@ class _UserManagementTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Expanded(
+              SizedBox(
+                height: 200,
                 child: ListView(
                   controller: scrollController,
                   children: UserRole.values.map((role) {
@@ -331,6 +345,48 @@ class _UserManagementTab extends StatelessWidget {
                             .collection('users')
                             .doc(userId)
                             .update({'role': role.name});
+                        if (context.mounted) Navigator.pop(context);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Verification Level',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView(
+                  children: VerificationBadge.allBadges.map((badge) {
+                    final currentLevel = VerificationLevel.values.firstWhere(
+                      (v) => v.name == (data['verificationLevel'] as String?),
+                      orElse: () => VerificationLevel.none,
+                    );
+                    final isSelected = badge.level == currentLevel;
+                    final authRepo = AuthRepository();
+                    return ListTile(
+                      leading: Icon(
+                        badge.icon,
+                        color: isSelected ? badge.color : Colors.grey,
+                        size: 20,
+                      ),
+                      title: Text(
+                        badge.displayName,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      trailing: isSelected
+                          ? Icon(Icons.check_circle, color: badge.color, size: 20)
+                          : null,
+                      onTap: () async {
+                        await authRepo.updateVerificationLevel(userId, badge.level);
                         if (context.mounted) Navigator.pop(context);
                       },
                     );

@@ -1,3 +1,5 @@
+import 'adoption_fee.dart';
+
 class Pet {
   final String id;
   final String name;
@@ -16,6 +18,7 @@ class Pet {
   final String? uploaderEmail;
   final bool isUserUpload;
   final DateTime? createdAt;
+  final AdoptionFee? adoptionFee;
 
   Pet({
     required this.id,
@@ -35,6 +38,7 @@ class Pet {
     this.uploaderEmail,
     this.isUserUpload = false,
     this.createdAt,
+    this.adoptionFee,
   });
 
   factory Pet.fromMap(String id, Map<String, dynamic> map) {
@@ -58,6 +62,9 @@ class Pet {
       createdAt: map['createdAt'] != null
           ? (map['createdAt'] as dynamic).toDate()
           : null,
+      adoptionFee: map['adoptionFee'] != null
+          ? AdoptionFee.fromMap(map['adoptionFee'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -78,6 +85,7 @@ class Pet {
       'uploadedBy': uploadedBy,
       'uploaderEmail': uploaderEmail,
       'isUserUpload': isUserUpload,
+      'adoptionFee': adoptionFee?.toMap(),
     };
   }
 
@@ -99,6 +107,7 @@ class Pet {
     String? uploaderEmail,
     bool? isUserUpload,
     DateTime? createdAt,
+    AdoptionFee? adoptionFee,
   }) {
     return Pet(
       id: id ?? this.id,
@@ -118,6 +127,7 @@ class Pet {
       uploaderEmail: uploaderEmail ?? this.uploaderEmail,
       isUserUpload: isUserUpload ?? this.isUserUpload,
       createdAt: createdAt ?? this.createdAt,
+      adoptionFee: adoptionFee ?? this.adoptionFee,
     );
   }
 }

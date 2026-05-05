@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
+import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/screens/home_screen.dart';
 import 'package:stray_pets_mu/models/user_role.dart';
 
@@ -20,8 +23,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _errorMessage;
 
   Future<void> _register() async {
+    final lang = context.read<LanguageProvider>().lang;
     if (_nameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      setState(() => _errorMessage = 'Please fill in all required fields');
+      setState(() => _errorMessage = AppStrings.get('please_fill_required_fields', lang));
       return;
     }
     setState(() { _isLoading = true; _errorMessage = null; });
@@ -48,9 +52,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>().lang;
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(title: Text('Create Account')),
+      appBar: AppBar(title: Text(AppStrings.get('create_account', lang))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -60,28 +65,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 20),
               Center(child: Icon(Icons.pets, size: 64, color: AppTheme.primary)),
               const SizedBox(height: 16),
-              Center(child: Text('Join mauzanimo',
+              Center(child: Text(AppStrings.get('join_mauzanimo', lang),
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
               const SizedBox(height: 8),
-              Center(child: Text('Create an account to start adopting',
+              Center(child: Text(AppStrings.get('create_an_account_to_start_adopting', lang),
                 style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6)))),
               const SizedBox(height: 32),
-              _field(_nameController, 'Full Name', Icons.person_outline),
+              _field(_nameController, AppStrings.get('full_name', lang), Icons.person_outline),
               const SizedBox(height: 16),
-              _field(_emailController, 'Email Address', Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+              _field(_emailController, AppStrings.get('email', lang), Icons.email_outlined, keyboardType: TextInputType.emailAddress),
               const SizedBox(height: 16),
-              _field(_phoneController, 'Phone Number', Icons.phone_outlined, keyboardType: TextInputType.phone),
+              _field(_phoneController, AppStrings.get('phone', lang), Icons.phone_outlined, keyboardType: TextInputType.phone),
               const SizedBox(height: 16),
-              _field(_passwordController, 'Password', Icons.lock_outline, obscure: true),
+              _field(_passwordController, AppStrings.get('password', lang), Icons.lock_outline, obscure: true),
               const SizedBox(height: 24),
-              // Role Selection
               Text(
-                'I am a:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textDark,
-                ),
+                AppStrings.get('i_am_a', lang),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textDark),
               ),
               const SizedBox(height: 12),
               ...selfAssignableRoles.map((role) => _RoleOption(
@@ -100,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: _isLoading ? null : _register,
                   child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : Text('Create Account', style: TextStyle(fontSize: 16)),
+                    : Text(AppStrings.get('create_account', lang), style: TextStyle(fontSize: 16)),
                 ),
               ),
               const SizedBox(height: 16),
@@ -109,15 +109,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: () => Navigator.pop(context),
                   child: RichText(
                     text: TextSpan(
-                      text: 'Already have an account? ',
+                      text: '${AppStrings.get('already_have_account', lang)} ',
                       style: TextStyle(color: AppTheme.textDark.withOpacity(0.6)),
-                      children: const [
+                      children: [
                         TextSpan(
-                          text: 'Sign In',
-                          style: TextStyle(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          text: AppStrings.get('sign_in', lang),
+                          style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -188,20 +185,13 @@ class _RoleOption extends StatelessWidget {
                   ),
                   Text(
                     role.description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                   ),
                 ],
               ),
             ),
             if (isSelected)
-              const Icon(
-                Icons.check_circle,
-                color: AppTheme.primary,
-                size: 24,
-              ),
+              const Icon(Icons.check_circle, color: AppTheme.primary, size: 24),
           ],
         ),
       ),

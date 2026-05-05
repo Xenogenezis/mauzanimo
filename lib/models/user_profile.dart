@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'user_role.dart';
+import 'pet_preferences.dart';
+import 'verification_badge.dart';
 
 class UserProfile {
   final String uid;
@@ -8,6 +10,8 @@ class UserProfile {
   final String? phone;
   final UserRole role;
   final DateTime? createdAt;
+  final PetPreferences? petPreferences;
+  final VerificationLevel verificationLevel;
 
   UserProfile({
     required this.uid,
@@ -16,6 +20,8 @@ class UserProfile {
     this.phone,
     this.role = UserRole.adopter,
     this.createdAt,
+    this.petPreferences,
+    this.verificationLevel = VerificationLevel.none,
   });
 
   factory UserProfile.fromMap(String uid, Map<String, dynamic> map) {
@@ -28,6 +34,13 @@ class UserProfile {
       createdAt: map['createdAt'] != null
           ? (map['createdAt'] as Timestamp).toDate()
           : null,
+      petPreferences: map['petPreferences'] != null
+          ? PetPreferences.fromMap(map['petPreferences'] as Map<String, dynamic>)
+          : null,
+      verificationLevel: VerificationLevel.values.firstWhere(
+        (v) => v.name == map['verificationLevel'] as String?,
+        orElse: () => VerificationLevel.none,
+      ),
     );
   }
 
@@ -38,6 +51,8 @@ class UserProfile {
       'phone': phone,
       'role': role.name,
       'createdAt': FieldValue.serverTimestamp(),
+      'petPreferences': petPreferences?.toMap(),
+      'verificationLevel': verificationLevel.name,
     };
   }
 
@@ -48,6 +63,8 @@ class UserProfile {
     String? phone,
     UserRole? role,
     DateTime? createdAt,
+    PetPreferences? petPreferences,
+    VerificationLevel? verificationLevel,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -56,6 +73,8 @@ class UserProfile {
       phone: phone ?? this.phone,
       role: role ?? this.role,
       createdAt: createdAt ?? this.createdAt,
+      petPreferences: petPreferences ?? this.petPreferences,
+      verificationLevel: verificationLevel ?? this.verificationLevel,
     );
   }
 

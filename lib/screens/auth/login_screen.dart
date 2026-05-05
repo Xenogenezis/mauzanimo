@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
@@ -45,9 +46,32 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_tapCount >= _requiredTaps) {
       _tapCount = 0;
       _firstTapTime = null;
+      _verifyAdminAccess();
+    }
+  }
+
+  Future<void> _verifyAdminAccess() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Access denied. Please sign in first.')),
+      );
+      return;
+    }
+
+    final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final role = doc.data()?['role'] as String?;
+    if (!mounted) return;
+
+    if (role == 'admin' || role == 'superAdmin') {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const AdminDashboard()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Access denied. Admin privileges required.')),
       );
     }
   }
@@ -55,14 +79,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _forgotPassword(BuildContext context, String lang) async {
     if (_emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(lang == 'fr' ? 'Entrez votre email dabord' : 'Please enter your email address first')));
+        SnackBar(content: Text(AppStrings.get('enter_email_for_reset', lang))));
       return;
     }
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailController.text.trim());
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(lang == 'fr' ? 'Email de reinitialisation envoye!' : 'Password reset email sent!')));
+        SnackBar(content: Text(AppStrings.get('reset_email_sent', lang))));
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message ?? '')));
     }
@@ -136,10 +160,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Center(child: Text('MauZanimo',
+              Center(child: Text(AppStrings.get('app_name', lang),
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
               const SizedBox(height: 8),
-              Center(child: Text(lang == 'fr' ? 'Connectez-vous pour continuer' : 'Sign in to continue',
+              Center(child: Text(AppStrings.get('sign_in_to_continue', lang),
                 style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6)))),
               const SizedBox(height: 48),
               TextField(

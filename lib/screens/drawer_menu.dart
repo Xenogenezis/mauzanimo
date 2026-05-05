@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
+import 'package:stray_pets_mu/providers/theme_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
 import 'package:stray_pets_mu/screens/info/donate_screen.dart';
@@ -14,6 +15,9 @@ import 'package:stray_pets_mu/screens/stories/success_stories_screen.dart';
 import 'package:stray_pets_mu/screens/lostfound/lost_found_screen.dart';
 import 'package:stray_pets_mu/screens/events/events_screen.dart';
 import 'package:stray_pets_mu/screens/gamification/leaderboard_screen.dart';
+import 'package:stray_pets_mu/screens/rescue/rescue_report_screen.dart';
+import 'package:stray_pets_mu/screens/rescue/rescue_list_screen.dart';
+import 'package:stray_pets_mu/screens/foster/my_fosters_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -50,80 +54,116 @@ class AppDrawer extends StatelessWidget {
                 _DrawerTile(
                   icon: Icons.search,
                   title: AppStrings.get('lost_found', lang),
-                  subtitle: lang == 'fr' ? 'Signalez ou trouvez des animaux' : 'Report or find lost animals',
+                  subtitle: AppStrings.get('lost_found_subtitle', lang),
                   color: Colors.orange,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => LostFoundScreen())); },
                 ),
                 _DrawerTile(
+                  icon: Icons.warning_amber_rounded,
+                  title: AppStrings.get('emergency_rescue', lang),
+                  subtitle: AppStrings.get('report_injured_stray', lang),
+                  color: Colors.red,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => RescueReportScreen()));
+                  },
+                ),
+                _DrawerTile(
+                  icon: Icons.home_outlined,
+                  title: AppStrings.get('foster_program', lang),
+                  subtitle: AppStrings.get('foster_program_subtitle', lang),
+                  color: Colors.teal,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => MyFostersScreen()));
+                  },
+                ),
+                _DrawerTile(
                   icon: Icons.event_outlined,
                   title: AppStrings.get('events', lang),
-                  subtitle: lang == 'fr' ? 'Evenements a venir' : 'Upcoming events near you',
+                  subtitle: AppStrings.get('events_subtitle', lang),
                   color: AppTheme.primary,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => EventsScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.leaderboard_outlined,
                   title: AppStrings.get('leaderboard', lang),
-                  subtitle: lang == 'fr' ? 'Voir les meilleurs contributeurs' : 'See top contributors',
+                  subtitle: AppStrings.get('leaderboard_subtitle', lang),
                   color: Colors.amber,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => LeaderboardScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.auto_stories_outlined,
                   title: AppStrings.get('stories', lang),
-                  subtitle: lang == 'fr' ? 'Animaux qui ont trouve un foyer' : 'Pets that found their home',
+                  subtitle: AppStrings.get('stories_subtitle', lang),
                   color: Colors.green,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => SuccessStoriesScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.favorite_outline,
                   title: AppStrings.get('donate', lang),
-                  subtitle: lang == 'fr' ? 'Soutenez notre mission' : 'Support our mission',
+                  subtitle: AppStrings.get('donate_subtitle', lang),
                   color: Colors.red,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => DonateScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.handshake_outlined,
                   title: AppStrings.get('partners', lang),
-                  subtitle: lang == 'fr' ? 'Vets, refuges et ONG' : 'Vets, shelters and NGOs',
+                  subtitle: AppStrings.get('partners_subtitle', lang),
                   color: AppTheme.primary,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => PartnersScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.volunteer_activism_outlined,
                   title: AppStrings.get('volunteer', lang),
-                  subtitle: lang == 'fr' ? 'Rejoignez notre communaute' : 'Join our community',
+                  subtitle: AppStrings.get('volunteer_subtitle', lang),
                   color: Colors.orange,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => VolunteerScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.info_outline,
                   title: AppStrings.get('about_app', lang),
-                  subtitle: lang == 'fr' ? 'Notre histoire et mission' : 'Our story and mission',
+                  subtitle: AppStrings.get('about_app', lang),
                   color: Colors.blue,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => AboutScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.support_agent_outlined,
                   title: AppStrings.get('contact', lang),
-                  subtitle: lang == 'fr' ? 'Obtenir de l aide' : 'Get help from our team',
+                  subtitle: AppStrings.get('contact', lang),
                   color: Colors.purple,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => ContactScreen())); },
                 ),
                 const Divider(height: 32),
                 Consumer<LanguageProvider>(
-                  builder: (context, langProvider, _) => ListTile(
+                  builder: (context, langProvider, _) {
+                    final nextLang = langProvider.lang == 'en' ? 'fr' : langProvider.lang == 'fr' ? 'mfe' : 'en';
+                    return ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.language, color: Colors.blue, size: 22),
+                      ),
+                      title: Text(AppStrings.get('language', langProvider.lang),
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textDark)),
+                      subtitle: Text(langProvider.currentLanguageDisplayName,
+                        style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                      onTap: () => langProvider.setLanguage(nextLang),
+                    );
+                  },
+                ),
+                Consumer<ThemeProvider>(
+                  builder: (context, themeProvider, _) => ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                      child: const Icon(Icons.language, color: Colors.blue, size: 22),
+                      decoration: BoxDecoration(color: Colors.purple.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                      child: Icon(themeProvider.isDark ? Icons.light_mode : Icons.dark_mode, color: Colors.purple, size: 22),
                     ),
-                    title: Text(langProvider.lang == 'en' ? 'Switch to French' : 'Passer en Anglais',
+                    title: Text(themeProvider.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
                       style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textDark)),
-                    subtitle: Text(langProvider.lang == 'en' ? 'Langue: English' : 'Language: Francais',
-                      style: const TextStyle(fontSize: 11, color: Colors.grey)),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-                    onTap: () => langProvider.toggleLanguage(),
+                    onTap: () => themeProvider.toggleTheme(),
                   ),
                 ),
                 _DrawerTile(
@@ -142,7 +182,7 @@ class AppDrawer extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text('Powered by JCI Grand Baie',
+            child: Text(AppStrings.get('powered_by', lang),
               style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
           ),
         ],

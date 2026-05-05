@@ -36,7 +36,7 @@ class LanguageSelectScreen extends StatelessWidget {
                     sublabel: 'Continue in English',
                     isSelected: langProvider.lang == 'en',
                     onTap: () async {
-                      if (langProvider.lang != 'en') await langProvider.toggleLanguage();
+                      langProvider.setLanguage('en');
                       if (!context.mounted) return;
                       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OnboardingScreen()));
                     },
@@ -48,7 +48,19 @@ class LanguageSelectScreen extends StatelessWidget {
                     sublabel: 'Continuer en Francais',
                     isSelected: langProvider.lang == 'fr',
                     onTap: () async {
-                      if (langProvider.lang != 'fr') await langProvider.toggleLanguage();
+                      langProvider.setLanguage('fr');
+                      if (!context.mounted) return;
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OnboardingScreen()));
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _LangButton(
+                    flag: 'MF',
+                    label: 'Kreol Morisien',
+                    sublabel: 'Kontinie an Kreol Morisien',
+                    isSelected: langProvider.lang == 'mfe',
+                    onTap: () async {
+                      langProvider.setLanguage('mfe');
                       if (!context.mounted) return;
                       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OnboardingScreen()));
                     },

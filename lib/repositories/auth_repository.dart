@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_profile.dart';
+import '../models/verification_badge.dart';
 import '../utils/result.dart';
 
 class AuthRepository {
@@ -197,4 +198,17 @@ class AuthRepository {
 
   /// Check if user is authenticated
   bool get isAuthenticated => _auth.currentUser != null;
+
+  Future<Result<void>> updateVerificationLevel(String uid, VerificationLevel level) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'verificationLevel': level.name,
+      });
+      return Result.success(null);
+    } on FirebaseException catch (e) {
+      return Result.failure(e.message ?? 'Firestore error', error: e);
+    } catch (e) {
+      return Result.failure(e.toString(), error: e);
+    }
+  }
 }
