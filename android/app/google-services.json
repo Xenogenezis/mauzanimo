@@ -7,9 +7,38 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:573750997910:android:83fdd4e778e17a940163b7",
+        "mobilesdk_app_id": "1:573750997910:android:3533f7c1c6d62d780163b7",
         "android_client_info": {
           "package_name": "com.jcigrandbaie.mauzanimo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "573750997910-0vnp300osgpk1u6gh6ll0jr59c20355c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoS_sDoVgwcN71xQmkU_6zIiMYGmhoJ6E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "573750997910-0vnp300osgpk1u6gh6ll0jr59c20355c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:573750997910:android:4edee6d2a2b002440163b7",
+        "android_client_info": {
+          "package_name": "mu.jcigrandbaie.mauzanimo"
         }
       },
       "oauth_client": [
