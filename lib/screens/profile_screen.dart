@@ -154,19 +154,19 @@ class ProfileScreen extends StatelessWidget {
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
                     boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 4))]),
                   child: Row(children: [
-                    Icon(Icons.pets, color: AppTheme.primary),
-                    SizedBox(width: 12),
+                    const Icon(Icons.pets, color: AppTheme.primary),
+                    const SizedBox(width: 12),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(AppStrings.get('my_pet_listings', lang), style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
-                      Text(AppStrings.get('edit_or_delete_your_listed_pets', lang), style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text(AppStrings.get('my_pet_listings', lang), style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                      Text(AppStrings.get('edit_or_delete_your_listed_pets', lang), style: const TextStyle(fontSize: 12, color: Colors.grey)),
                     ])),
-                    Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
                   ]),
                 ),
               ),
               const SizedBox(height: 32),
               Text(AppStrings.get('my_inquiries', lang),
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
               const SizedBox(height: 16),
               StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
@@ -175,13 +175,13 @@ class ProfileScreen extends StatelessWidget {
                   .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator(color: AppTheme.primary));
+                    return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
                   }
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return Center(child: Column(children: [
                       Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade300),
                       const SizedBox(height: 8),
-                      Text(AppStrings.get('no_inquiries_yet', lang), style: TextStyle(color: Colors.grey)),
+                      Text(AppStrings.get('no_inquiries_yet', lang), style: const TextStyle(color: Colors.grey)),
                     ]));
                   }
                   return ListView.builder(
@@ -260,7 +260,7 @@ class ProfileScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.star, color: AppTheme.accent, size: 20),
+                            const Icon(Icons.star, color: AppTheme.accent, size: 20),
                             const SizedBox(width: 4),
                             Text(avgRating.toStringAsFixed(1),
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark)),
@@ -313,10 +313,10 @@ class ProfileScreen extends StatelessWidget {
                     await authProvider.signOut();
                     if (!context.mounted) return;
                     Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (_) => LoginScreen()));
+                      MaterialPageRoute(builder: (_) => const LoginScreen()));
                   },
                   icon: const Icon(Icons.logout, color: Colors.red),
-                  label: Text(AppStrings.get('sign_out', lang), style: TextStyle(color: Colors.red)),
+                  label: Text(AppStrings.get('sign_out', lang), style: const TextStyle(color: Colors.red)),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.red),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -400,10 +400,10 @@ class _PreferencesCardState extends State<_PreferencesCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            const Icon(Icons.tune, color: AppTheme.primary, size: 20),
-            const SizedBox(width: 8),
-            Text('Pet Preferences', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+          const Row(children: [
+            Icon(Icons.tune, color: AppTheme.primary, size: 20),
+            SizedBox(width: 8),
+            Text('Pet Preferences', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
           ]),
           const SizedBox(height: 12),
           const Text('Type', style: TextStyle(fontSize: 12, color: Colors.grey)),
@@ -423,7 +423,7 @@ class _PreferencesCardState extends State<_PreferencesCard> {
           const SizedBox(height: 12),
           const Text('Age Range', style: TextStyle(fontSize: 12, color: Colors.grey)),
           DropdownButtonFormField<String>(
-            value: _ageRange,
+            initialValue: _ageRange,
             decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
             items: const [
               DropdownMenuItem(value: 'any', child: Text('Any Age')),
@@ -436,7 +436,7 @@ class _PreferencesCardState extends State<_PreferencesCard> {
           const SizedBox(height: 12),
           const Text('Gender', style: TextStyle(fontSize: 12, color: Colors.grey)),
           DropdownButtonFormField<String>(
-            value: _gender,
+            initialValue: _gender,
             decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
             items: const [
               DropdownMenuItem(value: 'any', child: Text('Any Gender')),

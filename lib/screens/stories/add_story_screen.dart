@@ -19,7 +19,7 @@ class _AddStoryScreenState extends State<AddStoryScreen> {
   Future<void> _submit() async {
     if (_petNameController.text.isEmpty || _storyController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill in all required fields')));
+        const SnackBar(content: Text('Please fill in all required fields')));
       return;
     }
     setState(() => _isLoading = true);
@@ -35,7 +35,7 @@ class _AddStoryScreenState extends State<AddStoryScreen> {
       setState(() => _submitted = true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Something went wrong please try again')));
+        const SnackBar(content: Text('Something went wrong please try again')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -44,7 +44,7 @@ class _AddStoryScreenState extends State<AddStoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Share your story')),
+      appBar: AppBar(title: const Text('Share your story')),
       body: _submitted ? _success() : _form(),
     );
   }
@@ -54,12 +54,12 @@ class _AddStoryScreenState extends State<AddStoryScreen> {
     children: [
       const Icon(Icons.favorite, size: 100, color: Colors.red),
       const SizedBox(height: 24),
-      Text('Story shared', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+      const Text('Story shared', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
       const SizedBox(height: 12),
-      Text('Thank you for sharing your adoption stor',
+      const Text('Thank you for sharing your adoption stor',
         textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.6)),
       const SizedBox(height: 32),
-      ElevatedButton(onPressed: () => Navigator.pop(context), child: Text('Go back')),
+      ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Go back')),
     ])));
 
   Widget _form() => SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(
@@ -84,7 +84,7 @@ class _AddStoryScreenState extends State<AddStoryScreen> {
       const SizedBox(height: 32),
       SizedBox(width: double.infinity, child: ElevatedButton(
         onPressed: _isLoading ? null : _submit,
-        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text('Share story', style: TextStyle(fontSize: 16)))),
+        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Share story', style: TextStyle(fontSize: 16)))),
     ]));
 
   Widget _f(TextEditingController c, String label, IconData icon, {int maxLines = 1}) =>

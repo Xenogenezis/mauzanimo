@@ -5,7 +5,7 @@ import '../utils/result.dart';
 
 class RescueProvider extends ChangeNotifier {
   final RescueRepository _repository;
-  List<RescueReport> _reports = [];
+  final List<RescueReport> _reports = [];
   bool _isLoading = false;
   String? _error;
 

@@ -39,7 +39,7 @@ class SuccessStoriesScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(color: AppTheme.primary),
             );
           }
@@ -54,12 +54,12 @@ class SuccessStoriesScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     AppStrings.get('no_stories_yet', lang),
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                    style: const TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     AppStrings.get('be_the_first_to_share_your_adoption_stor', lang),
-                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -190,7 +190,7 @@ class _StoryCard extends StatelessWidget {
                 errorBuilder: (c, e, s) => Container(
                   height: 200,
                   color: AppTheme.lightGrey,
-                  child: Center(
+                  child: const Center(
                     child: Icon(Icons.pets, size: 48, color: AppTheme.primary),
                   ),
                 ),

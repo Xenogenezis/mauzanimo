@@ -67,6 +67,6 @@ class PetCard extends StatelessWidget {
   }
   Widget _placeholder() {
     return Container(color: AppTheme.lightGrey,
-      child: Center(child: Icon(Icons.pets, size: 48, color: AppTheme.primary)));
+      child: const Center(child: Icon(Icons.pets, size: 48, color: AppTheme.primary)));
   }
 }

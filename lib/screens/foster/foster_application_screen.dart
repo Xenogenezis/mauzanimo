@@ -128,7 +128,7 @@ class _FosterApplicationScreenState extends State<FosterApplicationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_('apply_to_foster') + ' ${widget.petName}',
+          Text('${_('apply_to_foster')} ${widget.petName}',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
           const SizedBox(height: 8),
           Text(_('foster_program_desc'),

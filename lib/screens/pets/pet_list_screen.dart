@@ -89,7 +89,7 @@ class _PetListScreenState extends State<PetListScreen> {
                   decoration: InputDecoration(
                     hintText: AppStrings.get('search_pets', lang),
                     border: InputBorder.none,
-                    icon: Icon(Icons.search, color: AppTheme.primary),
+                    icon: const Icon(Icons.search, color: AppTheme.primary),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 20),

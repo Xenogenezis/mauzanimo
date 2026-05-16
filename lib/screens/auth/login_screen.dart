@@ -100,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
     } on FirebaseAuthException catch (e) {
       setState(() { _errorMessage = e.message; });
     } finally {
@@ -134,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Icon(Icons.pets, size: 80, color: AppTheme.primary),
+                        const Icon(Icons.pets, size: 80, color: AppTheme.primary),
                         if (_tapCount > 0)
                           Positioned(
                             bottom: 0,
@@ -161,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               Center(child: Text(AppStrings.get('app_name', lang),
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
               const SizedBox(height: 8),
               Center(child: Text(AppStrings.get('sign_in_to_continue', lang),
                 style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6)))),
@@ -216,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               Center(
                 child: TextButton(
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterScreen())),
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
                   child: RichText(
                     text: TextSpan(
                       text: '${AppStrings.get('no_account', lang)} ',

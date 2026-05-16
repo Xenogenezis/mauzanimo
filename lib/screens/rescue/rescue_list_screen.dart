@@ -114,7 +114,7 @@ class RescueListScreen extends StatelessWidget {
                           style: const TextStyle(fontSize: 14, color: AppTheme.textDark)),
                       const SizedBox(height: 8),
                       Row(children: [
-                        Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
+                        const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
                         const SizedBox(width: 4),
                         Expanded(child: Text(data['location'] ?? '',
                             style: const TextStyle(fontSize: 12, color: Colors.grey))),

@@ -5,7 +5,7 @@ import '../utils/result.dart';
 
 class FosterProvider extends ChangeNotifier {
   final FosterRepository _repository;
-  List<Foster> _fosters = [];
+  final List<Foster> _fosters = [];
   bool _isLoading = false;
   String? _error;
 

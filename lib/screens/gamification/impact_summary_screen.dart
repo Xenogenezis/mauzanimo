@@ -233,7 +233,7 @@ class ImpactSummaryScreen extends StatelessWidget {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.accent,
                     shape: BoxShape.circle,
                   ),

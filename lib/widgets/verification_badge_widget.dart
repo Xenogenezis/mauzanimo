@@ -13,7 +13,7 @@ class VerificationBadgeWidget extends StatelessWidget {
     if (level == VerificationLevel.none) return const SizedBox.shrink();
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: badge.color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),

@@ -134,7 +134,7 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
           children: [
             Text(
               AppStrings.get('report_type', lang),
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.w500,
                 color: AppTheme.textDark,
               ),
@@ -165,7 +165,7 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
             const SizedBox(height: 16),
             Text(
               AppStrings.get('animal_type', lang),
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.w500,
                 color: AppTheme.textDark,
               ),

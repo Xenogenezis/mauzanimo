@@ -41,7 +41,7 @@ class _EditPetScreenState extends State<EditPetScreen> {
 
   Future<void> _save() async {
     if (_nameController.text.isEmpty || _locationController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill in all required fields')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill in all required fields')));
       return;
     }
     setState(() => _isLoading = true);
@@ -59,10 +59,10 @@ class _EditPetScreenState extends State<EditPetScreen> {
         'dewormed': _dewormed,
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Listing updated successfully')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Listing updated successfully')));
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Something went wrong please try again')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Something went wrong please try again')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -71,7 +71,7 @@ class _EditPetScreenState extends State<EditPetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Edit listing')),
+      appBar: AppBar(title: const Text('Edit listing')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -95,7 +95,7 @@ class _EditPetScreenState extends State<EditPetScreen> {
           const SizedBox(height: 16),
           _f(_contactController, 'Contact Number', Icons.phone_outlined, keyboardType: TextInputType.phone),
           const SizedBox(height: 16),
-          Text('Type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+          const Text('Type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -115,7 +115,7 @@ class _EditPetScreenState extends State<EditPetScreen> {
             )).toList(),
           ),
           const SizedBox(height: 16),
-          Text('Gender', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+          const Text('Gender', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -134,13 +134,13 @@ class _EditPetScreenState extends State<EditPetScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             )).toList(),
           ),
-          SwitchListTile(title: Text('Vaccinated'), value: _vaccinated, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),
-          SwitchListTile(title: Text('Sterilized'), value: _sterilized, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _sterilized = v)),
-          SwitchListTile(title: Text('Dewormed'), value: _dewormed, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _dewormed = v)),
+          SwitchListTile(title: const Text('Vaccinated'), value: _vaccinated, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),
+          SwitchListTile(title: const Text('Sterilized'), value: _sterilized, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _sterilized = v)),
+          SwitchListTile(title: const Text('Dewormed'), value: _dewormed, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _dewormed = v)),
           const SizedBox(height: 32),
           SizedBox(width: double.infinity, child: ElevatedButton(
             onPressed: _isLoading ? null : _save,
-            child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text('Save changes', style: TextStyle(fontSize: 16)))),
+            child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Save changes', style: TextStyle(fontSize: 16)))),
           const SizedBox(height: 20),
         ]),
       ),

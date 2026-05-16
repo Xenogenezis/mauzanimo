@@ -20,7 +20,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
 
   Future<void> _save() async {
     if (_nameController.text.isEmpty || _locationController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill required fields')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill required fields')));
       return;
     }
     setState(() => _isLoading = true);
@@ -35,16 +35,16 @@ class _AddPetScreenState extends State<AddPetScreen> {
 'status': 'available', 'createdAt': FieldValue.serverTimestamp(),
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Pet added')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pet added')));
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Something went wrong')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Something went wrong')));
     } finally { setState(() => _isLoading = false); }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text('Add new pet')),
+    appBar: AppBar(title: const Text('Add new pet')),
     body: SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -54,7 +54,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
         const SizedBox(height: 16), _f(_imageUrlController, 'Image URL', Icons.image_outlined),
         const SizedBox(height: 16), _f(_descriptionController, 'Description', Icons.description_outlined, maxLines: 4),
         const SizedBox(height: 16),
-        Text('Type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+        const Text('Type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -74,7 +74,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
           )).toList(),
         ),
         const SizedBox(height: 16),
-        Text('Gender', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+        const Text('Gender', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -93,14 +93,14 @@ class _AddPetScreenState extends State<AddPetScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           )).toList(),
         ),
-        SwitchListTile(title: Text('Vaccinated'), value: _vaccinated, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),
-        SwitchListTile(title: Text('Sterilized'), value: _sterilized, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _sterilized = v)),
-        SwitchListTile(title: Text('Dewormed'), value: _dewormed, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _dewormed = v)),
+        SwitchListTile(title: const Text('Vaccinated'), value: _vaccinated, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _vaccinated = v)),
+        SwitchListTile(title: const Text('Sterilized'), value: _sterilized, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _sterilized = v)),
+        SwitchListTile(title: const Text('Dewormed'), value: _dewormed, activeThumbColor: AppTheme.primary, onChanged: (v) => setState(() => _dewormed = v)),
         
         const SizedBox(height: 32),
         SizedBox(width: double.infinity, child: ElevatedButton(
           onPressed: _isLoading ? null : _save,
-          child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text('Save pet'))),
+          child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Save pet'))),
       ],
     )),
   );

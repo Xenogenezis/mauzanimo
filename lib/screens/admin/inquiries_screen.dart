@@ -25,7 +25,7 @@ class InquiriesScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(color: AppTheme.primary),
             );
           }
@@ -40,7 +40,7 @@ class InquiriesScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     AppStrings.get('no_inquiries_yet', lang),
-                    style: TextStyle(color: Colors.grey),
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ],
               ),

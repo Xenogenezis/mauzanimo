@@ -28,7 +28,7 @@ class DonateScreen extends StatelessWidget {
             Center(
               child: Text(
                 AppStrings.get('support_mauzanimo', lang),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -70,7 +70,7 @@ class DonateScreen extends StatelessWidget {
             const SizedBox(height: 32),
             Text(
               AppStrings.get('bank_transfer_details', lang),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,
@@ -88,22 +88,22 @@ class DonateScreen extends StatelessWidget {
                 children: [
                   Text(
                     AppStrings.get('bank_mcb_mauritius', lang),
-                    style: TextStyle(fontSize: 14, color: AppTheme.textDark),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.textDark),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     AppStrings.get('account_name_jci_grand_baie', lang),
-                    style: TextStyle(fontSize: 14, color: AppTheme.textDark),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.textDark),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     AppStrings.get('account_no_xxxxxxxxxxxx', lang),
-                    style: TextStyle(fontSize: 14, color: AppTheme.textDark),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.textDark),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     AppStrings.get('reference_mauzanimo_donation', lang),
-                    style: TextStyle(fontSize: 14, color: AppTheme.textDark),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.textDark),
                   ),
                 ],
               ),
@@ -126,7 +126,7 @@ class DonateScreen extends StatelessWidget {
   }
 
   Future<void> _contactForAlternativePayment(BuildContext context, String lang) async {
-    final email = 'jcigrandbaie@gmail.com';
+    const email = 'jcigrandbaie@gmail.com';
     final subject = Uri.encodeComponent(
       lang == 'fr'
           ? 'Demande de don - Autres methodes de paiement'

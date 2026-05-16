@@ -15,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 }
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  final List<Widget> _screens = [PetListScreen(), const FavouritesScreen(), const ProfileScreen()];
+  final List<Widget> _screens = [const PetListScreen(), const FavouritesScreen(), const ProfileScreen()];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,17 +32,17 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
               Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => LoginScreen()));
+                MaterialPageRoute(builder: (_) => const LoginScreen()));
             },
           ),
         ],
       ),
       body: _screens[_currentIndex],
       floatingActionButton: _currentIndex == 0 ? FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => UploadPetScreen())),
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UploadPetScreen())),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: Text('List a Pet', style: TextStyle(color: Colors.white)),
+        label: const Text('List a Pet', style: TextStyle(color: Colors.white)),
       ) : null,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

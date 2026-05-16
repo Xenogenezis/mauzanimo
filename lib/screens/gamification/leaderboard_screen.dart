@@ -114,7 +114,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             sliver: SliverToBoxAdapter(
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.emoji_events,
                     color: AppTheme.accent,
                     size: 24,

@@ -5,7 +5,7 @@ import '../utils/result.dart';
 
 class AdoptionProvider extends ChangeNotifier {
   final AdoptionRepository _repository;
-  List<Adoption> _adoptions = [];
+  final List<Adoption> _adoptions = [];
   bool _isLoading = false;
   String? _error;
 

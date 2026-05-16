@@ -42,7 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = e.message);
     } finally {
@@ -63,10 +63,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              Center(child: Icon(Icons.pets, size: 64, color: AppTheme.primary)),
+              const Center(child: Icon(Icons.pets, size: 64, color: AppTheme.primary)),
               const SizedBox(height: 16),
               Center(child: Text(AppStrings.get('join_mauzanimo', lang),
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
               const SizedBox(height: 8),
               Center(child: Text(AppStrings.get('create_an_account_to_start_adopting', lang),
                 style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6)))),
@@ -81,7 +81,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 24),
               Text(
                 AppStrings.get('i_am_a', lang),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textDark),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textDark),
               ),
               const SizedBox(height: 12),
               ...selfAssignableRoles.map((role) => _RoleOption(
@@ -100,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: _isLoading ? null : _register,
                   child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(AppStrings.get('create_account', lang), style: TextStyle(fontSize: 16)),
+                    : Text(AppStrings.get('create_account', lang), style: const TextStyle(fontSize: 16)),
                 ),
               ),
               const SizedBox(height: 16),

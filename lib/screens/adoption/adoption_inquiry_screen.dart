@@ -20,7 +20,7 @@ class _AdoptionInquiryScreenState extends State<AdoptionInquiryScreen> {
 
   Future<void> _submit() async {
     if (_nameController.text.isEmpty || _emailController.text.isEmpty || _phoneController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill in all required fields')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill in all required fields')));
       return;
     }
     setState(() => _isLoading = true);
@@ -38,7 +38,7 @@ class _AdoptionInquiryScreenState extends State<AdoptionInquiryScreen> {
       });
       setState(() => _submitted = true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Something went wrong')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Something went wrong')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -47,7 +47,7 @@ class _AdoptionInquiryScreenState extends State<AdoptionInquiryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Adoption Inquiry')),
+      appBar: AppBar(title: const Text('Adoption Inquiry')),
       body: _submitted ? _success() : _form(),
     );
   }
@@ -57,20 +57,20 @@ class _AdoptionInquiryScreenState extends State<AdoptionInquiryScreen> {
     children: [
       const Icon(Icons.check_circle_outline, size: 100, color: AppTheme.primary),
       const SizedBox(height: 24),
-      Text('Inquiry Submitted!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+      const Text('Inquiry Submitted!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
       const SizedBox(height: 12),
-      Text('Thank you! Our team will get in touch with you shortly.',
+      const Text('Thank you! Our team will get in touch with you shortly.',
         textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey)),
       const SizedBox(height: 32),
       ElevatedButton(
         onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
-        child: Text('Back to Home')),
+        child: const Text('Back to Home')),
     ])));
 
   Widget _form() => SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text('Your Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+      const Text('Your Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
       const SizedBox(height: 16),
       _field(_nameController, 'Full Name', Icons.person_outline),
       const SizedBox(height: 16),
@@ -82,7 +82,7 @@ class _AdoptionInquiryScreenState extends State<AdoptionInquiryScreen> {
       const SizedBox(height: 32),
       SizedBox(width: double.infinity, child: ElevatedButton(
         onPressed: _isLoading ? null : _submit,
-        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text('Submit Inquiry'))),
+        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Submit Inquiry'))),
     ]));
 
   Widget _field(TextEditingController c, String label, IconData icon,

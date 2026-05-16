@@ -76,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
                 color: AppTheme.primary,
               ),
               const SizedBox(height: 24),
-              Text(
+              const Text(
                 'MauZanimo',
                 style: TextStyle(
                   fontSize: 36,

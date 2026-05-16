@@ -39,7 +39,7 @@ bool _isLoading = false;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_t(context, 'Camera permission is required to take photos.', 'Permission camera requise pour prendre des photos.')),
-            action: SnackBarAction(label: 'Settings', onPressed: openAppSettings),
+            action: const SnackBarAction(label: 'Settings', onPressed: openAppSettings),
           ),
         );
       }
@@ -61,7 +61,7 @@ bool _isLoading = false;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_t(context, 'Gallery permission is required to choose photos.', 'Permission galerie requise pour choisir des photos.')),
-            action: SnackBarAction(label: 'Settings', onPressed: openAppSettings),
+            action: const SnackBarAction(label: 'Settings', onPressed: openAppSettings),
           ),
         );
       }
@@ -133,7 +133,7 @@ bool _isLoading = false;
       builder: (_) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(_t(context, 'Add Photo', 'Ajouter une photo'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+          Text(_t(context, 'Add Photo', 'Ajouter une photo'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
           const SizedBox(height: 20),
           ListTile(
             leading: Container(
@@ -161,7 +161,7 @@ bool _isLoading = false;
 
   Future<void> _submit() async {
     if (_nameController.text.isEmpty || _locationController.text.isEmpty || _contactController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill in all required fields')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill in all required fields')));
       return;
     }
     setState(() => _isLoading = true);
@@ -203,7 +203,7 @@ bool _isLoading = false;
       });
       setState(() => _submitted = true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Something went wrong please try again')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Something went wrong please try again')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -222,10 +222,10 @@ bool _isLoading = false;
     children: [
       const Icon(Icons.check_circle_outline, size: 100, color: AppTheme.primary),
       const SizedBox(height: 24),
-      Text(_t(context, 'Pet Listed!', 'Animal publie!'), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+      Text(_t(context, 'Pet Listed!', 'Animal publie!'), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
       const SizedBox(height: 12),
       Text(_t(context, 'Your pet has been listed for adoption. We hope they find a loving home soon!', 'Votre animal a ete mis en adoption. Nous esperons qu\'il trouvera un foyer aimant bientot!'),
-        textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.6)),
+        textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: Colors.grey, height: 1.6)),
       const SizedBox(height: 32),
       ElevatedButton(
         onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
@@ -246,7 +246,7 @@ bool _isLoading = false;
         ]),
       ),
       const SizedBox(height: 24),
-      Text(_t(context, 'Pet Photo', 'Photo de l\'animal'), style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+      Text(_t(context, 'Pet Photo', 'Photo de l\'animal'), style: const TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
       InkWell(
         onTap: _showImageOptions,
@@ -291,7 +291,7 @@ bool _isLoading = false;
       const SizedBox(height: 16),
       _f(_contactController, 'Your Contact Number', Icons.phone_outlined, keyboardType: TextInputType.phone),
       const SizedBox(height: 16),
-      Text(_t(context, 'Type', 'Type'), style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+      Text(_t(context, 'Type', 'Type'), style: const TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
@@ -311,7 +311,7 @@ bool _isLoading = false;
         )).toList(),
       ),
       const SizedBox(height: 16),
-      Text(_t(context, 'Gender', 'Sexe'), style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+      Text(_t(context, 'Gender', 'Sexe'), style: const TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
@@ -343,7 +343,7 @@ bool _isLoading = false;
         onPressed: _isLoading ? null : _submit,
         child: _isLoading
           ? const CircularProgressIndicator(color: Colors.white)
-          : Text(_t(context, 'List My Pet', 'Publier mon animal'), style: TextStyle(fontSize: 16)))),
+          : Text(_t(context, 'List My Pet', 'Publier mon animal'), style: const TextStyle(fontSize: 16)))),
       const SizedBox(height: 20),
     ]));
 

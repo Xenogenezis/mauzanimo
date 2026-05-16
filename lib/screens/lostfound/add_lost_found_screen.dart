@@ -22,7 +22,7 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
 
   Future<void> _submit() async {
     if (_descriptionController.text.isEmpty || _locationController.text.isEmpty || _contactController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill in all required fields')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill in all required fields')));
       return;
     }
     setState(() => _isLoading = true);
@@ -38,7 +38,7 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
       });
       setState(() => _submitted = true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Something went wrong')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Something went wrong')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -47,7 +47,7 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Post lost found')),
+      appBar: AppBar(title: const Text('Post lost found')),
       body: _submitted ? _success() : _form(),
     );
   }
@@ -57,17 +57,17 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
     children: [
       const Icon(Icons.check_circle_outline, size: 100, color: Colors.orange),
       const SizedBox(height: 24),
-      Text('Report posted', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+      const Text('Report posted', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
       const SizedBox(height: 12),
-      Text('Your report has been posted successfully', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey)),
+      const Text('Your report has been posted successfully', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey)),
       const SizedBox(height: 32),
-      ElevatedButton(onPressed: () => Navigator.pop(context), child: Text('Go back')),
+      ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Go back')),
     ])));
 
   Widget _form() => SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text('Report type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+      const Text('Report type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
@@ -87,7 +87,7 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
         )).toList(),
       ),
       const SizedBox(height: 16),
-      Text('Animal type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+      const Text('Animal type', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
@@ -118,7 +118,7 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
       SizedBox(width: double.infinity, child: ElevatedButton(
         onPressed: _isLoading ? null : _submit,
         style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text('Post report', style: TextStyle(fontSize: 16)))),
+        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Post report', style: TextStyle(fontSize: 16)))),
     ]));
 
   Widget _f(TextEditingController c, String label, IconData icon,

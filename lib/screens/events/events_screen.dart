@@ -37,7 +37,7 @@ class EventsScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(color: AppTheme.primary),
             );
           }
@@ -54,12 +54,12 @@ class EventsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     AppStrings.get('no_upcoming_events', lang),
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                    style: const TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     AppStrings.get('check_back_soon_for_adoption_events_near', lang),
-                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -145,7 +145,7 @@ class EventCard extends StatelessWidget {
                 errorBuilder: (c, e, s) => Container(
                   height: 160,
                   color: AppTheme.lightGrey,
-                  child: Center(
+                  child: const Center(
                     child: Icon(Icons.event, size: 48, color: AppTheme.primary),
                   ),
                 ),
@@ -167,7 +167,7 @@ class EventCard extends StatelessWidget {
                       ),
                       child: Text(
                         AppStrings.get('upcoming', lang),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           color: AppTheme.primary,
                           fontWeight: FontWeight.w600,
@@ -545,7 +545,7 @@ class MyEventRegistrationsSheet extends StatelessWidget {
                         const SizedBox(height: 16),
                         Text(
                           AppStrings.get('no_event_registrations', lang),
-                          style: TextStyle(color: Colors.grey),
+                          style: const TextStyle(color: Colors.grey),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -603,7 +603,7 @@ class _RegistrationCard extends StatelessWidget {
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: AppTheme.primary.withOpacity(0.1),
-              child: Icon(Icons.event, color: AppTheme.primary),
+              child: const Icon(Icons.event, color: AppTheme.primary),
             ),
             title: Text(eventTitle),
             subtitle: Column(

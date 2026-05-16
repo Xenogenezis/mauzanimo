@@ -103,12 +103,12 @@ class PetDetailScreen extends StatelessWidget {
                     _chip(Icons.male_outlined, pet['gender'] ?? 'Unknown'),
                   ]),
                   const SizedBox(height: 24),
-                  Text('About', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                  const Text('About', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
                   const SizedBox(height: 8),
                   Text(pet['description'] ?? 'No description available.',
                     style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.7), height: 1.6)),
                   const SizedBox(height: 24),
-                  Text('Health Status', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                  const Text('Health Status', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
                   const SizedBox(height: 8),
                   Row(children: [
                     _healthChip('Vaccinated', pet['vaccinated'] == true),
@@ -120,7 +120,7 @@ class PetDetailScreen extends StatelessWidget {
                   ]),
                   const SizedBox(height: 24),
                   if (pet['adoptionFee'] != null) ...[
-                    Text('Adoption Fee', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                    const Text('Adoption Fee', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -160,7 +160,7 @@ class PetDetailScreen extends StatelessWidget {
                   ],
                   if (pet['status'] == 'adopted') ...[
                     const SizedBox(height: 24),
-                    Text('Photo Updates', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                    const Text('Photo Updates', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
                     const SizedBox(height: 12),
                     StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
@@ -202,7 +202,7 @@ class PetDetailScreen extends StatelessWidget {
                       onPressed: pet['status'] == 'adopted' ? null : () =>
                         Navigator.push(context, MaterialPageRoute(
                           builder: (_) => AdoptionWorkflowScreen(pet: pet, petId: petId))),
-                      child: Text('Start Adoption Process', style: TextStyle(fontSize: 16)),
+                      child: const Text('Start Adoption Process', style: TextStyle(fontSize: 16)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -219,7 +219,7 @@ class PetDetailScreen extends StatelessWidget {
                         }
                       },
                       icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                      label: Text('Chat on WhatsApp', style: TextStyle(color: Color(0xFF25D366))),
+                      label: const Text('Chat on WhatsApp', style: TextStyle(color: Color(0xFF25D366))),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFF25D366)),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -308,7 +308,7 @@ class PetDetailScreen extends StatelessWidget {
   }
 
   Widget _placeholder() => Container(color: AppTheme.lightGrey,
-    child: Center(child: Icon(Icons.pets, size: 80, color: AppTheme.primary)));
+    child: const Center(child: Icon(Icons.pets, size: 80, color: AppTheme.primary)));
   Widget _chip(IconData icon, String label) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     decoration: BoxDecoration(color: AppTheme.lightGrey, borderRadius: BorderRadius.circular(20)),

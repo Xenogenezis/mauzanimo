@@ -17,7 +17,7 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
 
   Future<void> _submit() async {
     if (_nameController.text.isEmpty || _phoneController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill in all required fields')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill in all required fields')));
       return;
     }
     setState(() => _isLoading = true);
@@ -32,7 +32,7 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
       });
       setState(() => _submitted = true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Something went wrong')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Something went wrong')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -41,7 +41,7 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Volunteer')),
+      appBar: AppBar(title: const Text('Volunteer')),
       body: _submitted ? _success() : _form(),
     );
   }
@@ -51,20 +51,20 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
     children: [
       const Icon(Icons.check_circle_outline, size: 100, color: AppTheme.primary),
       const SizedBox(height: 24),
-      Text('Thank you', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+      const Text('Thank you', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
       const SizedBox(height: 12),
-      Text('We have received your volunteer applicat',
+      const Text('We have received your volunteer applicat',
         textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.6)),
       const SizedBox(height: 32),
-      ElevatedButton(onPressed: () => Navigator.pop(context), child: Text('Go back')),
+      ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Go back')),
     ])));
 
   Widget _form() => SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Center(child: Icon(Icons.volunteer_activism_outlined, size: 64, color: Colors.orange)),
+      const Center(child: Icon(Icons.volunteer_activism_outlined, size: 64, color: Colors.orange)),
       const SizedBox(height: 16),
-      Center(child: Text('Join our team', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
+      const Center(child: Text('Join our team', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
       const SizedBox(height: 8),
       Center(child: Text('Help us make a difference for stray anim',
         textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6)))),
@@ -77,7 +77,7 @@ class _VolunteerScreenState extends State<VolunteerScreen> {
       const SizedBox(height: 32),
       SizedBox(width: double.infinity, child: ElevatedButton(
         onPressed: _isLoading ? null : _submit,
-        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text('Apply to volunteer'))),
+        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Apply to volunteer'))),
     ]));
 
   Widget _f(TextEditingController c, String label, IconData icon,

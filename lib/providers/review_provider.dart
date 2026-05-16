@@ -5,7 +5,7 @@ import '../utils/result.dart';
 
 class ReviewProvider extends ChangeNotifier {
   final ReviewRepository _repository;
-  List<Review> _reviews = [];
+  final List<Review> _reviews = [];
   bool _isLoading = false;
   String? _error;
 

@@ -152,7 +152,7 @@ class _RescueReportScreenState extends State<RescueReportScreen> {
           Text(_('animal_type'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _animalType,
+            initialValue: _animalType,
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.pets),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -182,7 +182,7 @@ class _RescueReportScreenState extends State<RescueReportScreen> {
                   activeColor: Colors.red,
                   onChanged: (v) => setState(() => _urgency = v!),
                 ),
-                Divider(height: 1),
+                const Divider(height: 1),
                 RadioListTile<String>(
                   title: Text(_('urgency_high'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
                   subtitle: Text(_('urgency_high_desc'), style: const TextStyle(fontSize: 12)),
@@ -191,7 +191,7 @@ class _RescueReportScreenState extends State<RescueReportScreen> {
                   activeColor: Colors.orange,
                   onChanged: (v) => setState(() => _urgency = v!),
                 ),
-                Divider(height: 1),
+                const Divider(height: 1),
                 RadioListTile<String>(
                   title: Text(_('urgency_medium'), style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber.shade700)),
                   subtitle: Text(_('urgency_medium_desc'), style: const TextStyle(fontSize: 12)),

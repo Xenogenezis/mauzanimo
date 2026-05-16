@@ -31,6 +31,10 @@
 
   <title>stray_pets_mu</title>
   <link rel="manifest" href="manifest.json">
+  <script>
+    // Firebase SDK v12+ checks for Node.js `global` in browsers — polyfill before any scripts load.
+    var global = window;
+  </script>
 </head>
 <body>
   <!--

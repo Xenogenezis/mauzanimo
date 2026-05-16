@@ -23,7 +23,7 @@ class LanguageSelectScreen extends StatelessWidget {
                   const SizedBox(height: 32),
                   const Icon(Icons.pets, size: 64, color: AppTheme.primary),
                   const SizedBox(height: 16),
-                  Text('MauZanimo',
+                  const Text('MauZanimo',
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
                   const SizedBox(height: 8),
                   Text('Choose your language / Choisissez votre langue',

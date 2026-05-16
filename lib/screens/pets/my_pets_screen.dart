@@ -11,7 +11,7 @@ class MyPetsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      appBar: AppBar(title: Text('My listed pets')),
+      appBar: AppBar(title: const Text('My listed pets')),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
           .collection('pets')
@@ -19,14 +19,14 @@ class MyPetsScreen extends StatelessWidget {
           .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator(color: AppTheme.primary));
+            return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
           }
           final docs = snapshot.data?.docs ?? [];
           if (docs.isEmpty) {
             return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(Icons.pets, size: 64, color: Colors.grey.shade300),
               const SizedBox(height: 16),
-              Text('You have not listed any pets yet', style: TextStyle(color: Colors.grey, fontSize: 16)),
+              const Text('You have not listed any pets yet', style: TextStyle(color: Colors.grey, fontSize: 16)),
             ]));
           }
           return ListView.builder(
@@ -72,7 +72,7 @@ class MyPetsScreen extends StatelessWidget {
                       ElevatedButton.icon(
                         onPressed: () => _confirmAdopted(context, petId, data['name']),
                         icon: const Icon(Icons.favorite, size: 16),
-                        label: Text('Mark as adopted'),
+                        label: const Text('Mark as adopted'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           minimumSize: const Size(double.infinity, 42),
@@ -87,7 +87,7 @@ class MyPetsScreen extends StatelessWidget {
                           onPressed: () => Navigator.push(context,
                             MaterialPageRoute(builder: (_) => EditPetScreen(petId: petId, pet: data))),
                           icon: const Icon(Icons.edit_outlined, size: 16),
-                          label: Text('Edit'),
+                          label: const Text('Edit'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppTheme.primary,
                             side: const BorderSide(color: AppTheme.primary),
@@ -100,7 +100,7 @@ class MyPetsScreen extends StatelessWidget {
                         child: OutlinedButton.icon(
                           onPressed: () => _confirmDelete(context, petId, data['name']),
                           icon: const Icon(Icons.delete_outline, size: 16),
-                          label: Text('Delete'),
+                          label: const Text('Delete'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red,
                             side: const BorderSide(color: Colors.red),
@@ -131,7 +131,7 @@ class MyPetsScreen extends StatelessWidget {
         ]),
         content: Text('${name ?? 'This pet'} has found a home! Mark this listing as adopted?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -142,7 +142,7 @@ class MyPetsScreen extends StatelessWidget {
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: Text('Yes adopted'),
+            child: const Text('Yes adopted'),
           ),
         ],
       ),
@@ -154,21 +154,21 @@ class MyPetsScreen extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Delete listing'),
+        title: const Text('Delete listing'),
         content: Text('Are you sure you want to delete the listing for ${name ?? 'this pet'}? This cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
               await FirebaseFirestore.instance.collection('pets').doc(petId).delete();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Listing deleted successfully')));
+                  const SnackBar(content: Text('Listing deleted successfully')));
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Delete'),
+            child: const Text('Delete'),
           ),
         ],
       ),

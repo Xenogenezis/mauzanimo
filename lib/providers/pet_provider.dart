@@ -80,8 +80,8 @@ class PetProvider extends ChangeNotifier {
       if (prefs.preferredLocation != null && prefs.preferredLocation!.isNotEmpty) {
         result = result.where((p) => p.location.toLowerCase().contains(prefs.preferredLocation!.toLowerCase())).toList();
       }
-      if (prefs.ageRange != null && prefs.ageRange != 'any') {
-        result = result.where((p) => _matchesAgeRange(p.age, prefs.ageRange!)).toList();
+      if (prefs.ageRange != 'any') {
+        result = result.where((p) => _matchesAgeRange(p.age, prefs.ageRange)).toList();
       }
     }
 

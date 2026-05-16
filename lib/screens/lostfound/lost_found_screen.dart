@@ -108,7 +108,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                       .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
+                  return const Center(
                     child: CircularProgressIndicator(color: Colors.orange),
                   );
                 }
@@ -125,7 +125,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                         const SizedBox(height: 16),
                         Text(
                           AppStrings.get('no_reports_yet', lang),
-                          style: TextStyle(color: Colors.grey),
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       ],
                     ),

@@ -6,44 +6,44 @@ class PartnersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Our Partners')),
+      appBar: AppBar(title: const Text('Our Partners')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child: Icon(Icons.handshake_outlined, size: 80, color: AppTheme.primary)),
+            const Center(child: Icon(Icons.handshake_outlined, size: 80, color: AppTheme.primary)),
             const SizedBox(height: 16),
-            Center(child: Text('Our Partners',
+            const Center(child: Text('Our Partners',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
             const SizedBox(height: 8),
             Center(child: Text('Working together for animal welfare in m',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6)))),
             const SizedBox(height: 32),
-            Text('Veterinary clinics',
+            const Text('Veterinary clinics',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
             const SizedBox(height: 12),
-            _PartnerCard(name: 'Grand Baie Vet Clinic', type: 'Veterinary', location: 'Grand Baie', icon: Icons.medical_services_outlined, color: Colors.blue),
+            const _PartnerCard(name: 'Grand Baie Vet Clinic', type: 'Veterinary', location: 'Grand Baie', icon: Icons.medical_services_outlined, color: Colors.blue),
             const SizedBox(height: 8),
-            _PartnerCard(name: 'Pamplemousses Animal Hospital', type: 'Veterinary', location: 'Pamplemousses', icon: Icons.local_hospital_outlined, color: Colors.red),
+            const _PartnerCard(name: 'Pamplemousses Animal Hospital', type: 'Veterinary', location: 'Pamplemousses', icon: Icons.local_hospital_outlined, color: Colors.red),
             const SizedBox(height: 24),
-            Text('Animal shelters',
+            const Text('Animal shelters',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
             const SizedBox(height: 12),
-            _PartnerCard(name: 'MSPCA Mauritius', type: 'Shelter', location: 'Port Louis', icon: Icons.home_outlined, color: Colors.orange),
+            const _PartnerCard(name: 'MSPCA Mauritius', type: 'Shelter', location: 'Port Louis', icon: Icons.home_outlined, color: Colors.orange),
             const SizedBox(height: 8),
-            _PartnerCard(name: 'Animal Rescue Mauritius', type: 'NGO', location: 'Nationwide', icon: Icons.volunteer_activism_outlined, color: Colors.green),
+            const _PartnerCard(name: 'Animal Rescue Mauritius', type: 'NGO', location: 'Nationwide', icon: Icons.volunteer_activism_outlined, color: Colors.green),
             const SizedBox(height: 32),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppTheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12)),
-              child: Row(children: [
-                const Icon(Icons.add_business_outlined, color: AppTheme.primary),
-                const SizedBox(width: 12),
-                const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              child: const Row(children: [
+                Icon(Icons.add_business_outlined, color: AppTheme.primary),
+                SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text('Become a partner', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
                   Text('Contact us to join our network', style: TextStyle(fontSize: 12, color: Colors.grey)),
                 ])),

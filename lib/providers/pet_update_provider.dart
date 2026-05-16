@@ -5,7 +5,7 @@ import '../utils/result.dart';
 
 class PetUpdateProvider extends ChangeNotifier {
   final PetUpdateRepository _repository;
-  List<PetUpdate> _updates = [];
+  final List<PetUpdate> _updates = [];
   bool _isLoading = false;
   String? _error;
 

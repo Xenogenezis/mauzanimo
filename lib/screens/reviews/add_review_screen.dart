@@ -121,7 +121,7 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_('reviewing') + ' ${widget.targetUserName}',
+          Text('${_('reviewing')} ${widget.targetUserName}',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
           const SizedBox(height: 24),
           Center(
@@ -150,7 +150,7 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                 _rating == 2 ? _('rating_fair') :
                 _rating == 3 ? _('rating_good') :
                 _rating == 4 ? _('rating_very_good') : _('rating_excellent'),
-                style: TextStyle(fontSize: 14, color: AppTheme.accent, fontWeight: FontWeight.w600),
+                style: const TextStyle(fontSize: 14, color: AppTheme.accent, fontWeight: FontWeight.w600),
               ),
             ),
           ],

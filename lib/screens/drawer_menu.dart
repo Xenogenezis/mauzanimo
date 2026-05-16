@@ -38,7 +38,7 @@ class AppDrawer extends StatelessWidget {
               children: [
                 Image.asset('assets/images/jci_grand_baie.png', height: 60),
                 const SizedBox(height: 16),
-                Text('MauZanimo',
+                const Text('MauZanimo',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(height: 4),
                 Text(user?.email ?? 'Guest',
@@ -56,7 +56,7 @@ class AppDrawer extends StatelessWidget {
                   title: AppStrings.get('lost_found', lang),
                   subtitle: AppStrings.get('lost_found_subtitle', lang),
                   color: Colors.orange,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => LostFoundScreen())); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const LostFoundScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.warning_amber_rounded,
@@ -65,7 +65,7 @@ class AppDrawer extends StatelessWidget {
                   color: Colors.red,
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => RescueReportScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const RescueReportScreen()));
                   },
                 ),
                 _DrawerTile(
@@ -75,7 +75,7 @@ class AppDrawer extends StatelessWidget {
                   color: Colors.teal,
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => MyFostersScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MyFostersScreen()));
                   },
                 ),
                 _DrawerTile(
@@ -83,56 +83,56 @@ class AppDrawer extends StatelessWidget {
                   title: AppStrings.get('events', lang),
                   subtitle: AppStrings.get('events_subtitle', lang),
                   color: AppTheme.primary,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => EventsScreen())); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const EventsScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.leaderboard_outlined,
                   title: AppStrings.get('leaderboard', lang),
                   subtitle: AppStrings.get('leaderboard_subtitle', lang),
                   color: Colors.amber,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => LeaderboardScreen())); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaderboardScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.auto_stories_outlined,
                   title: AppStrings.get('stories', lang),
                   subtitle: AppStrings.get('stories_subtitle', lang),
                   color: Colors.green,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => SuccessStoriesScreen())); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const SuccessStoriesScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.favorite_outline,
                   title: AppStrings.get('donate', lang),
                   subtitle: AppStrings.get('donate_subtitle', lang),
                   color: Colors.red,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => DonateScreen())); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const DonateScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.handshake_outlined,
                   title: AppStrings.get('partners', lang),
                   subtitle: AppStrings.get('partners_subtitle', lang),
                   color: AppTheme.primary,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => PartnersScreen())); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const PartnersScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.volunteer_activism_outlined,
                   title: AppStrings.get('volunteer', lang),
                   subtitle: AppStrings.get('volunteer_subtitle', lang),
                   color: Colors.orange,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => VolunteerScreen())); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const VolunteerScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.info_outline,
                   title: AppStrings.get('about_app', lang),
                   subtitle: AppStrings.get('about_app', lang),
                   color: Colors.blue,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => AboutScreen())); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutScreen())); },
                 ),
                 _DrawerTile(
                   icon: Icons.support_agent_outlined,
                   title: AppStrings.get('contact', lang),
                   subtitle: AppStrings.get('contact', lang),
                   color: Colors.purple,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => ContactScreen())); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactScreen())); },
                 ),
                 const Divider(height: 32),
                 Consumer<LanguageProvider>(
@@ -174,7 +174,7 @@ class AppDrawer extends StatelessWidget {
                   onTap: () async {
                     await FirebaseAuth.instance.signOut();
                     if (!context.mounted) return;
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginScreen()));
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
                   },
                 ),
               ],
