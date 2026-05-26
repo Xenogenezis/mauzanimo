@@ -8,34 +8,61 @@ import '../../providers/language_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../providers/auth_provider.dart' as app_provider;
 import '../../models/event_registration.dart';
+import '../../widgets/login_required_view.dart';
 
-class EventsScreen extends StatelessWidget {
+class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
+
+  @override
+  State<EventsScreen> createState() => _EventsScreenState();
+}
+
+class _EventsScreenState extends State<EventsScreen> {
+  Stream<QuerySnapshot>? _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    if (FirebaseAuth.instance.currentUser != null) {
+      _stream = FirebaseFirestore.instance
+          .collection('events')
+          .orderBy('date', descending: false)
+          .snapshots();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context).lang;
     final user = Provider.of<app_provider.AuthProvider>(context).user;
 
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(AppStrings.get('events', lang))),
+        body: const LoginRequiredView(icon: Icons.event_outlined),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppStrings.get('events', lang)),
         actions: [
-          // Show user's registrations button
-          if (user != null)
-            IconButton(
-              icon: const Icon(Icons.confirmation_number_outlined),
-              onPressed: () => _showMyRegistrations(context),
-              tooltip: AppStrings.get('my_event_registrations', lang),
-            ),
+          IconButton(
+            icon: const Icon(Icons.confirmation_number_outlined),
+            onPressed: () => _showMyRegistrations(context),
+            tooltip: AppStrings.get('my_event_registrations', lang),
+          ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('events')
-            .orderBy('date', descending: false)
-            .snapshots(),
+        stream: _stream,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            if (isPermissionDenied(snapshot.error)) {
+              return const LoginRequiredView(icon: Icons.event_outlined);
+            }
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(color: AppTheme.primary),
@@ -269,7 +296,7 @@ class EventCard extends StatelessWidget {
 }
 
 /// Registration button with stream to check registration status
-class EventRegistrationButton extends StatelessWidget {
+class EventRegistrationButton extends StatefulWidget {
   final String eventId;
   final Map<String, dynamic> eventData;
   final User user;
@@ -282,15 +309,26 @@ class EventRegistrationButton extends StatelessWidget {
   });
 
   @override
+  State<EventRegistrationButton> createState() => _EventRegistrationButtonState();
+}
+
+class _EventRegistrationButtonState extends State<EventRegistrationButton> {
+  late final Stream<bool> _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    _stream = Provider.of<EventProvider>(context, listen: false)
+        .isUserRegisteredForEvent(eventId: widget.eventId, userId: widget.user.uid);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context).lang;
     final eventProvider = Provider.of<EventProvider>(context);
 
     return StreamBuilder<bool>(
-      stream: eventProvider.isUserRegisteredForEvent(
-        eventId: eventId,
-        userId: user.uid,
-      ),
+      stream: _stream,
       builder: (context, snapshot) {
         final isRegistered = snapshot.data ?? false;
 
@@ -328,10 +366,9 @@ class EventRegistrationButton extends StatelessWidget {
     final eventProvider = Provider.of<EventProvider>(context, listen: false);
 
     if (isRegistered) {
-      // Cancel registration
       final success = await eventProvider.cancelRegistration(
-        eventId: eventId,
-        userId: user.uid,
+        eventId: widget.eventId,
+        userId: widget.user.uid,
       );
 
       if (success && context.mounted) {
@@ -342,19 +379,18 @@ class EventRegistrationButton extends StatelessWidget {
         );
       }
     } else {
-      // Show registration dialog to collect user info
       final result = await showDialog<Map<String, String>>(
         context: context,
         builder: (context) => EventRegistrationDialog(
-          eventTitle: eventData['title'] ?? 'Event',
-          user: user,
+          eventTitle: widget.eventData['title'] ?? 'Event',
+          user: widget.user,
         ),
       );
 
       if (result != null && context.mounted) {
         final success = await eventProvider.registerForEvent(
-          eventId: eventId,
-          userId: user.uid,
+          eventId: widget.eventId,
+          userId: widget.user.uid,
           userName: result['name']!,
           userEmail: result['email']!,
           userPhone: result['phone'],
@@ -482,14 +518,28 @@ class _EventRegistrationDialogState extends State<EventRegistrationDialog> {
 }
 
 /// Bottom sheet showing user's event registrations
-class MyEventRegistrationsSheet extends StatelessWidget {
+class MyEventRegistrationsSheet extends StatefulWidget {
   const MyEventRegistrationsSheet({super.key});
+
+  @override
+  State<MyEventRegistrationsSheet> createState() => _MyEventRegistrationsSheetState();
+}
+
+class _MyEventRegistrationsSheetState extends State<MyEventRegistrationsSheet> {
+  Stream<List<EventRegistration>>? _stream;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _stream ??= Provider.of<EventProvider>(context, listen: false).getUserRegistrations(
+      Provider.of<app_provider.AuthProvider>(context, listen: false).user?.uid ?? '',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context).lang;
     final user = Provider.of<app_provider.AuthProvider>(context).user;
-    final eventProvider = Provider.of<EventProvider>(context);
 
     if (user == null) {
       return Container(
@@ -527,7 +577,7 @@ class MyEventRegistrationsSheet extends StatelessWidget {
           const SizedBox(height: 16),
           Expanded(
             child: StreamBuilder<List<EventRegistration>>(
-              stream: eventProvider.getUserRegistrations(user.uid),
+              stream: _stream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());

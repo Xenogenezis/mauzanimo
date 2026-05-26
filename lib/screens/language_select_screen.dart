@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
-import 'package:stray_pets_mu/screens/onboarding_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stray_pets_mu/screens/home_screen.dart';
 
 class LanguageSelectScreen extends StatelessWidget {
   const LanguageSelectScreen({super.key});
@@ -37,8 +38,10 @@ class LanguageSelectScreen extends StatelessWidget {
                     isSelected: langProvider.lang == 'en',
                     onTap: () async {
                       langProvider.setLanguage('en');
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('onboarding_done', true);
                       if (!context.mounted) return;
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OnboardingScreen()));
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
                     },
                   ),
                   const SizedBox(height: 16),
@@ -49,8 +52,10 @@ class LanguageSelectScreen extends StatelessWidget {
                     isSelected: langProvider.lang == 'fr',
                     onTap: () async {
                       langProvider.setLanguage('fr');
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('onboarding_done', true);
                       if (!context.mounted) return;
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OnboardingScreen()));
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
                     },
                   ),
                   const SizedBox(height: 16),
@@ -61,8 +66,10 @@ class LanguageSelectScreen extends StatelessWidget {
                     isSelected: langProvider.lang == 'mfe',
                     onTap: () async {
                       langProvider.setLanguage('mfe');
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('onboarding_done', true);
                       if (!context.mounted) return;
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OnboardingScreen()));
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
                     },
                   ),
                 ],

@@ -7,14 +7,40 @@ import '../../lang/app_strings.dart';
 import '../../providers/language_provider.dart';
 import 'add_story_screen.dart';
 import 'edit_story_screen.dart';
+import '../../widgets/login_required_view.dart';
 
-class SuccessStoriesScreen extends StatelessWidget {
+class SuccessStoriesScreen extends StatefulWidget {
   const SuccessStoriesScreen({super.key});
+
+  @override
+  State<SuccessStoriesScreen> createState() => _SuccessStoriesScreenState();
+}
+
+class _SuccessStoriesScreenState extends State<SuccessStoriesScreen> {
+  Stream<QuerySnapshot>? _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    if (FirebaseAuth.instance.currentUser != null) {
+      _stream = FirebaseFirestore.instance
+          .collection('stories')
+          .orderBy('createdAt', descending: true)
+          .snapshots();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context).lang;
     final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(AppStrings.get('stories', lang))),
+        body: const LoginRequiredView(icon: Icons.auto_stories_outlined),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -33,11 +59,14 @@ class SuccessStoriesScreen extends StatelessWidget {
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('stories')
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
+        stream: _stream,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            if (isPermissionDenied(snapshot.error)) {
+              return const LoginRequiredView(icon: Icons.auto_stories_outlined);
+            }
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(color: AppTheme.primary),
@@ -74,7 +103,7 @@ class SuccessStoriesScreen extends StatelessWidget {
               final data = snapshot.data!.docs[index].data()
                   as Map<String, dynamic>;
               final storyId = snapshot.data!.docs[index].id;
-              final isOwner = data['userId'] == user?.uid;
+              final isOwner = data['userId'] == user.uid;
 
               return _StoryCard(
                 storyId: storyId,

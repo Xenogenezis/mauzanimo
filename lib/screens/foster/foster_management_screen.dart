@@ -1,19 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/providers/foster_provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/widgets/login_required_view.dart';
 
-class FosterManagementScreen extends StatelessWidget {
+class FosterManagementScreen extends StatefulWidget {
   const FosterManagementScreen({super.key});
+
+  @override
+  State<FosterManagementScreen> createState() => _FosterManagementScreenState();
+}
+
+class _FosterManagementScreenState extends State<FosterManagementScreen> {
+  Stream<QuerySnapshot>? _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    if (FirebaseAuth.instance.currentUser != null) {
+      _stream = FirebaseFirestore.instance
+          .collection('fosters')
+          .orderBy('createdAt', descending: true)
+          .snapshots();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>().lang;
     final fosterProvider = context.read<FosterProvider>();
     String _(String key) => AppStrings.get(key, lang);
+
+    if (FirebaseAuth.instance.currentUser == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(_('foster_management')),
+          backgroundColor: AppTheme.primary,
+          foregroundColor: Colors.white,
+        ),
+        body: const LoginRequiredView(icon: Icons.home_outlined),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -22,12 +53,12 @@ class FosterManagementScreen extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('fosters')
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
+        stream: _stream,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
+            if (isPermissionDenied(snapshot.error)) {
+              return const LoginRequiredView(icon: Icons.home_outlined);
+            }
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData) {

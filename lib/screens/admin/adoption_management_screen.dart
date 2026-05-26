@@ -1,14 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/models/adoption.dart';
 import 'package:stray_pets_mu/providers/adoption_provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/widgets/login_required_view.dart';
 
-class AdoptionManagementScreen extends StatelessWidget {
+class AdoptionManagementScreen extends StatefulWidget {
   const AdoptionManagementScreen({super.key});
+
+  @override
+  State<AdoptionManagementScreen> createState() => _AdoptionManagementScreenState();
+}
+
+class _AdoptionManagementScreenState extends State<AdoptionManagementScreen> {
+  Stream<QuerySnapshot>? _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    if (FirebaseAuth.instance.currentUser != null) {
+      _stream = FirebaseFirestore.instance
+          .collection('adoptions')
+          .orderBy('createdAt', descending: true)
+          .snapshots();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +37,17 @@ class AdoptionManagementScreen extends StatelessWidget {
 
     String _(String key) => AppStrings.get(key, lang);
 
+    if (FirebaseAuth.instance.currentUser == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(_('adoption_management')),
+          backgroundColor: AppTheme.primary,
+          foregroundColor: Colors.white,
+        ),
+        body: const LoginRequiredView(icon: Icons.pets),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_('adoption_management')),
@@ -24,12 +55,12 @@ class AdoptionManagementScreen extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('adoptions')
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
+        stream: _stream,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
+            if (isPermissionDenied(snapshot.error)) {
+              return const LoginRequiredView(icon: Icons.pets);
+            }
             return Center(child: Text('${_('error')}: ${snapshot.error}'));
           }
           if (!snapshot.hasData) {
@@ -231,6 +262,4 @@ class AdoptionManagementScreen extends StatelessWidget {
     };
   }
 
-  String _(String key) => AppStrings.get(
-      key, ''); // placeholder, actual _ is in build with lang
 }

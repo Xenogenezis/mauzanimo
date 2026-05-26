@@ -3,13 +3,31 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
-import 'package:stray_pets_mu/models/rescue_report.dart';
 import 'package:stray_pets_mu/providers/rescue_provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/widgets/login_required_view.dart';
 
-class RescueListScreen extends StatelessWidget {
+class RescueListScreen extends StatefulWidget {
   const RescueListScreen({super.key});
+
+  @override
+  State<RescueListScreen> createState() => _RescueListScreenState();
+}
+
+class _RescueListScreenState extends State<RescueListScreen> {
+  Stream<QuerySnapshot>? _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    if (FirebaseAuth.instance.currentUser != null) {
+      _stream = FirebaseFirestore.instance
+          .collection('rescue_reports')
+          .orderBy('createdAt', descending: true)
+          .snapshots();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +36,17 @@ class RescueListScreen extends StatelessWidget {
 
     String _(String key) => AppStrings.get(key, lang);
 
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(_('emergency_rescue')),
+          backgroundColor: Colors.red.shade700,
+          foregroundColor: Colors.white,
+        ),
+        body: const LoginRequiredView(icon: Icons.volunteer_activism),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_('emergency_rescue')),
@@ -25,12 +54,12 @@ class RescueListScreen extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('rescue_reports')
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
+        stream: _stream,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
+            if (isPermissionDenied(snapshot.error)) {
+              return const LoginRequiredView(icon: Icons.volunteer_activism);
+            }
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData) {
@@ -122,7 +151,7 @@ class RescueListScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text('${_('reported_by')} ${data['reporterName'] ?? ''} - ${data['reporterPhone'] ?? ''}',
                           style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                      if (status == 'pending' && user != null) ...[
+                      if (status == 'pending') ...[
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
@@ -150,7 +179,7 @@ class RescueListScreen extends StatelessWidget {
                         ),
                       ],
                       if (status == 'assigned' &&
-                          data['assignedVolunteerId'] == user?.uid) ...[
+                          data['assignedVolunteerId'] == user.uid) ...[
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
