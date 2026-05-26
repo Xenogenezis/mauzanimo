@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/pets/pet_list_screen.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
@@ -7,6 +7,8 @@ import 'package:stray_pets_mu/screens/profile_screen.dart';
 import 'package:stray_pets_mu/screens/favourites_screen.dart';
 import 'package:stray_pets_mu/screens/pets/upload_pet_screen.dart';
 import 'package:stray_pets_mu/screens/drawer_menu.dart';
+import 'package:stray_pets_mu/providers/auth_provider.dart';
+import 'package:stray_pets_mu/widgets/auth_guard.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,19 +29,27 @@ class _HomeScreenState extends State<HomeScreen> {
           Text('MauZanimo', style: TextStyle(fontWeight: FontWeight.bold)),
         ]),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()));
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, _) {
+              if (!authProvider.isAuthenticated) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: () async {
+                  await authProvider.signOut();
+                  if (!context.mounted) return;
+                  Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()));
+                },
+              );
             },
           ),
         ],
       ),
       body: _screens[_currentIndex],
       floatingActionButton: _currentIndex == 0 ? FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UploadPetScreen())),
+        onPressed: () => AuthGuard.requireAuth(context, () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const UploadPetScreen()));
+        }),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('List a Pet', style: TextStyle(color: Colors.white)),

@@ -1,29 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/pets/pet_card.dart';
 import 'package:stray_pets_mu/screens/pets/pet_detail_screen.dart';
+import 'package:stray_pets_mu/screens/auth/login_screen.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
+import 'package:stray_pets_mu/lang/app_strings.dart';
 
 class FavouritesScreen extends StatelessWidget {
   const FavouritesScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final lang = context.watch<LanguageProvider>().lang;
+    if (user == null) {
+      return _LoginPrompt(
+        message: AppStrings.get('saved_login_prompt', lang),
+        icon: Icons.favorite_outline,
+      );
+    }
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
-              child: Text('Saved Pets',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              child: Text(AppStrings.get('saved_pets', lang),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
             ),
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('favourites').where('userId', isEqualTo: user?.uid).snapshots(),
+                stream: FirebaseFirestore.instance.collection('favourites').where('userId', isEqualTo: user.uid).snapshots(),
                 builder: (context, favSnapshot) {
                   if (favSnapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
@@ -33,9 +44,9 @@ class FavouritesScreen extends StatelessWidget {
                     return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Icon(Icons.favorite_outline, size: 64, color: Colors.grey.shade300),
                       const SizedBox(height: 16),
-                      const Text('No saved pets yet', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                      Text(AppStrings.get('no_saved', lang), style: const TextStyle(color: Colors.grey, fontSize: 16)),
                       const SizedBox(height: 8),
-                      const Text('Tap the heart on any pet to save them here.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                      Text(AppStrings.get('no_saved_hint', lang), style: const TextStyle(color: Colors.grey, fontSize: 13)),
                     ]));
                   }
                   final petIds = docs.map((d) => (d.data() as Map<String, dynamic>)['petId'] as String).toList();
@@ -73,6 +84,48 @@ class FavouritesScreen extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginPrompt extends StatelessWidget {
+  final String message;
+  final IconData icon;
+
+  const _LoginPrompt({required this.message, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>().lang;
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 64, color: Colors.grey.shade300),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  ),
+                  child: Text(AppStrings.get('sign_in', lang)),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

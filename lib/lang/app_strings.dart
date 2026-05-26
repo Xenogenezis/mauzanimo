@@ -311,6 +311,11 @@ class AppStrings {
       'caption_hint': 'Write a caption for this update...',
       'no_updates': 'No updates yet',
       'update_added': 'Update Added!',
+      'login_to_continue': 'Please sign in to continue with this action.',
+      'guest': 'Guest',
+      'saved_login_prompt': 'Sign in to see your saved pets.',
+      'profile_login_prompt': 'Sign in to view your profile and manage your activity.',
+      'register': 'Register',
     },
     'fr': {
       'app_name': 'MauZanimo',
@@ -623,6 +628,11 @@ class AppStrings {
       'caption_hint': 'Ecrivez une legende pour cette mise a jour...',
       'no_updates': 'Aucune mise a jour',
       'update_added': 'Mise a jour ajoutee!',
+      'login_to_continue': 'Veuillez vous connecter pour continuer avec cette action.',
+      'guest': 'Invite',
+      'saved_login_prompt': 'Connectez-vous pour voir vos animaux sauvegardes.',
+      'profile_login_prompt': 'Connectez-vous pour voir votre profil et gerer votre activite.',
+      'register': 'S\'inscrire',
     },
     'mfe': {
       'app_name': 'MauZanimo',
@@ -934,6 +944,11 @@ class AppStrings {
       'caption_hint': 'Ekir enn lesann pou sa mizazour...',
       'no_updates': 'Pankor ena mizazour',
       'update_added': 'Mizazour Ajoute!',
+      'login_to_continue': 'Konekte oumem pou kontinie avek sa aksion la.',
+      'guest': 'Viziter',
+      'saved_login_prompt': 'Konekte pou get ou bann zanimo ki finn gard.',
+      'profile_login_prompt': 'Konekte pou get ou profil ek zere ou aktivite.',
+      'register': 'Enskrir',
     },
   };
 

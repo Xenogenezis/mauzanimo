@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/providers/theme_provider.dart';
+import 'package:stray_pets_mu/providers/auth_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
+import 'package:stray_pets_mu/screens/auth/register_screen.dart';
 import 'package:stray_pets_mu/screens/info/donate_screen.dart';
 import 'package:stray_pets_mu/screens/info/partners_screen.dart';
 import 'package:stray_pets_mu/screens/info/contact_screen.dart';
@@ -16,7 +17,6 @@ import 'package:stray_pets_mu/screens/lostfound/lost_found_screen.dart';
 import 'package:stray_pets_mu/screens/events/events_screen.dart';
 import 'package:stray_pets_mu/screens/gamification/leaderboard_screen.dart';
 import 'package:stray_pets_mu/screens/rescue/rescue_report_screen.dart';
-import 'package:stray_pets_mu/screens/rescue/rescue_list_screen.dart';
 import 'package:stray_pets_mu/screens/foster/my_fosters_screen.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -24,7 +24,8 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    final authProvider = context.watch<AuthProvider>();
+    final isAuthenticated = authProvider.isAuthenticated;
     final lang = Provider.of<LanguageProvider>(context).lang;
     return Drawer(
       child: Column(
@@ -41,11 +42,43 @@ class AppDrawer extends StatelessWidget {
                 const Text('MauZanimo',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(height: 4),
-                Text(user?.email ?? 'Guest',
+                Text(isAuthenticated ? (authProvider.email ?? AppStrings.get('guest', lang)) : AppStrings.get('guest', lang),
                   style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8))),
               ],
             ),
           ),
+          if (!isAuthenticated) ...[
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                      },
+                      child: Text(AppStrings.get('sign_in', lang)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.primary),
+                        foregroundColor: AppTheme.primary,
+                      ),
+                      child: Text(AppStrings.get('register', lang)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
@@ -58,26 +91,28 @@ class AppDrawer extends StatelessWidget {
                   color: Colors.orange,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const LostFoundScreen())); },
                 ),
-                _DrawerTile(
-                  icon: Icons.warning_amber_rounded,
-                  title: AppStrings.get('emergency_rescue', lang),
-                  subtitle: AppStrings.get('report_injured_stray', lang),
-                  color: Colors.red,
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const RescueReportScreen()));
-                  },
-                ),
-                _DrawerTile(
-                  icon: Icons.home_outlined,
-                  title: AppStrings.get('foster_program', lang),
-                  subtitle: AppStrings.get('foster_program_subtitle', lang),
-                  color: Colors.teal,
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MyFostersScreen()));
-                  },
-                ),
+                if (isAuthenticated)
+                  _DrawerTile(
+                    icon: Icons.warning_amber_rounded,
+                    title: AppStrings.get('emergency_rescue', lang),
+                    subtitle: AppStrings.get('report_injured_stray', lang),
+                    color: Colors.red,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const RescueReportScreen()));
+                    },
+                  ),
+                if (isAuthenticated)
+                  _DrawerTile(
+                    icon: Icons.home_outlined,
+                    title: AppStrings.get('foster_program', lang),
+                    subtitle: AppStrings.get('foster_program_subtitle', lang),
+                    color: Colors.teal,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const MyFostersScreen()));
+                    },
+                  ),
                 _DrawerTile(
                   icon: Icons.event_outlined,
                   title: AppStrings.get('events', lang),
@@ -166,17 +201,18 @@ class AppDrawer extends StatelessWidget {
                     onTap: () => themeProvider.toggleTheme(),
                   ),
                 ),
-                _DrawerTile(
-                  icon: Icons.logout,
-                  title: AppStrings.get('sign_out', lang),
-                  subtitle: '',
-                  color: Colors.grey,
-                  onTap: () async {
-                    await FirebaseAuth.instance.signOut();
-                    if (!context.mounted) return;
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-                  },
-                ),
+                if (isAuthenticated)
+                  _DrawerTile(
+                    icon: Icons.logout,
+                    title: AppStrings.get('sign_out', lang),
+                    subtitle: '',
+                    color: Colors.grey,
+                    onTap: () async {
+                      await authProvider.signOut();
+                      if (!context.mounted) return;
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                    },
+                  ),
               ],
             ),
           ),

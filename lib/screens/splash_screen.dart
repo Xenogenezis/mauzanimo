@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stray_pets_mu/screens/language_select_screen.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
@@ -32,14 +31,13 @@ class _SplashScreenState extends State<SplashScreen>
       try {
         final prefs = await SharedPreferences.getInstance();
         final onboardingDone = prefs.getBool('onboarding_done') ?? false;
-        final user = FirebaseAuth.instance.currentUser;
         if (!mounted) return;
         if (!onboardingDone) {
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LanguageSelectScreen()));
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => user != null ? const HomeScreen() : const LoginScreen()),
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
           );
         }
       } catch (e) {

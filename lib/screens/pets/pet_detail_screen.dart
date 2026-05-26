@@ -12,15 +12,19 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:stray_pets_mu/widgets/auth_guard.dart';
 
 class PetDetailScreen extends StatelessWidget {
   final Map<String, dynamic> pet;
   final String petId;
   const PetDetailScreen({super.key, required this.pet, required this.petId});
 
-  Future<void> _toggleFavourite() async {
+  Future<void> _toggleFavourite(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      AuthGuard.requireAuth(context, () {});
+      return;
+    }
     final ref = FirebaseFirestore.instance.collection('favourites');
     final existing = await ref.where('userId', isEqualTo: user.uid).where('petId', isEqualTo: petId).get();
     if (existing.docs.isEmpty) {
@@ -47,7 +51,7 @@ class PetDetailScreen extends StatelessWidget {
                   return IconButton(
                     icon: Icon(isFav ? Icons.favorite : Icons.favorite_outline,
                       color: isFav ? Colors.red : Colors.white),
-                    onPressed: _toggleFavourite,
+                    onPressed: () => _toggleFavourite(context),
                   );
                 },
               ),
@@ -184,8 +188,10 @@ class PetDetailScreen extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () => Navigator.push(context,
-                            MaterialPageRoute(builder: (_) => PetUpdateFormScreen(petId: petId))),
+                        onPressed: () => AuthGuard.requireAuth(context, () {
+                          Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => PetUpdateFormScreen(petId: petId)));
+                        }),
                         icon: const Icon(Icons.add_photo_alternate_outlined),
                         label: const Text('Add Update'),
                         style: OutlinedButton.styleFrom(
@@ -200,8 +206,10 @@ class PetDetailScreen extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: pet['status'] == 'adopted' ? null : () =>
-                        Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => AdoptionWorkflowScreen(pet: pet, petId: petId))),
+                        AuthGuard.requireAuth(context, () {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => AdoptionWorkflowScreen(pet: pet, petId: petId)));
+                        }),
                       child: const Text('Start Adoption Process', style: TextStyle(fontSize: 16)),
                     ),
                   ),
@@ -231,11 +239,13 @@ class PetDetailScreen extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => AddReviewScreen(
-                            targetUserId: pet['uploadedBy'] as String,
-                            targetUserName: pet['uploadedByName'] ?? 'User',
-                          ))),
+                        onPressed: () => AuthGuard.requireAuth(context, () {
+                          Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => AddReviewScreen(
+                              targetUserId: pet['uploadedBy'] as String,
+                              targetUserName: pet['uploadedByName'] ?? 'User',
+                            )));
+                        }),
                         icon: const Icon(Icons.star_outline, color: AppTheme.accent),
                         label: const Text('Rate this Rehomer', style: TextStyle(color: AppTheme.accent)),
                         style: OutlinedButton.styleFrom(
@@ -249,11 +259,13 @@ class PetDetailScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => FosterApplicationScreen(
-                          petId: petId,
-                          petName: pet['name'] ?? '',
-                        ))),
+                      onPressed: () => AuthGuard.requireAuth(context, () {
+                        Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => FosterApplicationScreen(
+                            petId: petId,
+                            petName: pet['name'] ?? '',
+                          )));
+                      }),
                       icon: const Icon(Icons.home_outlined, color: Colors.teal),
                       label: const Text('Apply to Foster', style: TextStyle(color: Colors.teal)),
                       style: OutlinedButton.styleFrom(
