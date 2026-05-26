@@ -44,11 +44,18 @@ class PetProvider extends ChangeNotifier {
     );
     result.when(
       success: (stream) {
-        _subscription = stream.listen((pets) {
-          _pets = pets;
-          _hasMore = pets.length >= _currentLimit;
-          _applyFilters();
-        });
+        _subscription = stream.listen(
+          (pets) {
+            _pets = pets;
+            _hasMore = pets.length >= _currentLimit;
+            _applyFilters();
+          },
+          onError: (error) {
+            _error = 'Failed to load pets. Please try again.';
+            _isLoading = false;
+            notifyListeners();
+          },
+        );
       },
       failure: (message) {
         _error = message;

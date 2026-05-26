@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../lang/app_strings.dart';
 import '../../providers/language_provider.dart';
+import '../../widgets/login_required_view.dart';
 import 'add_lost_found_screen.dart';
 import 'edit_lost_found_screen.dart';
 
@@ -23,6 +24,13 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context).lang;
     final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(AppStrings.get('lost_found', lang))),
+        body: const LoginRequiredView(icon: Icons.search),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -107,6 +115,21 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                       .orderBy('createdAt', descending: true)
                       .snapshots(),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 64, color: Colors.grey.shade300),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading reports',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  );
+                }
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                     child: CircularProgressIndicator(color: Colors.orange),
@@ -139,7 +162,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                     final data = docs[index].data() as Map<String, dynamic>;
                     final reportId = docs[index].id;
                     final isLost = data['type'] == 'Lost';
-                    final isOwner = data['userId'] == user?.uid;
+                    final isOwner = data['userId'] == user.uid;
 
                     return _ReportCard(
                       reportId: reportId,

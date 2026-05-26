@@ -18,10 +18,16 @@ class FavouritesProvider extends ChangeNotifier {
       final result = _petRepository.getFavoritePetIds(_userId!);
       result.when(
         success: (stream) {
-          stream.listen((ids) {
-            _favoriteIds = ids;
-            notifyListeners();
-          });
+          stream.listen(
+            (ids) {
+              _favoriteIds = ids;
+              notifyListeners();
+            },
+            onError: (error) {
+              _error = 'Failed to load favorites. Please try again.';
+              notifyListeners();
+            },
+          );
         },
         failure: (message) {
           _error = message;

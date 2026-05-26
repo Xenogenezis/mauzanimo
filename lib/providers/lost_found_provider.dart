@@ -17,10 +17,17 @@ class LostFoundProvider extends ChangeNotifier {
     final result = _repository.getLostFoundStream();
     result.when(
       success: (stream) {
-        stream.listen((reports) {
-          _reports = reports;
-          _applyFilters();
-        });
+        stream.listen(
+          (reports) {
+            _reports = reports;
+            _applyFilters();
+          },
+          onError: (error) {
+            _error = 'Failed to load reports. Please try again.';
+            _isLoading = false;
+            notifyListeners();
+          },
+        );
       },
       failure: (message) {
         _error = message;
