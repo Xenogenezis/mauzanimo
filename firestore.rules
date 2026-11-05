@@ -537,7 +537,11 @@ service cloud.firestore {
             && strOk(request.resource.data.get('description', null), 500)
             && strOk(request.resource.data.get('relatedEntityId', null), 128))
           || isAdmin();
-        allow update, delete: if isAdmin();
+        allow update: if isAdmin();
+        // Owners may erase (never edit) their own history: needed for
+        // account deletion under the Data Protection Act, and deleting
+        // entries cannot raise anyone's points.
+        allow delete: if isOwner(userId) || isAdmin();
       }
 
       match /{sub=**} {
