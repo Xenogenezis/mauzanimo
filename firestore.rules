@@ -234,5 +234,30 @@ service cloud.firestore {
     }
 
     // ===== Feature collections (each block added by its own feature) =====
+
+    // --- reports ---
+    // Report-abuse queue. Signed-in users file reports (create only); admins
+    // triage them and moderate the target by setting `hidden: true` on it
+    // (admins can already update every target collection above).
+    function validReport() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['reporterId', 'targetCollection', 'targetId',
+                               'reason', 'details', 'status', 'createdAt'])
+        && d.keys().hasAll(['reporterId', 'targetCollection', 'targetId',
+                            'reason', 'status', 'createdAt'])
+        && d.reporterId == request.auth.uid
+        && d.targetCollection in ['pets', 'lostfound', 'sightings', 'stories', 'reviews']
+        && d.targetId is string && d.targetId.size() > 0 && d.targetId.size() <= 128
+        && d.reason in ['spam', 'scam', 'animal_welfare', 'inappropriate', 'wrong_info', 'other']
+        && (!('details' in d) || (d.details is string && d.details.size() <= 1000))
+        && d.status == 'open'
+        && d.createdAt == request.time;
+    }
+
+    match /reports/{reportId} {
+      allow create: if isAuthenticated() && validReport();
+      allow read: if ownsDoc('reporterId') || isAdmin();
+      allow update, delete: if isAdmin();
+    }
   }
 }

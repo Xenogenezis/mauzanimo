@@ -8,8 +8,9 @@ const int kMaxSimilarPets = 6;
 /// (already narrowed to the same type and ordered newest first).
 ///
 /// Keeps only pets that are still available (a missing status counts as
-/// available, as on the detail screen), drops the current pet and any
-/// duplicate ids, and returns at most [max] pets in their original order.
+/// available, as on the detail screen) and not hidden by a moderator, drops
+/// the current pet and any duplicate ids, and returns at most [max] pets in
+/// their original order.
 List<PetDoc> filterSimilarPets(
   Iterable<PetDoc> candidates, {
   required String currentPetId,
@@ -20,6 +21,7 @@ List<PetDoc> filterSimilarPets(
   for (final pet in candidates) {
     if (result.length >= max) break;
     if (pet.id == currentPetId || !seen.add(pet.id)) continue;
+    if (pet.data['hidden'] == true) continue; // moderated
     final status = (pet.data['status'] ?? 'available').toString().trim();
     if (status.toLowerCase() != 'available') continue;
     result.add(pet);

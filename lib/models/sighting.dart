@@ -28,6 +28,9 @@ class Sighting {
   final String status;
   final DateTime? createdAt;
 
+  /// Hidden by a moderator after a report; lists filter these out.
+  final bool hidden;
+
   const Sighting({
     required this.id,
     required this.reporterId,
@@ -43,6 +46,7 @@ class Sighting {
     this.lostReportId,
     this.status = 'open',
     this.createdAt,
+    this.hidden = false,
   });
 
   bool get isLinkedToLostReport => lostReportId != null && lostReportId!.isNotEmpty;
@@ -65,6 +69,7 @@ class Sighting {
       lostReportId: map['lostReportId'] as String?,
       status: map['status'] as String? ?? 'open',
       createdAt: ts is Timestamp ? ts.toDate() : null,
+      hidden: map['hidden'] == true,
     );
   }
 

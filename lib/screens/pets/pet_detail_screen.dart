@@ -19,6 +19,7 @@ import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/screens/pets/adopt_poster_screen.dart';
 import 'package:stray_pets_mu/utils/similar_pets.dart';
+import 'package:stray_pets_mu/widgets/report_button.dart';
 
 class PetDetailScreen extends StatelessWidget {
   final Map<String, dynamic> pet;
@@ -78,6 +79,9 @@ class PetDetailScreen extends StatelessWidget {
                 onPressed: () => Navigator.push(context, MaterialPageRoute(
                   builder: (_) => AdoptPosterScreen(pet: pet, petId: petId))),
               ),
+              if (pet['uploadedBy'] == null ||
+                  pet['uploadedBy'] != FirebaseAuth.instance.currentUser?.uid)
+                ReportButton(targetCollection: 'pets', targetId: petId, color: Colors.white),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: pet['imageUrl'] != null

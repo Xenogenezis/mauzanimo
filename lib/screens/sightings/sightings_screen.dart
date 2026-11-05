@@ -16,6 +16,7 @@ import '../../utils/location_service.dart';
 import '../../widgets/app_image.dart';
 import '../../widgets/location_picker.dart';
 import '../../widgets/login_required_view.dart';
+import '../../widgets/report_button.dart';
 import 'report_sighting_screen.dart';
 
 /// Map + list of recent sightings, with "near me" filtering.
@@ -105,7 +106,8 @@ class _SightingsScreenState extends State<SightingsScreen> {
           if (!snap.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          var items = snap.data!;
+          // Moderated sightings stay out of both the map and the list.
+          var items = snap.data!.where((s) => !s.hidden).toList();
           if (_me != null && _radiusKm != null) {
             items = SightingRepository.within(items, _me!.latitude, _me!.longitude, _radiusKm!);
           }
@@ -243,7 +245,18 @@ class _SightingsScreenState extends State<SightingsScreen> {
                 if (s.isLinkedToLostReport) t('matches_lost_report'),
               ].join(' · '),
             ),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (s.reporterId != FirebaseAuth.instance.currentUser?.uid)
+                  ReportButton(
+                    targetCollection: 'sightings',
+                    targetId: s.id,
+                    iconSize: 20,
+                  ),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
           ),
         );
       },

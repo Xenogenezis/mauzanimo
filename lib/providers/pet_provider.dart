@@ -66,7 +66,8 @@ class PetProvider extends ChangeNotifier {
   }
 
   void _applyFilters() {
-    var result = _pets;
+    // Moderated (hidden) pets never show in the list.
+    var result = _pets.where((pet) => !pet.hidden).toList();
 
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();

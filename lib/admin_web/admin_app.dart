@@ -13,6 +13,7 @@ import '../widgets/app_image.dart';
 import '../widgets/location_picker.dart';
 import 'collection_table.dart';
 import 'overview.dart';
+import 'reports_section.dart';
 
 const _adminRoles = ['admin', 'superAdmin'];
 const _allRoles = ['adopter', 'rehomer', 'volunteer', 'partner', 'admin', 'superAdmin'];
@@ -186,6 +187,7 @@ class _AdminShellState extends State<AdminShell> {
 
   late final List<_Section> _sections = [
     _Section('Overview', Icons.dashboard_outlined, () => AdminOverview(onOpen: _openSection, footer: _mapFooter())),
+    _Section('Reports', Icons.flag_outlined, () => const AdminReportsSection()),
     _Section('Sightings', Icons.add_location_alt_outlined, () => const _SightingsPage()),
     _Section('Pets', Icons.pets, _pets),
     _Section('Adoptions', Icons.favorite_outline, _adoptions),

@@ -15,6 +15,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../utils/distance_sort.dart';
 import '../../utils/geo_utils.dart';
 import '../../utils/location_service.dart';
+import '../../utils/moderation.dart';
+import '../../widgets/report_button.dart';
 import 'lost_poster_screen.dart';
 
 class LostFoundScreen extends StatefulWidget {
@@ -237,7 +239,8 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                   );
                 }
 
-                var docs = snapshot.data?.docs ?? [];
+                var docs = withoutHidden(snapshot.data?.docs ?? <QueryDocumentSnapshot>[],
+                    (d) => d.data() as Map<String, dynamic>?);
                 if (_sortByDistance && _myFix != null) {
                   docs = sortByDistance(
                     docs,
@@ -395,9 +398,21 @@ class _ReportCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  data['animalType'] ?? 'Animal',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      data['animalType'] ?? 'Animal',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    if (!isOwner)
+                      ReportButton(
+                        targetCollection: 'lostfound',
+                        targetId: reportId,
+                        color: Colors.grey,
+                        iconSize: 18,
+                      ),
+                  ],
                 ),
               ],
             ),
