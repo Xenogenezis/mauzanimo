@@ -60,10 +60,10 @@ class PetDetailScreen extends StatelessWidget {
                 onPressed: () {
                   final name = pet['name'] ?? 'this pet';
                   final desc = pet['description'] ?? '';
-                  Share.share(
-                    'Check out $name on MauZanimo! $desc\n\nDownload the MauZanimo app to adopt pets in Mauritius.',
+                  SharePlus.instance.share(ShareParams(
+                    text: 'Check out $name on MauZanimo! $desc\n\nDownload the MauZanimo app to adopt pets in Mauritius.',
                     subject: 'Adopt $name - MauZanimo',
-                  );
+                  ));
                 },
               ),
             ],

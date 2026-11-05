@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
+import 'package:stray_pets_mu/utils/location_service.dart';
+import 'package:stray_pets_mu/widgets/location_picker.dart';
 
 class AddLostFoundScreen extends StatefulWidget {
   const AddLostFoundScreen({super.key});
@@ -13,6 +20,42 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
   final _locationController = TextEditingController();
   final _contactController = TextEditingController();
   final _imageUrlController = TextEditingController();
+  final _picker = ImagePicker();
+  Uint8List? _photo;
+  LatLng? _gps;
+  LatLng? _pin;
+  bool _locating = false;
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _locationController.dispose();
+    _contactController.dispose();
+    _imageUrlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _useGps() async {
+    setState(() => _locating = true);
+    try {
+      final fix = await const LocationService().currentFix();
+      if (mounted) setState(() => _gps = _pin = LatLng(fix.latitude, fix.longitude));
+    } on LocationException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not get GPS location - tap the map instead')));
+      }
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  Future<void> _pickPhoto(ImageSource source) async {
+    final picked = await _picker.pickImage(source: source, imageQuality: 60, maxWidth: 1024);
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    if (mounted) setState(() => _photo = bytes);
+  }
   String _type = 'Lost';
   String _animalType = 'Dog';
   bool _isLoading = false;
@@ -32,15 +75,19 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
         'description': _descriptionController.text.trim(),
         'location': _locationController.text.trim(),
         'contact': _contactController.text.trim(),
-        'imageUrl': _imageUrlController.text.trim(),
+        'imageUrl': _photo != null
+            ? 'data:image/jpeg;base64,${base64Encode(_photo!)}'
+            : _imageUrlController.text.trim(),
+        if (_pin != null) 'geo': GeoPoint(_pin!.latitude, _pin!.longitude),
         'userId': FirebaseAuth.instance.currentUser?.uid,
         'createdAt': FieldValue.serverTimestamp(),
       });
-      setState(() => _submitted = true);
+      if (mounted) setState(() => _submitted = true);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Something went wrong')));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -113,7 +160,38 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
       const SizedBox(height: 16),
       _f(_contactController, 'Your contact number', Icons.phone_outlined, keyboardType: TextInputType.phone),
       const SizedBox(height: 16),
-      _f(_imageUrlController, 'Photo URL (optional)', Icons.image_outlined),
+      Row(children: [
+        const Expanded(child: Text('Pin location on map',
+            style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark))),
+        TextButton.icon(
+          onPressed: _locating ? null : _useGps,
+          icon: _locating
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.my_location, size: 18),
+          label: const Text('Use GPS'),
+        ),
+      ]),
+      const SizedBox(height: 4),
+      LocationPicker(initial: _gps, height: 200, onChanged: (p) => setState(() => _pin = p)),
+      const Padding(
+        padding: EdgeInsets.only(top: 4),
+        child: Text('Tap the map to set where the animal was last seen (optional).',
+            style: TextStyle(fontSize: 12, color: Colors.grey)),
+      ),
+      const SizedBox(height: 16),
+      const Text('Photo', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textDark)),
+      const SizedBox(height: 8),
+      if (_photo != null)
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.memory(_photo!, height: 180, width: double.infinity, fit: BoxFit.cover),
+        ),
+      Row(children: [
+        TextButton.icon(onPressed: () => _pickPhoto(ImageSource.camera),
+            icon: const Icon(Icons.photo_camera_outlined), label: const Text('Camera')),
+        TextButton.icon(onPressed: () => _pickPhoto(ImageSource.gallery),
+            icon: const Icon(Icons.photo_library_outlined), label: const Text('Gallery')),
+      ]),
       const SizedBox(height: 32),
       SizedBox(width: double.infinity, child: ElevatedButton(
         onPressed: _isLoading ? null : _submit,

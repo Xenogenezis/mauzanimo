@@ -18,6 +18,7 @@ import 'package:stray_pets_mu/screens/events/events_screen.dart';
 import 'package:stray_pets_mu/screens/gamification/leaderboard_screen.dart';
 import 'package:stray_pets_mu/screens/rescue/rescue_report_screen.dart';
 import 'package:stray_pets_mu/screens/foster/my_fosters_screen.dart';
+import 'package:stray_pets_mu/screens/sightings/sightings_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -90,6 +91,13 @@ class AppDrawer extends StatelessWidget {
                   subtitle: AppStrings.get('lost_found_subtitle', lang),
                   color: Colors.orange,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const LostFoundScreen())); },
+                ),
+                _DrawerTile(
+                  icon: Icons.add_location_alt_outlined,
+                  title: AppStrings.get('sightings', lang),
+                  subtitle: AppStrings.get('sightings_subtitle', lang),
+                  color: Colors.teal,
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const SightingsScreen())); },
                 ),
                 if (isAuthenticated)
                   _DrawerTile(

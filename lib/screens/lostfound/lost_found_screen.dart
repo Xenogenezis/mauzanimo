@@ -8,6 +8,10 @@ import '../../providers/language_provider.dart';
 import '../../widgets/login_required_view.dart';
 import 'add_lost_found_screen.dart';
 import 'edit_lost_found_screen.dart';
+import '../sightings/report_sighting_screen.dart';
+import '../sightings/sightings_screen.dart';
+import '../../widgets/app_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LostFoundScreen extends StatefulWidget {
   const LostFoundScreen({super.key});
@@ -293,6 +297,13 @@ class _ReportCard extends StatelessWidget {
                 ),
               ],
             ),
+            if ((data['imageUrl'] as String? ?? '').isNotEmpty) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AppImage(data['imageUrl'] as String?, height: 160, width: double.infinity),
+              ),
+            ],
             const SizedBox(height: 8),
             Text(
               data['description'] ?? '',
@@ -308,10 +319,26 @@ class _ReportCard extends StatelessWidget {
                 const Icon(Icons.location_on_outlined,
                     size: 14, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text(
-                  data['location'] ?? '',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                Expanded(
+                  child: Text(
+                    data['location'] ?? '',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ),
+                if (data['geo'] is GeoPoint)
+                  InkWell(
+                    onTap: () {
+                      final g = data['geo'] as GeoPoint;
+                      launchUrl(
+                        Uri.parse('https://www.google.com/maps/search/?api=1&query=${g.latitude},${g.longitude}'),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(Icons.map_outlined, size: 18, color: AppTheme.primary),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 4),
@@ -326,6 +353,48 @@ class _ReportCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (isLost) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (!isOwner)
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ReportSightingScreen(
+                              lostReportId: reportId,
+                              lostReportSummary:
+                                  '${data['animalType'] ?? ''} - ${data['description'] ?? ''}',
+                              initialAnimalType: data['animalType'] as String?,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Icons.add_a_photo, size: 16),
+                        label: Text(AppStrings.get('i_saw_this_animal', lang)),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                      ),
+                    ),
+                  if (!isOwner) const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SightingsScreen(
+                            lostReportId: reportId,
+                            title: AppStrings.get('view_sightings', lang),
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.location_searching, size: 16),
+                      label: Text(AppStrings.get('view_sightings', lang)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             if (isOwner) ...[
               const SizedBox(height: 12),
               const Divider(),
