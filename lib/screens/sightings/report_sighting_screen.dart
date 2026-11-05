@@ -1,3 +1,4 @@
+import 'package:stray_pets_mu/utils/jpeg_metadata.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -115,7 +116,8 @@ class _ReportSightingScreenState extends State<ReportSightingScreen> {
       // Small enough to keep the Firestore document well under 1 MB.
       final picked = await _picker.pickImage(source: source, imageQuality: 60, maxWidth: 1024);
       if (picked == null) return;
-      final bytes = await picked.readAsBytes();
+      // Strip GPS and other EXIF metadata: these posts are public.
+      final bytes = stripJpegMetadata(await picked.readAsBytes());
       if (mounted) setState(() => _photo = bytes);
     } catch (_) {
       if (mounted) {

@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
+import 'package:stray_pets_mu/utils/jpeg_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
 import 'dart:convert';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:provider/provider.dart';
@@ -28,11 +30,13 @@ class _UploadPetScreenState extends State<UploadPetScreen> {
 bool _isLoading = false;
   bool _submitted = false;
   XFile? _selectedImage;
+  Uint8List? _previewBytes;
   final _picker = ImagePicker();
   final _types = ['dogs', 'cats', 'others'];
   final _genders = ['Male', 'Female'];
 
   Future<bool> _requestCameraPermission() async {
+    if (kIsWeb) return true;
     final status = await Permission.camera.request();
     if (status.isDenied || status.isPermanentlyDenied) {
       if (mounted) {
@@ -49,13 +53,9 @@ bool _isLoading = false;
   }
 
   Future<bool> _requestGalleryPermission() async {
-    Permission permission;
-    if (Platform.isAndroid) {
-      permission = Permission.photos;
-    } else {
-      permission = Permission.photos;
-    }
-    final status = await permission.request();
+    // The browser's own file picker handles access on web.
+    if (kIsWeb) return true;
+    final status = await Permission.photos.request();
     if (status.isDenied || status.isPermanentlyDenied) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -75,13 +75,15 @@ bool _isLoading = false;
     if (!granted) return;
     final picked = await _picker.pickImage(source: ImageSource.camera, imageQuality: 70, maxWidth: 1200);
     if (picked != null) {
-      final file = File(picked.path);
-      final bytes = await file.readAsBytes();
+      final bytes = stripJpegMetadata(await picked.readAsBytes());
       if (bytes.length > 500 * 1024) {
         if (mounted) _showSizeError(context);
         return;
       }
-      setState(() => _selectedImage = picked);
+      setState(() {
+        _selectedImage = picked;
+        _previewBytes = bytes;
+      });
     }
   }
 
@@ -90,13 +92,15 @@ bool _isLoading = false;
     if (!granted) return;
     final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70, maxWidth: 1200);
     if (picked != null) {
-      final file = File(picked.path);
-      final bytes = await file.readAsBytes();
+      final bytes = stripJpegMetadata(await picked.readAsBytes());
       if (bytes.length > 500 * 1024) {
         if (mounted) _showSizeError(context);
         return;
       }
-      setState(() => _selectedImage = picked);
+      setState(() {
+        _selectedImage = picked;
+        _previewBytes = bytes;
+      });
     }
   }
 
@@ -168,8 +172,9 @@ bool _isLoading = false;
     try {
       String imageBase64 = '';
       if (_selectedImage != null) {
-        final file = File(_selectedImage!.path);
-        final bytes = await file.readAsBytes();
+        // XFile works on web too (dart:io File does not). Strip GPS/EXIF
+        // metadata because pet listings are public.
+        final bytes = stripJpegMetadata(await _selectedImage!.readAsBytes());
         // Check file size - 500KB limit
         if (bytes.length > 500 * 1024) {
           if (mounted) {
@@ -261,7 +266,7 @@ bool _isLoading = false;
           child: _selectedImage != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: Image.file(File(_selectedImage!.path), fit: BoxFit.cover, width: double.infinity))
+                child: Image.memory(_previewBytes!, fit: BoxFit.cover, width: double.infinity))
             : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Icon(Icons.add_a_photo_outlined, size: 48, color: AppTheme.primary.withOpacity(0.6)),
                 const SizedBox(height: 12),
