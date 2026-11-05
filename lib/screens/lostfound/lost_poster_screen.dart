@@ -1,17 +1,13 @@
-import 'dart:ui' as ui;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../lang/app_strings.dart';
 import '../../providers/language_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../utils/file_download.dart';
+import '../../utils/poster_export.dart';
 import '../../widgets/app_image.dart';
 
 /// Printable / shareable A4-style poster for a Lost & Found report.
@@ -33,19 +29,6 @@ class _LostPosterScreenState extends State<LostPosterScreen> {
 
   bool get _isLost => (widget.data['type'] ?? 'Lost') != 'Found';
 
-  Future<Uint8List> _capturePng() async {
-    final boundary =
-        _posterKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    final image = await boundary.toImage(pixelRatio: 3);
-    try {
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) throw StateError('PNG encoding failed');
-      return byteData.buffer.asUint8List();
-    } finally {
-      image.dispose();
-    }
-  }
-
   String _shareText(String lang) {
     final d = widget.data;
     final header =
@@ -62,25 +45,18 @@ class _LostPosterScreenState extends State<LostPosterScreen> {
   Future<void> _sharePoster(BuildContext buttonContext, String lang) async {
     setState(() => _busy = true);
     // Needed by iPad share sheets; read before any await.
-    final box = buttonContext.findRenderObject() as RenderBox?;
-    final origin =
-        box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+    final origin = shareOriginOf(buttonContext);
     try {
-      final bytes = await _capturePng();
-      if (kIsWeb) {
-        await downloadBytes(_fileName, bytes, mimeType: 'image/png');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppStrings.get('lf_poster_downloaded', lang))),
-          );
-        }
-      } else {
-        await SharePlus.instance.share(ShareParams(
-          files: [XFile.fromData(bytes, mimeType: 'image/png', name: _fileName)],
-          fileNameOverrides: const [_fileName],
-          text: _shareText(lang),
-          sharePositionOrigin: origin,
-        ));
+      final result = await exportPoster(
+        boundaryKey: _posterKey,
+        fileName: _fileName,
+        shareText: _shareText(lang),
+        shareOrigin: origin,
+      );
+      if (result == PosterExportResult.downloaded && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.get('lf_poster_downloaded', lang))),
+        );
       }
     } catch (e) {
       if (mounted) {

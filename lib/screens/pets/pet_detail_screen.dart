@@ -14,6 +14,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:stray_pets_mu/widgets/auth_guard.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/providers/recently_viewed_provider.dart';
+import 'package:flutter/gestures.dart';
+import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
+import 'package:stray_pets_mu/screens/pets/adopt_poster_screen.dart';
+import 'package:stray_pets_mu/utils/similar_pets.dart';
 
 class PetDetailScreen extends StatelessWidget {
   final Map<String, dynamic> pet;
@@ -66,6 +71,12 @@ class PetDetailScreen extends StatelessWidget {
                     subject: 'Adopt $name - MauZanimo',
                   ));
                 },
+              ),
+              IconButton(
+                icon: const Icon(Icons.campaign_outlined, color: Colors.white),
+                tooltip: AppStrings.get('pd_poster_action', _langOf(context)),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(
+                  builder: (_) => AdoptPosterScreen(pet: pet, petId: petId))),
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
@@ -278,6 +289,12 @@ class PetDetailScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  _SimilarPets(
+                    key: ValueKey('similar-$petId'),
+                    petId: petId,
+                    type: pet['type'] as String?,
+                    lang: _langOf(context),
+                  ),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -286,6 +303,15 @@ class PetDetailScreen extends StatelessWidget {
         ],
       ),
     ));
+  }
+
+  /// Current UI language; falls back to English when no provider is above.
+  static String _langOf(BuildContext context) {
+    try {
+      return context.watch<LanguageProvider>().lang;
+    } on ProviderNotFoundException {
+      return 'en';
+    }
   }
 
   Widget _buildImage(String imageUrl) =>
@@ -338,4 +364,155 @@ class _RecordRecentlyViewedState extends State<_RecordRecentlyViewed> {
 
   @override
   Widget build(BuildContext context) => widget.child;
+}
+
+/// "Similar pets": other available pets of the same type, newest first.
+/// Hidden while loading, when there are none, or if the query fails.
+class _SimilarPets extends StatefulWidget {
+  final String petId;
+  final String? type;
+  final String lang;
+  const _SimilarPets({super.key, required this.petId, required this.type, required this.lang});
+
+  @override
+  State<_SimilarPets> createState() => _SimilarPetsState();
+}
+
+class _SimilarPetsState extends State<_SimilarPets> {
+  late final Future<List<PetDoc>> _future = _load();
+  final _scrollController = ScrollController();
+
+  Future<List<PetDoc>> _load() async {
+    final type = widget.type;
+    if (type == null || type.isEmpty) return const [];
+    try {
+      // Same shape as PetRepository.getPetsStream (backed by an index).
+      final snapshot = await FirebaseFirestore.instance
+          .collection('pets')
+          .where('type', isEqualTo: type)
+          .orderBy('createdAt', descending: true)
+          .limit(10)
+          .get();
+      return filterSimilarPets(
+        snapshot.docs.map((d) => (id: d.id, data: d.data())),
+        currentPetId: widget.petId,
+      );
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<PetDoc>>(
+      future: _future,
+      builder: (context, snapshot) {
+        final pets = snapshot.data ?? const <PetDoc>[];
+        if (pets.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(AppStrings.get('pd_similar_pets', widget.lang),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 186,
+                // Let mouse users drag the row on web/desktop too.
+                child: ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                    PointerDeviceKind.trackpad,
+                    PointerDeviceKind.stylus,
+                  }),
+                  child: Scrollbar(
+                    controller: _scrollController,
+                    child: ListView.separated(
+                      controller: _scrollController,
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.only(bottom: 10),
+                      itemCount: pets.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, i) => _SimilarPetCard(pet: pets[i]),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SimilarPetCard extends StatelessWidget {
+  final PetDoc pet;
+  const _SimilarPetCard({required this.pet});
+
+  @override
+  Widget build(BuildContext context) {
+    final data = pet.data;
+    final imageUrl = data['imageUrl'] as String?;
+    final location = (data['location'] as String?)?.trim() ?? '';
+    return SizedBox(
+      width: 140,
+      child: Material(
+        color: Colors.white,
+        elevation: 1,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => Navigator.push(context, MaterialPageRoute(
+            builder: (_) => PetDetailScreen(pet: data, petId: pet.id))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 110,
+                width: double.infinity,
+                child: imageUrl != null && imageUrl.trim().isNotEmpty
+                    ? AppImage(imageUrl, width: 140, height: 110, decodeWidth: 160)
+                    : Container(
+                        color: AppTheme.lightGrey,
+                        child: Icon(Icons.pets, size: 36,
+                          color: AppTheme.primary.withValues(alpha: 0.5))),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+                child: Text(
+                  (data['name'] as String?)?.trim().isNotEmpty == true ? data['name'] as String : 'Unknown',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                ),
+              ),
+              if (location.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 2, 10, 0),
+                  child: Row(children: [
+                    const Icon(Icons.location_on_outlined, size: 13, color: Colors.grey),
+                    const SizedBox(width: 2),
+                    Expanded(
+                      child: Text(location,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    ),
+                  ]),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
