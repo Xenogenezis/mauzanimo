@@ -12,6 +12,7 @@ import 'package:stray_pets_mu/widgets/auth_guard.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/widgets/adaptive_nav_scaffold.dart';
+import 'package:stray_pets_mu/screens/notifications/notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text('MauZanimo', style: TextStyle(fontWeight: FontWeight.bold)),
         ]),
         actions: [
+          const NotificationBell(),
           Consumer<AuthProvider>(
             builder: (context, authProvider, _) {
               if (!authProvider.isAuthenticated) return const SizedBox.shrink();

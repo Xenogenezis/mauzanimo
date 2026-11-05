@@ -258,6 +258,67 @@ service cloud.firestore {
       allow create: if isAuthenticated() && validReport();
       allow read: if ownsDoc('reporterId') || isAdmin();
       allow update, delete: if isAdmin();
+
+    // --- notifications ---
+    // In-app notifications, written by the client that causes the event.
+    // Text is localised on the reader side from `type` + `params`.
+    function notifDocPath(coll, id) {
+      return /databases/$(database)/documents/$(coll)/$(id);
+    }
+
+    function shortString(v, max) {
+      return v is string && v.size() > 0 && v.size() <= max;
+    }
+
+    // Shape shared by every notification type.
+    function validNotificationBase() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['toUid', 'type', 'params', 'refCollection', 'refId', 'fromUid', 'read', 'createdAt'])
+        && d.keys().hasAll(['toUid', 'type', 'params', 'refCollection', 'refId', 'fromUid', 'read', 'createdAt'])
+        && shortString(d.toUid, 128)
+        && shortString(d.refId, 128)
+        && d.fromUid == request.auth.uid
+        && d.read == false
+        && d.createdAt == request.time
+        && d.params is map
+        && d.params.size() <= 2;
+    }
+
+    // Admin moved an adoption to a new stage: notify the adopter.
+    function validAdoptionStageNotification() {
+      let d = request.resource.data;
+      return d.type == 'adoption_stage'
+        && isAdmin()
+        && d.refCollection == 'adoptions'
+        && d.params.keys().hasOnly(['petName', 'stage'])
+        && d.params.keys().hasAll(['petName', 'stage'])
+        && d.params.petName is string && d.params.petName.size() <= 100
+        && d.params.stage in ['application', 'screening', 'meet_greet', 'trial', 'completed', 'rejected']
+        && d.toUid == get(notifDocPath('adoptions', d.refId)).data.adopterId;
+    }
+
+    // Someone reported a sighting on a lost post: notify the post's owner.
+    // The sighting must exist, be the caller's, and point at that post.
+    function validSightingNotification() {
+      let d = request.resource.data;
+      return d.type == 'sighting'
+        && d.refCollection == 'lostfound'
+        && d.toUid == get(notifDocPath('lostfound', d.refId)).data.userId
+        && d.toUid != request.auth.uid
+        && d.params.keys().hasOnly(['animalType', 'sightingId'])
+        && d.params.keys().hasAll(['animalType', 'sightingId'])
+        && shortString(d.params.animalType, 40)
+        && shortString(d.params.sightingId, 128)
+        && get(notifDocPath('sightings', d.params.sightingId)).data.reporterId == request.auth.uid
+        && get(notifDocPath('sightings', d.params.sightingId)).data.lostReportId == d.refId;
+    }
+
+    match /notifications/{notificationId} {
+      allow read, delete: if ownsDoc('toUid');
+      allow update: if ownsDoc('toUid') && onlyChanges(['read'])
+        && request.resource.data.read is bool;
+      allow create: if isAuthenticated() && validNotificationBase()
+        && (validAdoptionStageNotification() || validSightingNotification());
     }
   }
 }

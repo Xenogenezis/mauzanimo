@@ -1,21 +1,35 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/sighting.dart';
 import '../utils/geo_utils.dart';
 import '../utils/offline_write.dart';
 import '../utils/result.dart';
+import 'notification_repository.dart';
 
 class SightingRepository {
   static const String collection = 'sightings';
   final FirebaseFirestore _firestore;
+  final NotificationRepository _notifications;
 
-  SightingRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  SightingRepository({FirebaseFirestore? firestore, NotificationRepository? notifications})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _notifications = notifications ?? NotificationRepository(firestore: firestore);
 
   /// Returns whether the write reached the server or is queued offline.
   Future<Result<WriteOutcome>> create(Sighting sighting) async {
     try {
       final ref = _firestore.collection(collection).doc();
       final outcome = await writeOfflineFirst(ref.set(sighting.toMap()));
+      // Tell the lost post's owner (skipped for their own post). Queued after
+      // the sighting, so the rules can check it exists. Never fails create.
+      final lostId = sighting.lostReportId;
+      if (lostId != null && lostId.isNotEmpty) {
+        unawaited(_notifications.notifySighting(
+          lostReportId: lostId,
+          sightingId: ref.id,
+          animalType: sighting.animalType,
+        ));
+      }
       return Result.success(outcome);
     } on FirebaseException catch (e) {
       return Result.failure(e.message ?? 'Could not save sighting', error: e);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/adoption.dart';
+import '../repositories/notification_repository.dart';
 import '../theme/app_theme.dart';
 import '../utils/geo_utils.dart';
 import '../widgets/app_image.dart';
@@ -276,6 +278,12 @@ class _AdminShellState extends State<AdminShell> {
               batch.update(FirebaseFirestore.instance.collection('pets').doc(petId), {'status': petStatus});
             }
             await batch.commit();
+            unawaited(NotificationRepository().notifyAdoptionStage(
+              adoptionId: doc.id,
+              stage: value,
+              adopterId: doc.data()['adopterId'] as String?,
+              petName: doc.data()['petName'] as String?,
+            ));
           },
         ),
       );

@@ -20,6 +20,7 @@ import 'providers/rescue_provider.dart';
 import 'providers/foster_provider.dart';
 import 'providers/pet_update_provider.dart';
 import 'providers/recently_viewed_provider.dart';
+import 'providers/notifications_provider.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/pet_repository.dart';
 import 'repositories/lost_found_repository.dart';
@@ -30,6 +31,7 @@ import 'repositories/review_repository.dart';
 import 'repositories/rescue_repository.dart';
 import 'repositories/foster_repository.dart';
 import 'repositories/pet_update_repository.dart';
+import 'repositories/notification_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -122,6 +124,12 @@ class MauZanimoApp extends StatelessWidget {
             ),
             ChangeNotifierProvider(
               create: (_) => PetUpdateProvider(petUpdateRepository),
+            ),
+            // Follows sign-in/out via setUid instead of being recreated.
+            ChangeNotifierProxyProvider<AuthProvider, NotificationsProvider>(
+              create: (_) => NotificationsProvider(NotificationRepository()),
+              update: (_, auth, p) => (p ?? NotificationsProvider(NotificationRepository()))
+                ..setUid(auth.uid),
             ),
           ],
           child: MaterialApp(
