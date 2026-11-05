@@ -5,6 +5,10 @@ import 'strings_myadoptions.dart';
 import 'strings_petdetail.dart';
 import 'strings_ui.dart';
 import 'strings_web.dart';
+import 'strings_report.dart';
+import 'strings_account.dart';
+import 'strings_notify.dart';
+import 'strings_alerts.dart';
 
 class AppStrings {
   static Map<String, Map<String, String>> translations = {
@@ -1279,6 +1283,10 @@ class AppStrings {
     petdetailStrings,
     uiStrings,
     webStrings,
+    reportStrings,
+    accountStrings,
+    notifyStrings,
+    alertsStrings,
   ];
 
   static String? _lookup(String key, String lang) {

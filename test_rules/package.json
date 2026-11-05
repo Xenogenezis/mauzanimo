@@ -2,7 +2,7 @@
   "name": "mauzanimo-rules-tests",
   "private": true,
   "scripts": {
-    "test": "cd .. && firebase emulators:exec --only firestore --project demo-mauzanimo \"node --test test_rules/rules.test.mjs\""
+    "test": "cd .. && firebase emulators:exec --only firestore --project demo-mauzanimo \"node --test --test-concurrency=1 test_rules/*.test.mjs\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",

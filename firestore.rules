@@ -232,5 +232,7 @@ service cloud.firestore {
         allow write: if isOwner(userId) || isAdmin();
       }
     }
+
+    // ===== Feature collections (each block added by its own feature) =====
   }
 }
