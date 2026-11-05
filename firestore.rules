@@ -2,7 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -11,26 +13,460 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function isAdmin() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'adopter');
     }
 
-    // Public collections: anyone can read, only authenticated can write
+    // Matches UserProfile.isAdmin in the app: admin OR superAdmin.
+    function isAdmin() {
+      return isAuthenticated() && userRole() in ['admin', 'superAdmin'];
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && userRole() == 'superAdmin';
+    }
+
+    function isVolunteerOrAbove() {
+      return isAuthenticated() && userRole() in ['volunteer', 'partner', 'admin', 'superAdmin'];
+    }
+
+    // Only these fields changed between the stored doc and the write.
+    function onlyChanges(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // The new doc's owner field must be the caller.
+    function createsAsSelf(field) {
+      return isAuthenticated() && request.resource.data.get(field, null) == request.auth.uid;
+    }
+
+    function ownsDoc(field) {
+      return isAuthenticated() && resource.data.get(field, null) == request.auth.uid;
+    }
+
+    // Caps on user-supplied content. Images are stored as base64 data URIs
+    // in the document (Firestore max doc size is 1 MiB), so bound them to
+    // stop oversized writes and bill-inflating spam.
+    function saneContent() {
+      let d = request.resource.data;
+      return (!('imageUrl' in d) || d.imageUrl == null
+              || (d.imageUrl is string && d.imageUrl.size() <= 850000))
+        && (!('description' in d) || d.description == null
+              || (d.description is string && d.description.size() <= 5000));
+    }
+
+    // Pets are public, so don't let new writes publish the uploader's email.
+    function noPublicEmail() {
+      return !('uploaderEmail' in request.resource.data)
+        || request.resource.data.uploaderEmail == null
+        || (resource != null && resource.data.get('uploaderEmail', null) == request.resource.data.uploaderEmail);
+    }
+
+    // Optional GeoPoint must be a GeoPoint when present.
+    function validGeo() {
+      return !('geo' in request.resource.data) || request.resource.data.geo is latlng;
+    }
+
+    // --- Schema helpers (rules hardening, Nov 2026) ----------------------
+    // Field lists below mirror what the Dart code writes; keep them in sync
+    // when a screen or model starts writing a new field. Admin writes are
+    // never whitelisted (admins moderate, e.g. set `hidden: true`).
+
+    // The new doc has no fields outside `fields`.
+    function keysOnly(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Optional / nullable string no longer than n characters.
+    function strOk(v, n) {
+      return v == null || (v is string && v.size() <= n);
+    }
+
+    // Optional / nullable bool.
+    function boolOk(v) {
+      return v == null || v is bool;
+    }
+
+    // Server-timestamp field: when present it must be the write time
+    // (FieldValue.serverTimestamp()), so posts cannot be back- or future-dated.
+    function stampedNow(field) {
+      return !(field in request.resource.data) || request.resource.data[field] == request.time;
+    }
+
+    // On update, a changed server-timestamp field must be the write time.
+    function changedToNow(field) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([field])
+        || request.resource.data.get(field, null) == request.time;
+    }
+
+    function updatedNow() {
+      return changedToNow('updatedAt');
+    }
+
+    // Field is absent or null.
+    function unset(field) {
+      return request.resource.data.get(field, null) == null;
+    }
+
+    // ---------------------------------------------------------------------
+    // Users
+    // ---------------------------------------------------------------------
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      // Self-registration may only pick a self-assignable role.
+      allow create: if isOwner(userId)
+        && request.resource.data.get('role', 'adopter') in ['adopter', 'rehomer', 'volunteer'];
+      // Owners may edit their profile but never their role or verification.
+      allow update: if (isOwner(userId)
+          && !request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(['role', 'verificationLevel', 'badges']))
+        // Admins manage roles; only a superAdmin can grant or revoke admin rights.
+        || (isAdmin()
+          && (!(request.resource.data.get('role', '') in ['admin', 'superAdmin'])
+              && !(resource.data.get('role', '') in ['admin', 'superAdmin'])
+              || isSuperAdmin()));
+      // Owners may erase their own profile (account deletion, DPA 2017).
+      allow delete: if isOwner(userId) || isSuperAdmin();
+    }
+
+    match /pending_users/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Pets
+    // ---------------------------------------------------------------------
+    function petFieldsOk() {
+      let d = request.resource.data;
+      return strOk(d.get('name', null), 80)
+        && strOk(d.get('type', null), 40)
+        && strOk(d.get('location', null), 200)
+        && strOk(d.get('age', null), 40)
+        && strOk(d.get('gender', null), 40)
+        && strOk(d.get('contact', null), 60)
+        && boolOk(d.get('vaccinated', null))
+        && boolOk(d.get('sterilized', null))
+        && boolOk(d.get('dewormed', null))
+        && boolOk(d.get('isUserUpload', null))
+        && d.get('status', 'available') in ['available', 'pending', 'adopted']
+        && (d.get('adoptionFee', null) == null || d.adoptionFee is map)
+        && validGeo() && saneContent() && noPublicEmail();
+    }
+
     match /pets/{petId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (resource.data.uploadedBy == request.auth.uid || isAdmin());
-      allow delete: if isAuthenticated() && (resource.data.uploadedBy == request.auth.uid || isAdmin());
+      // upload_pet_screen.dart, and Pet.toMap via PetRepository.addPet.
+      allow create: if (createsAsSelf('uploadedBy')
+          && keysOnly(['name', 'type', 'location', 'description', 'imageUrl', 'age', 'gender',
+                       'vaccinated', 'sterilized', 'dewormed', 'status', 'contact', 'uploadedBy',
+                       'uploaderEmail', 'isUserUpload', 'adoptionFee', 'geo', 'createdAt'])
+          && request.resource.data.get('status', 'available') == 'available'
+          && stampedNow('createdAt')
+          && petFieldsOk())
+        || isAdmin();
+      // Owner edits (edit_pet_screen.dart; my_pets_screen.dart "mark adopted").
+      // uploadedBy, createdAt, isUserUpload and moderation fields (hidden)
+      // are not in the list, so they are immutable for the owner.
+      allow update: if (ownsDoc('uploadedBy')
+          && onlyChanges(['name', 'type', 'location', 'description', 'imageUrl', 'age', 'gender',
+                          'contact', 'vaccinated', 'sterilized', 'dewormed', 'status',
+                          'adoptionFee', 'geo', 'uploaderEmail', 'updatedAt'])
+          && updatedNow()
+          && petFieldsOk())
+        || isAdmin()
+        // Any signed-in adopter starting the adoption workflow may flag the pet as pending.
+        || (isAuthenticated() && onlyChanges(['status'])
+            && resource.data.get('status', 'available') == 'available'
+            && request.resource.data.status == 'pending');
+      allow delete: if ownsDoc('uploadedBy') || isAdmin();
     }
 
+    match /favourites/{favId} {
+      allow read, update, delete: if ownsDoc('userId');
+      allow create: if createsAsSelf('userId');
+    }
+
+    match /pet_updates/{updateId} {
+      allow read: if true;
+      // PetUpdate.toMap (pet_update_form_screen.dart).
+      allow create: if createsAsSelf('userId')
+        && keysOnly(['petId', 'userId', 'userName', 'imageUrl', 'caption', 'createdAt'])
+        && strOk(request.resource.data.get('petId', null), 128)
+        && strOk(request.resource.data.get('userName', null), 254)
+        && strOk(request.resource.data.get('caption', null), 2000)
+        && stampedNow('createdAt')
+        && saneContent();
+      // The app never edits updates; owners may fix caption/photo only.
+      allow update: if (ownsDoc('userId')
+          && onlyChanges(['caption', 'imageUrl', 'updatedAt'])
+          && strOk(request.resource.data.get('caption', null), 2000)
+          && updatedNow() && saneContent())
+        || isAdmin();
+      allow delete: if ownsDoc('userId') || isAdmin();
+    }
+
+    // Reviews use auto ids (ReviewRepository.addReview -> add()), so "one
+    // review per user per target" can't be enforced here without a
+    // deterministic doc id ('{reviewerId}_{targetUserId}') in the app.
+    match /reviews/{reviewId} {
+      allow read: if true;
+      // Review.toMap (add_review_screen.dart).
+      allow create: if createsAsSelf('reviewerId')
+        && keysOnly(['reviewerId', 'reviewerName', 'targetUserId', 'rating', 'comment', 'createdAt'])
+        && request.resource.data.targetUserId is string
+        && request.resource.data.reviewerId != request.resource.data.targetUserId
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && strOk(request.resource.data.get('comment', null), 2000)
+        && strOk(request.resource.data.get('reviewerName', null), 254)
+        && stampedNow('createdAt');
+      // Admins moderate (edit, hide, delete).
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Adoption
+    // ---------------------------------------------------------------------
+    match /inquiries/{inquiryId} {
+      allow read: if ownsDoc('userId') || isAdmin();
+      // adoption_inquiry_screen.dart.
+      allow create: if createsAsSelf('userId')
+        && keysOnly(['petId', 'petName', 'applicantName', 'email', 'phone', 'message',
+                     'status', 'createdAt', 'userId'])
+        && request.resource.data.get('status', 'pending') == 'pending'
+        && strOk(request.resource.data.get('petId', null), 128)
+        && strOk(request.resource.data.get('petName', null), 200)
+        && strOk(request.resource.data.get('applicantName', null), 100)
+        && strOk(request.resource.data.get('email', null), 254)
+        && strOk(request.resource.data.get('phone', null), 40)
+        && strOk(request.resource.data.get('message', null), 5000)
+        && stampedNow('createdAt');
+      allow update, delete: if isAdmin();
+    }
+
+    match /adoptions/{adoptionId} {
+      allow read: if ownsDoc('adopterId') || isAdmin();
+      // Adoption.toMap (adoption_workflow_screen.dart). Must start at
+      // `application` with an empty history and no rejection reason.
+      allow create: if createsAsSelf('adopterId')
+        && keysOnly(['petId', 'petName', 'adopterId', 'adopterName', 'adopterEmail',
+                     'adopterPhone', 'currentStage', 'stageHistory', 'createdAt',
+                     'rejectionReason'])
+        && request.resource.data.currentStage == 'application'
+        && (!('stageHistory' in request.resource.data)
+            || (request.resource.data.stageHistory is list
+                && request.resource.data.stageHistory.size() == 0))
+        && unset('rejectionReason')
+        && strOk(request.resource.data.get('petId', null), 128)
+        && strOk(request.resource.data.get('petName', null), 200)
+        && strOk(request.resource.data.get('adopterName', null), 100)
+        && strOk(request.resource.data.get('adopterEmail', null), 254)
+        && strOk(request.resource.data.get('adopterPhone', null), 40)
+        && stampedNow('createdAt');
+      allow update, delete: if isAdmin();
+    }
+
+    match /fosters/{fosterId} {
+      allow read: if ownsDoc('fosterUserId') || isAdmin();
+      // Foster.toMap (foster_application_screen.dart).
+      allow create: if createsAsSelf('fosterUserId')
+        && keysOnly(['petId', 'petName', 'fosterUserId', 'fosterUserName', 'startDate',
+                     'endDate', 'status', 'notes', 'createdAt'])
+        && request.resource.data.get('status', 'pending') == 'pending'
+        && unset('endDate')
+        && strOk(request.resource.data.get('petId', null), 128)
+        && strOk(request.resource.data.get('petName', null), 200)
+        && strOk(request.resource.data.get('fosterUserName', null), 254)
+        && strOk(request.resource.data.get('notes', null), 5000)
+        && stampedNow('startDate')
+        && stampedNow('createdAt');
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Community content (code uses `lostfound` and `stories`)
+    // ---------------------------------------------------------------------
+    function lostFoundFieldsOk() {
+      let d = request.resource.data;
+      return strOk(d.get('type', null), 40)
+        && strOk(d.get('animalType', null), 40)
+        && strOk(d.get('location', null), 200)
+        && strOk(d.get('contact', null), 60)
+        && validGeo() && saneContent();
+    }
+
+    match /lostfound/{reportId} {
+      allow read: if true;
+      // add_lost_found_screen.dart, and LostFound.toMap via LostFoundRepository.
+      allow create: if createsAsSelf('userId')
+        && keysOnly(['type', 'animalType', 'description', 'location', 'contact', 'imageUrl',
+                     'geo', 'userId', 'createdAt'])
+        && stampedNow('createdAt')
+        && lostFoundFieldsOk();
+      // edit_lost_found_screen.dart. userId, createdAt, hidden are immutable.
+      allow update: if (ownsDoc('userId')
+          && onlyChanges(['type', 'animalType', 'description', 'location', 'contact',
+                          'imageUrl', 'geo', 'updatedAt'])
+          && updatedNow()
+          && lostFoundFieldsOk())
+        || isAdmin();
+      allow delete: if ownsDoc('userId') || isAdmin();
+    }
+
+    // Photo + GPS sightings of strays or of animals reported lost.
+    match /sightings/{sightingId} {
+      allow read: if true;
+      // Sighting.toMap (report_sighting_screen.dart).
+      allow create: if createsAsSelf('reporterId')
+        && keysOnly(['reporterId', 'reporterName', 'animalType', 'description', 'imageUrl',
+                     'geo', 'accuracyMeters', 'manuallyPlaced', 'locationLabel',
+                     'lostReportId', 'status', 'createdAt'])
+        && request.resource.data.geo is latlng
+        && request.resource.data.get('status', 'open') == 'open'
+        && strOk(request.resource.data.get('reporterName', null), 254)
+        && strOk(request.resource.data.get('animalType', null), 40)
+        && strOk(request.resource.data.get('description', null), 1000)
+        && strOk(request.resource.data.get('locationLabel', null), 200)
+        && strOk(request.resource.data.get('lostReportId', null), 128)
+        && boolOk(request.resource.data.get('manuallyPlaced', null))
+        && (request.resource.data.get('accuracyMeters', null) == null
+            || request.resource.data.accuracyMeters is number)
+        && stampedNow('createdAt')
+        && saneContent();
+      allow update: if
+        // Reporter may mark their own sighting resolved / reopen it
+        // (SightingRepository.setStatus), but never un-hide a moderated one.
+        (ownsDoc('reporterId')
+          && onlyChanges(['status', 'handledBy', 'updatedAt'])
+          && resource.data.get('status', 'open') != 'hidden'
+          && request.resource.data.get('status', 'open') in ['open', 'resolved']
+          && request.resource.data.get('handledBy', null)
+               in [null, request.auth.uid, resource.data.get('handledBy', null)]
+          && updatedNow())
+        || isAdmin()
+        // Volunteers may triage (status only), signing as themselves.
+        || (onlyChanges(['status', 'handledBy', 'updatedAt'])
+            && request.resource.data.get('status', 'open') in ['open', 'resolved', 'hidden']
+            && request.resource.data.get('handledBy', null)
+                 in [null, request.auth.uid, resource.data.get('handledBy', null)]
+            && updatedNow()
+            && isVolunteerOrAbove());
+      allow delete: if ownsDoc('reporterId') || isAdmin();
+    }
+
+    match /stories/{storyId} {
+      allow read: if true;
+      // add_story_screen.dart.
+      allow create: if createsAsSelf('userId')
+        && keysOnly(['petName', 'adopterName', 'story', 'imageUrl', 'userId', 'createdAt'])
+        && strOk(request.resource.data.get('petName', null), 80)
+        && strOk(request.resource.data.get('adopterName', null), 100)
+        && strOk(request.resource.data.get('story', null), 5000)
+        && stampedNow('createdAt')
+        && saneContent();
+      // edit_story_screen.dart. userId, createdAt, hidden are immutable.
+      allow update: if (ownsDoc('userId')
+          && onlyChanges(['petName', 'adopterName', 'story', 'imageUrl', 'updatedAt'])
+          && strOk(request.resource.data.get('petName', null), 80)
+          && strOk(request.resource.data.get('adopterName', null), 100)
+          && strOk(request.resource.data.get('story', null), 5000)
+          && updatedNow()
+          && saneContent())
+        || isAdmin();
+      allow delete: if ownsDoc('userId') || isAdmin();
+    }
+
+    function rescueFieldsOk() {
+      let d = request.resource.data;
+      return strOk(d.get('location', null), 200)
+        && strOk(d.get('animalType', null), 40)
+        && strOk(d.get('urgency', null), 40)
+        && strOk(d.get('reporterName', null), 254)
+        && strOk(d.get('reporterPhone', null), 40)
+        && strOk(d.get('assignedVolunteerName', null), 254)
+        && validGeo() && saneContent();
+    }
+
+    match /rescue_reports/{reportId} {
+      allow read: if true;
+      // RescueReport.toMap (rescue_report_screen.dart): starts pending and
+      // unassigned.
+      allow create: if createsAsSelf('reporterId')
+        && keysOnly(['description', 'location', 'animalType', 'urgency', 'status', 'imageUrl',
+                     'reporterId', 'reporterName', 'reporterPhone', 'assignedVolunteerId',
+                     'assignedVolunteerName', 'createdAt', 'resolvedAt', 'geo'])
+        && request.resource.data.get('status', 'pending') == 'pending'
+        && unset('assignedVolunteerId')
+        && unset('assignedVolunteerName')
+        && unset('resolvedAt')
+        && stampedNow('createdAt')
+        && rescueFieldsOk();
+      allow update: if
+        // Reporter may correct their report or close it (no app UI yet).
+        (ownsDoc('reporterId')
+          && onlyChanges(['description', 'location', 'animalType', 'urgency', 'imageUrl',
+                          'reporterPhone', 'status', 'resolvedAt', 'updatedAt'])
+          && request.resource.data.get('status', 'pending')
+               in [resource.data.get('status', 'pending'), 'resolved']
+          && changedToNow('resolvedAt') && updatedNow()
+          && rescueFieldsOk())
+        || isAdmin()
+        // Volunteers may self-assign a pending report (rescue_list_screen.dart)...
+        || (onlyChanges(['status', 'assignedVolunteerId', 'assignedVolunteerName'])
+            && resource.data.get('status', 'pending') == 'pending'
+            && request.resource.data.status == 'assigned'
+            && request.resource.data.assignedVolunteerId == request.auth.uid
+            && strOk(request.resource.data.get('assignedVolunteerName', null), 254)
+            && isVolunteerOrAbove())
+        // ...and resolve a report assigned to them.
+        || (onlyChanges(['status', 'resolvedAt'])
+            && ownsDoc('assignedVolunteerId')
+            && request.resource.data.status == 'resolved'
+            && changedToNow('resolvedAt')
+            && isVolunteerOrAbove());
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Events
+    // ---------------------------------------------------------------------
     match /events/{eventId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    match /success_stories/{storyId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
+    match /event_registrations/{regId} {
+      allow read: if ownsDoc('userId') || isAdmin();
+      // EventRepository.registerForEvent.
+      allow create: if createsAsSelf('userId')
+        && keysOnly(['eventId', 'userId', 'userName', 'userEmail', 'userPhone',
+                     'registeredAt', 'status'])
+        && request.resource.data.get('status', 'registered') == 'registered'
+        && request.resource.data.eventId is string
+        && request.resource.data.eventId.size() <= 128
+        && strOk(request.resource.data.get('userName', null), 100)
+        && strOk(request.resource.data.get('userEmail', null), 254)
+        && strOk(request.resource.data.get('userPhone', null), 40)
+        && stampedNow('registeredAt');
+      // Users may cancel their own active registration; admins manage status.
+      allow update: if (ownsDoc('userId') && onlyChanges(['status', 'cancelledAt'])
+                        && resource.data.get('status', 'registered') == 'registered'
+                        && request.resource.data.status == 'cancelled'
+                        && changedToNow('cancelledAt'))
+        || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /volunteers/{volunteerId} {
+      allow read: if isAdmin();
+      // volunteer_screen.dart.
+      allow create: if createsAsSelf('userId')
+        && keysOnly(['name', 'phone', 'message', 'userId', 'email', 'createdAt'])
+        && strOk(request.resource.data.get('name', null), 100)
+        && strOk(request.resource.data.get('phone', null), 40)
+        && strOk(request.resource.data.get('email', null), 254)
+        && strOk(request.resource.data.get('message', null), 5000)
+        && stampedNow('createdAt');
       allow update, delete: if isAdmin();
     }
 
@@ -39,85 +475,192 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /reviews/{reviewId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
+    // ---------------------------------------------------------------------
+    // Gamification (code uses `user_gamification`)
+    // NOTE: points are computed on the client, so a determined user can
+    // inflate their own score. Move awarding into a Cloud Function before
+    // the leaderboard carries any real reward. The rules below only bound
+    // it: points can't go down or jump by more than one action (max 100,
+    // UserGamification.pointsForAction) per write, and the rank is
+    // admin-only.
+    // ---------------------------------------------------------------------
+    function gamificationFieldsOk() {
+      let d = request.resource.data;
+      return d.get('totalPoints', 0) is int
+        && strOk(d.get('tier', null), 40)
+        && boolOk(d.get('showOnLeaderboard', null))
+        && (d.get('recentActions', null) == null || d.recentActions is list)
+        && (d.get('certificates', null) == null || d.certificates is list);
     }
 
-    match /pet_updates/{updateId} {
+    match /user_gamification/{userId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
-    }
-
-    match /lost_found/{reportId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
-    }
-
-    match /rescue_reports/{reportId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
+      // GamificationRepository.getOrCreateUserGamification / recordAction.
+      allow create: if (isOwner(userId)
+          && keysOnly(['userId', 'totalPoints', 'tier', 'recentActions', 'certificates',
+                       'lastWeekSummary', 'weeklySummaryViewedAt', 'showOnLeaderboard',
+                       'leaderboardRank', 'createdAt', 'updatedAt'])
+          && request.resource.data.get('userId', userId) == userId
+          && gamificationFieldsOk()
+          && request.resource.data.get('totalPoints', 0) >= 0
+          && request.resource.data.get('totalPoints', 0) <= 100
+          && request.resource.data.get('leaderboardRank', 0) == 0
+          && stampedNow('createdAt')
+          && stampedNow('updatedAt'))
+        || isAdmin();
+      // recordAction / toggleLeaderboardVisibility / markWeeklySummaryViewed.
+      allow update: if (isOwner(userId)
+          && onlyChanges(['totalPoints', 'tier', 'recentActions', 'certificates',
+                          'lastWeekSummary', 'weeklySummaryViewedAt', 'showOnLeaderboard',
+                          'updatedAt'])
+          && gamificationFieldsOk()
+          && request.resource.data.get('totalPoints', 0) >= resource.data.get('totalPoints', 0)
+          && request.resource.data.get('totalPoints', 0) <= resource.data.get('totalPoints', 0) + 100
+          && updatedNow())
+        || isAdmin();
       allow delete: if isAdmin();
+
+      // Append-only history of the owner's actions.
+      match /impact_history/{actionId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if (isOwner(userId)
+            && keysOnly(['action', 'points', 'timestamp', 'description', 'relatedEntityId',
+                         'userId'])
+            && request.resource.data.get('userId', userId) == userId
+            && request.resource.data.get('points', 0) is int
+            && request.resource.data.get('points', 0) >= 0
+            && request.resource.data.get('points', 0) <= 100
+            // ImpactRecord.toMap writes a client Timestamp.fromDate(now).
+            && (request.resource.data.get('timestamp', null) == null
+                || request.resource.data.timestamp is timestamp)
+            && strOk(request.resource.data.get('action', null), 40)
+            && strOk(request.resource.data.get('description', null), 500)
+            && strOk(request.resource.data.get('relatedEntityId', null), 128))
+          || isAdmin();
+        allow update: if isAdmin();
+        // Owners may erase (never edit) their own history: needed for
+        // account deletion under the Data Protection Act, and deleting
+        // entries cannot raise anyone's points.
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+
+      match /{sub=**} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if isAdmin();
+      }
     }
 
-    // Leaderboard is public read
-    match /gamification/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+    // ===== Feature collections (each block added by its own feature) =====
+
+    // --- reports ---
+    // Report-abuse queue. Signed-in users file reports (create only); admins
+    // triage them and moderate the target by setting `hidden: true` on it
+    // (admins can already update every target collection above).
+    function validReport() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['reporterId', 'targetCollection', 'targetId',
+                               'reason', 'details', 'status', 'createdAt'])
+        && d.keys().hasAll(['reporterId', 'targetCollection', 'targetId',
+                            'reason', 'status', 'createdAt'])
+        && d.reporterId == request.auth.uid
+        && d.targetCollection in ['pets', 'lostfound', 'sightings', 'stories', 'reviews']
+        && d.targetId is string && d.targetId.size() > 0 && d.targetId.size() <= 128
+        && d.reason in ['spam', 'scam', 'animal_welfare', 'inappropriate', 'wrong_info', 'other']
+        && (!('details' in d) || (d.details is string && d.details.size() <= 1000))
+        && d.status == 'open'
+        && d.createdAt == request.time;
     }
 
-    match /leaderboard/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Authenticated-only collections
-    match /favourites/{favId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-    }
-
-    match /inquiries/{inquiryId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    match /reports/{reportId} {
+      allow create: if isAuthenticated() && validReport();
+      allow read: if ownsDoc('reporterId') || isAdmin();
       allow update, delete: if isAdmin();
     }
 
-    match /adoptions/{adoptionId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
+    // --- notifications ---
+    // In-app notifications, written by the client that causes the event.
+    // Text is localised on the reader side from `type` + `params`.
+    function notifDocPath(coll, id) {
+      return /databases/$(database)/documents/$(coll)/$(id);
     }
 
-    match /fosters/{fosterId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
+    function shortString(v, max) {
+      return v is string && v.size() > 0 && v.size() <= max;
     }
 
-    match /event_registrations/{regId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
+    // Shape shared by every notification type.
+    function validNotificationBase() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['toUid', 'type', 'params', 'refCollection', 'refId', 'fromUid', 'read', 'createdAt'])
+        && d.keys().hasAll(['toUid', 'type', 'params', 'refCollection', 'refId', 'fromUid', 'read', 'createdAt'])
+        && shortString(d.toUid, 128)
+        && shortString(d.refId, 128)
+        && d.fromUid == request.auth.uid
+        && d.read == false
+        && d.createdAt == request.time
+        && d.params is map
+        && d.params.size() <= 2;
     }
 
-    match /volunteers/{volunteerId} {
+    // Admin moved an adoption to a new stage: notify the adopter.
+    function validAdoptionStageNotification() {
+      let d = request.resource.data;
+      return d.type == 'adoption_stage'
+        && isAdmin()
+        && d.refCollection == 'adoptions'
+        && d.params.keys().hasOnly(['petName', 'stage'])
+        && d.params.keys().hasAll(['petName', 'stage'])
+        && d.params.petName is string && d.params.petName.size() <= 100
+        && d.params.stage in ['application', 'screening', 'meet_greet', 'trial', 'completed', 'rejected']
+        && d.toUid == get(notifDocPath('adoptions', d.refId)).data.adopterId;
+    }
+
+    // Someone reported a sighting on a lost post: notify the post's owner.
+    // The sighting must exist, be the caller's, and point at that post.
+    function validSightingNotification() {
+      let d = request.resource.data;
+      return d.type == 'sighting'
+        && d.refCollection == 'lostfound'
+        && d.toUid == get(notifDocPath('lostfound', d.refId)).data.userId
+        && d.toUid != request.auth.uid
+        && d.params.keys().hasOnly(['animalType', 'sightingId'])
+        && d.params.keys().hasAll(['animalType', 'sightingId'])
+        && shortString(d.params.animalType, 40)
+        && shortString(d.params.sightingId, 128)
+        && get(notifDocPath('sightings', d.params.sightingId)).data.reporterId == request.auth.uid
+        && get(notifDocPath('sightings', d.params.sightingId)).data.lostReportId == d.refId;
+    }
+
+    match /notifications/{notificationId} {
+      allow read, delete: if ownsDoc('toUid');
+      allow update: if ownsDoc('toUid') && onlyChanges(['read'])
+        && request.resource.data.read is bool;
+      allow create: if isAuthenticated() && validNotificationBase()
+        && (validAdoptionStageNotification() || validSightingNotification());
+    }
+
+    // --- admin_audit ---
+    // Append-only trail of writes made from the web admin. Admins create
+    // entries for themselves only (actorUid + server time are enforced) and
+    // can read them; nobody can edit or delete an entry from a client.
+    match /admin_audit/{entryId} {
       allow read: if isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
-    }
-
-    // Users collection: users can read/write their own doc, admins can read/write any
-    match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasAll(['actorUid', 'action', 'collection', 'docId', 'at'])
+        && request.resource.data.keys().hasOnly(['actorUid', 'action', 'collection', 'docId', 'summary', 'at'])
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.action is string
+        && request.resource.data.action.size() > 0
+        && request.resource.data.action.size() <= 64
+        && request.resource.data.collection is string
+        && request.resource.data.collection.size() <= 64
+        && request.resource.data.docId is string
+        && request.resource.data.docId.size() <= 128
+        && (!('summary' in request.resource.data)
+            || (request.resource.data.summary is string
+                && request.resource.data.summary.size() <= 500))
+        && request.resource.data.at == request.time;
+      allow update, delete: if false;
     }
   }
 }

@@ -45,3 +45,6 @@ app.*.map.json
 /android/app/release
 mauzanimo.keystore
 android/key.properties
+
+# VPS deploy secrets
+deploy/.env

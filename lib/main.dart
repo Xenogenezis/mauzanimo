@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
+import 'widgets/offline_banner.dart';
 import 'providers/language_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
@@ -17,6 +19,8 @@ import 'providers/review_provider.dart';
 import 'providers/rescue_provider.dart';
 import 'providers/foster_provider.dart';
 import 'providers/pet_update_provider.dart';
+import 'providers/recently_viewed_provider.dart';
+import 'providers/notifications_provider.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/pet_repository.dart';
 import 'repositories/lost_found_repository.dart';
@@ -27,11 +31,20 @@ import 'repositories/review_repository.dart';
 import 'repositories/rescue_repository.dart';
 import 'repositories/foster_repository.dart';
 import 'repositories/pet_update_repository.dart';
+import 'repositories/notification_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Offline-first: keep a local cache so lists open instantly and work with
+  // no signal, and queue writes until the device reconnects. (On by default
+  // on Android/iOS; this also enables it on web and bounds the cache size.)
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: 100 * 1024 * 1024,
   );
 
   final authRepository = AuthRepository();
@@ -57,6 +70,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AdoptionProvider(adoptionRepository)),
         ChangeNotifierProvider(create: (_) => RescueProvider(rescueRepository)),
         ChangeNotifierProvider(create: (_) => FosterProvider(fosterRepository)),
+        ChangeNotifierProvider(create: (_) => RecentlyViewedProvider()),
       ],
       child: Builder(
         builder: (context) {
@@ -111,6 +125,12 @@ class MauZanimoApp extends StatelessWidget {
             ChangeNotifierProvider(
               create: (_) => PetUpdateProvider(petUpdateRepository),
             ),
+            // Follows sign-in/out via setUid instead of being recreated.
+            ChangeNotifierProxyProvider<AuthProvider, NotificationsProvider>(
+              create: (_) => NotificationsProvider(NotificationRepository()),
+              update: (_, auth, p) => (p ?? NotificationsProvider(NotificationRepository()))
+                ..setUid(auth.uid),
+            ),
           ],
           child: MaterialApp(
             title: 'MauZanimo',
@@ -119,6 +139,7 @@ class MauZanimoApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
             home: const SplashScreen(),
+            builder: (context, child) => OfflineBanner(child: child ?? const SizedBox()),
           ),
         );
       },

@@ -8,6 +8,8 @@ import '../../providers/language_provider.dart';
 import 'add_story_screen.dart';
 import 'edit_story_screen.dart';
 import '../../widgets/login_required_view.dart';
+import '../../utils/moderation.dart';
+import '../../widgets/report_button.dart';
 
 class SuccessStoriesScreen extends StatefulWidget {
   const SuccessStoriesScreen({super.key});
@@ -73,7 +75,10 @@ class _SuccessStoriesScreenState extends State<SuccessStoriesScreen> {
             );
           }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          final docs = withoutHidden(
+              snapshot.data?.docs ?? <QueryDocumentSnapshot>[],
+              (d) => d.data() as Map<String, dynamic>?);
+          if (docs.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -98,11 +103,10 @@ class _SuccessStoriesScreenState extends State<SuccessStoriesScreen> {
 
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            itemCount: snapshot.data!.docs.length,
+            itemCount: docs.length,
             itemBuilder: (context, index) {
-              final data = snapshot.data!.docs[index].data()
-                  as Map<String, dynamic>;
-              final storyId = snapshot.data!.docs[index].id;
+              final data = docs[index].data() as Map<String, dynamic>;
+              final storyId = docs[index].id;
               final isOwner = data['userId'] == user.uid;
 
               return _StoryCard(
@@ -266,6 +270,13 @@ class _StoryCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (!isOwner)
+                      ReportButton(
+                        targetCollection: 'stories',
+                        targetId: storyId,
+                        color: Colors.grey,
+                        iconSize: 18,
+                      ),
                   ],
                 ),
                 const SizedBox(height: 8),

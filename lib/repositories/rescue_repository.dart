@@ -1,3 +1,4 @@
+import '../utils/offline_write.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/rescue_report.dart';
 import '../utils/result.dart';
@@ -9,7 +10,7 @@ class RescueRepository {
 
   Future<Result<void>> createReport(RescueReport report) async {
     try {
-      await _firestore.collection('rescue_reports').add(report.toMap());
+      await writeOfflineFirst(_firestore.collection('rescue_reports').doc().set(report.toMap()));
       return Result.success(null);
     } on FirebaseException catch (e) {
       return Result.failure(e.message ?? 'Firestore error', error: e);

@@ -37,5 +37,9 @@ class AdoptionProvider extends ChangeNotifier {
     return result.isSuccess;
   }
 
+  /// Live list of the adoptions where [userId] is the adopter.
+  Result<Stream<List<Adoption>>> adoptionsForUser(String userId) =>
+      _repository.getAdoptionsForUser(userId);
+
   void clearError() { _error = null; notifyListeners(); }
 }
