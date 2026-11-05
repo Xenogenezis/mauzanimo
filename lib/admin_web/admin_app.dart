@@ -12,6 +12,7 @@ import '../utils/geo_utils.dart';
 import '../widgets/app_image.dart';
 import '../widgets/location_picker.dart';
 import 'collection_table.dart';
+import 'overview.dart';
 
 const _adminRoles = ['admin', 'superAdmin'];
 const _allRoles = ['adopter', 'rehomer', 'volunteer', 'partner', 'admin', 'superAdmin'];
@@ -184,7 +185,7 @@ class _AdminShellState extends State<AdminShell> {
   bool get _isSuper => widget.role == 'superAdmin';
 
   late final List<_Section> _sections = [
-    _Section('Overview', Icons.dashboard_outlined, () => _Overview(onOpen: (i) => setState(() => _index = i))),
+    _Section('Overview', Icons.dashboard_outlined, () => AdminOverview(onOpen: _openSection, footer: _mapFooter())),
     _Section('Sightings', Icons.add_location_alt_outlined, () => const _SightingsPage()),
     _Section('Pets', Icons.pets, _pets),
     _Section('Adoptions', Icons.favorite_outline, _adoptions),
@@ -197,6 +198,20 @@ class _AdminShellState extends State<AdminShell> {
     _Section('Volunteers', Icons.volunteer_activism_outlined, _volunteers),
     _Section('Users', Icons.people_outline, _users),
   ];
+
+  /// Navigates to the section with this label (used by the Overview page).
+  void _openSection(String label) {
+    final i = _sections.indexWhere((s) => s.label == label);
+    if (i >= 0) setState(() => _index = i);
+  }
+
+  Widget _mapFooter() => Builder(
+        builder: (context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Last 7 days on the map', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          const SizedBox(height: 460, child: _ActivityMap()),
+        ]),
+      );
 
   Widget _pets() => CollectionTable(
         title: 'Pets',
@@ -524,86 +539,8 @@ Object? Function(Map<String, dynamic>) _f(String field) => (d) => d[field];
 Object? _imageOf(Map<String, dynamic> d) => d['imageUrl'];
 
 // ---------------------------------------------------------------------------
-// Overview
+// Activity map (shown under the Overview dashboard)
 // ---------------------------------------------------------------------------
-
-class _Overview extends StatelessWidget {
-  final ValueChanged<int> onOpen;
-  const _Overview({required this.onOpen});
-
-  static final _db = FirebaseFirestore.instance;
-
-  @override
-  Widget build(BuildContext context) {
-    final tiles = <(String, Query, int, IconData, Color)>[
-      ('Open sightings', _db.collection('sightings').where('status', isEqualTo: 'open'), 1, Icons.add_location_alt, Colors.teal),
-      ('Pets available', _db.collection('pets').where('status', isEqualTo: 'available'), 2, Icons.pets, AppTheme.primary),
-      ('Adoptions in progress', _db.collection('adoptions').where('currentStage', whereIn: ['application', 'screening', 'meet_greet', 'trial']), 3, Icons.favorite, Colors.pink),
-      ('New inquiries', _db.collection('inquiries').where('status', isEqualTo: 'pending'), 4, Icons.mail, Colors.indigo),
-      ('Lost & found posts', _db.collection('lostfound'), 5, Icons.search, Colors.orange),
-      ('Unhandled SOS', _db.collection('rescue_reports').where('status', isEqualTo: 'pending'), 6, Icons.warning_amber_rounded, Colors.red),
-      ('Pets adopted', _db.collection('pets').where('status', isEqualTo: 'adopted'), 2, Icons.celebration, Colors.green),
-      ('Users', _db.collection('users'), 11, Icons.people, Colors.blueGrey),
-    ];
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        Text('Overview', style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 16),
-        Wrap(spacing: 16, runSpacing: 16, children: [
-          for (final (label, q, target, icon, color) in tiles)
-            _CountTile(label: label, query: q, icon: icon, color: color, onTap: () => onOpen(target)),
-        ]),
-        const SizedBox(height: 24),
-        Text('Last 7 days on the map', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        const SizedBox(height: 460, child: _ActivityMap()),
-      ],
-    );
-  }
-}
-
-class _CountTile extends StatelessWidget {
-  final String label;
-  final Query query;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-  const _CountTile({required this.label, required this.query, required this.icon, required this.color, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 220,
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(children: [
-              CircleAvatar(backgroundColor: color.withValues(alpha: 0.12), child: Icon(icon, color: color)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  // count() aggregation: billed as 1 read per 1000 docs, not per doc.
-                  FutureBuilder<AggregateQuerySnapshot>(
-                    future: query.count().get(),
-                    builder: (_, s) => Text(
-                      s.hasError ? '–' : (s.data?.count?.toString() ?? '…'),
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                ]),
-              ),
-            ]),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Sightings and geotagged lost & found posts from the last week.
 class _ActivityMap extends StatelessWidget {
