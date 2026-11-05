@@ -10,6 +10,7 @@ import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/providers/recently_viewed_provider.dart';
 import 'package:stray_pets_mu/widgets/app_image.dart';
+import 'package:stray_pets_mu/utils/responsive.dart';
 
 class FavouritesScreen extends StatefulWidget {
   const FavouritesScreen({super.key});
@@ -88,10 +89,11 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                           const Text('No saved pets yet', style: TextStyle(color: Colors.grey)),
                         ]));
                       }
-                      return GridView.builder(
+                      return LayoutBuilder(builder: (context, constraints) => GridView.builder(
                         padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 0.75),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: gridColumnsForWidth(constraints.maxWidth - 32),
+                          crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 0.75),
                         itemCount: favPets.length,
                         itemBuilder: (context, index) {
                           final pet = favPets[index].data() as Map<String, dynamic>;
@@ -101,7 +103,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                             onTap: () => Navigator.push(context,
                               MaterialPageRoute(builder: (_) => PetDetailScreen(pet: pet, petId: petId))));
                         },
-                      );
+                      ));
                     },
                   );
                 },

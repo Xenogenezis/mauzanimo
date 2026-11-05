@@ -8,6 +8,7 @@ import 'package:stray_pets_mu/providers/pet_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/widgets/pet_filter_sheet.dart';
 import 'package:stray_pets_mu/models/pet_filters.dart';
+import 'package:stray_pets_mu/utils/responsive.dart';
 
 class PetListScreen extends StatefulWidget {
   const PetListScreen({super.key});
@@ -191,12 +192,14 @@ class _PetListScreenState extends State<PetListScreen> {
                         ],
                       ),
                     )
-                  : GridView.builder(
+                  : LayoutBuilder(
+                    builder: (context, constraints) => GridView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
+                          SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount:
+                            gridColumnsForWidth(constraints.maxWidth - 32),
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                         childAspectRatio: 0.75,
@@ -226,6 +229,7 @@ class _PetListScreenState extends State<PetListScreen> {
                         );
                       },
                     ),
+                  ),
         ),
       ],
     );

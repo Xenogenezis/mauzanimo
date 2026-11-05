@@ -11,6 +11,7 @@ import 'package:stray_pets_mu/providers/auth_provider.dart';
 import 'package:stray_pets_mu/widgets/auth_guard.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/widgets/adaptive_nav_scaffold.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>().lang;
-    return Scaffold(
+    return AdaptiveNavScaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Row(children: [
@@ -57,17 +58,13 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(AppStrings.get('list_pet', lang), style: const TextStyle(color: Colors.white)),
       ) : null,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        selectedItemColor: AppTheme.primary,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: [
-          BottomNavigationBarItem(icon: const Icon(Icons.pets), label: AppStrings.get('pets', lang)),
-          BottomNavigationBarItem(icon: const Icon(Icons.favorite_outline), label: AppStrings.get('saved', lang)),
-          BottomNavigationBarItem(icon: const Icon(Icons.person_outline), label: AppStrings.get('profile', lang)),
-        ],
-      ),
+      currentIndex: _currentIndex,
+      onDestinationSelected: (index) => setState(() => _currentIndex = index),
+      destinations: [
+        AdaptiveNavDestination(icon: Icons.pets, label: AppStrings.get('pets', lang)),
+        AdaptiveNavDestination(icon: Icons.favorite_outline, label: AppStrings.get('saved', lang)),
+        AdaptiveNavDestination(icon: Icons.person_outline, label: AppStrings.get('profile', lang)),
+      ],
     );
   }
 }
