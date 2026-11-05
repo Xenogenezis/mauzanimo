@@ -5,6 +5,7 @@ import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
 import 'package:stray_pets_mu/screens/auth/register_screen.dart';
 import 'package:stray_pets_mu/screens/pets/my_pets_screen.dart';
+import 'package:stray_pets_mu/screens/adoption/my_adoptions_screen.dart';
 import 'package:stray_pets_mu/providers/auth_provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/providers/gamification_provider.dart';
@@ -204,6 +205,25 @@ class ProfileScreen extends StatelessWidget {
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(AppStrings.get('my_pet_listings', lang), style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
                       Text(AppStrings.get('edit_or_delete_your_listed_pets', lang), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    ])),
+                    const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                  ]),
+                ),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyAdoptionsScreen())),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4))]),
+                  child: Row(children: [
+                    const Icon(Icons.volunteer_activism_outlined, color: AppTheme.primary),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(AppStrings.get('my_adoptions', lang), style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                      Text(AppStrings.get('my_adoptions_subtitle', lang), style: const TextStyle(fontSize: 12, color: Colors.grey)),
                     ])),
                     const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
                   ]),

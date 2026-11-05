@@ -1,5 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// Server timestamps are null in local snapshots until the write is
+/// confirmed; fall back to now instead of throwing.
+DateTime _toDate(Object? value) =>
+    value is Timestamp ? value.toDate() : DateTime.now();
+
 enum AdoptionStage { application, screening, meet_greet, trial, completed, rejected }
 
 class StageRecord {
@@ -13,7 +18,7 @@ class StageRecord {
   factory StageRecord.fromMap(Map<String, dynamic> map) => StageRecord(
         stage: AdoptionStage.values.firstWhere((s) => s.name == map['stage'] as String?,
             orElse: () => AdoptionStage.application),
-        timestamp: (map['timestamp'] as Timestamp).toDate(),
+        timestamp: _toDate(map['timestamp']),
         notes: map['notes'] as String?,
         changedBy: map['changedBy'] as String?,
       );
@@ -66,7 +71,7 @@ class Adoption {
         stageHistory: (map['stageHistory'] as List<dynamic>?)
                 ?.map((e) => StageRecord.fromMap(e as Map<String, dynamic>))
                 .toList() ?? [],
-        createdAt: (map['createdAt'] as Timestamp).toDate(),
+        createdAt: _toDate(map['createdAt']),
         rejectionReason: map['rejectionReason'] as String?,
       );
 

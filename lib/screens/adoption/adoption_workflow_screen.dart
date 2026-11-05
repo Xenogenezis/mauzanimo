@@ -14,7 +14,21 @@ class AdoptionWorkflowScreen extends StatefulWidget {
   final Map<String, dynamic> pet;
   final String petId;
 
-  const AdoptionWorkflowScreen({super.key, required this.pet, required this.petId});
+  /// An existing application to follow. When set, the form is skipped and
+  /// the stage tracker for this adoption is shown.
+  final Adoption? adoption;
+
+  const AdoptionWorkflowScreen(
+      {super.key, required this.pet, required this.petId, this.adoption});
+
+  /// Opens the tracker for an existing [adoption].
+  factory AdoptionWorkflowScreen.existing({Key? key, required Adoption adoption}) =>
+      AdoptionWorkflowScreen(
+        key: key,
+        pet: {'name': adoption.petName},
+        petId: adoption.petId,
+        adoption: adoption,
+      );
 
   @override
   State<AdoptionWorkflowScreen> createState() => _AdoptionWorkflowScreenState();
@@ -40,6 +54,13 @@ class _AdoptionWorkflowScreenState extends State<AdoptionWorkflowScreen> {
     _nameController.text = authProvider.userProfile?.name ?? '';
     _emailController.text = authProvider.email ?? '';
     _phoneController.text = authProvider.userProfile?.phone ?? '';
+    final existing = widget.adoption;
+    if (existing != null) {
+      _submitted = true;
+      _adoptionId = existing.id;
+      _currentStage = existing.currentStage;
+      _stageHistory = existing.stageHistory;
+    }
   }
 
   @override
@@ -171,8 +192,6 @@ class _AdoptionWorkflowScreenState extends State<AdoptionWorkflowScreen> {
       _('stage_completed'),
     ];
 
-    final currentIndex = stages.indexOf(_currentStage ?? AdoptionStage.application);
-
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('adoptions')
@@ -189,6 +208,8 @@ class _AdoptionWorkflowScreenState extends State<AdoptionWorkflowScreen> {
                   ?.map((e) => StageRecord.fromMap(e as Map<String, dynamic>))
                   .toList() ?? [];
         }
+        final currentIndex =
+            stages.indexOf(_currentStage ?? AdoptionStage.application);
 
         return ListView(
           padding: const EdgeInsets.all(20),
