@@ -1,3 +1,7 @@
+import 'strings_lostfound.dart';
+import 'strings_recent.dart';
+import 'strings_adoption_tips.dart';
+
 class AppStrings {
   static Map<String, Map<String, String>> translations = {
     'en': {
@@ -1261,7 +1265,25 @@ class AppStrings {
     },
   };
 
+  /// Per-feature string files, kept separate so features can be added
+  /// without editing this large map.
+  static const List<Map<String, Map<String, String>>> featureStrings = [
+    lostfoundStrings,
+    recentStrings,
+    adoptionTipsStrings,
+  ];
+
+  static String? _lookup(String key, String lang) {
+    final v = translations[lang]?[key];
+    if (v != null) return v;
+    for (final m in featureStrings) {
+      final f = m[lang]?[key];
+      if (f != null) return f;
+    }
+    return null;
+  }
+
   static String get(String key, String lang) {
-    return translations[lang]?[key] ?? translations['en']?[key] ?? key;
+    return _lookup(key, lang) ?? _lookup(key, 'en') ?? key;
   }
 }
