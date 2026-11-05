@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../repositories/pet_repository.dart';
 import '../models/pet.dart';
 import '../models/pet_preferences.dart';
+import '../models/pet_filters.dart';
 import '../utils/result.dart';
 
 class PetProvider extends ChangeNotifier {
@@ -92,8 +93,16 @@ class PetProvider extends ChangeNotifier {
       }
     }
 
-    _filteredPets = result;
+    _filteredPets = _listFilters.apply(result);
     notifyListeners();
+  }
+
+  PetFilters _listFilters = PetFilters.none;
+  PetFilters get listFilters => _listFilters;
+
+  void setListFilters(PetFilters filters) {
+    _listFilters = filters;
+    _applyFilters();
   }
 
   void setPreferences(PetPreferences? prefs) {
@@ -102,18 +111,10 @@ class PetProvider extends ChangeNotifier {
   }
 
   bool _matchesAgeRange(String petAge, String range) {
-    final years = int.tryParse(petAge.replaceAll(RegExp(r'[^0-9]'), ''));
-    if (years == null) return true;
-    switch (range) {
-      case 'young':
-        return years <= 1;
-      case 'adult':
-        return years > 1 && years <= 7;
-      case 'senior':
-        return years > 7;
-      default:
-        return true;
-    }
+    // "6 months" used to parse as 6 years; the shared parser handles units.
+    final group = PetFilters.ageGroupOf(petAge);
+    if (group == AgeGroup.any) return true;
+    return range == 'any' || group.name == range;
   }
 
   void setSearchQuery(String query) {

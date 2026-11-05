@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/providers/pet_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/widgets/pet_filter_sheet.dart';
+import 'package:stray_pets_mu/models/pet_filters.dart';
 
 class PetListScreen extends StatefulWidget {
   const PetListScreen({super.key});
@@ -75,7 +77,8 @@ class _PetListScreenState extends State<PetListScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Container(
+              Row(children: [
+              Expanded(child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -101,7 +104,26 @@ class _PetListScreenState extends State<PetListScreen> {
                         : null,
                   ),
                 ),
+              )),
+              const SizedBox(width: 8),
+              Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                child: IconButton(
+                  tooltip: AppStrings.get('filter_sort', lang),
+                  icon: Badge(
+                    isLabelVisible: petProvider.listFilters.activeCount > 0,
+                    label: Text('${petProvider.listFilters.activeCount}'),
+                    child: const Icon(Icons.tune, color: AppTheme.primary),
+                  ),
+                  onPressed: () async {
+                    final chosen = await showPetFilterSheet(
+                        context, petProvider.listFilters, lang);
+                    if (chosen != null) petProvider.setListFilters(chosen);
+                  },
+                ),
               ),
+              ]),
             ],
           ),
         ),
@@ -118,7 +140,7 @@ class _PetListScreenState extends State<PetListScreen> {
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
-                  label: Text(filter),
+                  label: Text(AppStrings.get(filter.toLowerCase(), lang)),
                   selected: isSelected,
                   onSelected: (selected) {
                     if (selected) petProvider.setFilter(filter);
@@ -151,9 +173,21 @@ class _PetListScreenState extends State<PetListScreen> {
                               color: Colors.grey.shade300),
                           const SizedBox(height: 16),
                           Text(
-                            AppStrings.get('no_pets', lang),
+                            AppStrings.get(
+                                petProvider.listFilters.activeCount > 0 ||
+                                        petProvider.searchQuery.isNotEmpty
+                                    ? 'no_pets_match'
+                                    : 'no_pets',
+                                lang),
                             style: const TextStyle(color: Colors.grey),
                           ),
+                          if (petProvider.listFilters.activeCount > 0)
+                            TextButton(
+                              onPressed: () => petProvider
+                                  .setListFilters(PetFilters.none),
+                              child: Text(
+                                  AppStrings.get('filter_reset', lang)),
+                            ),
                         ],
                       ),
                     )

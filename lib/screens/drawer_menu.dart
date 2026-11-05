@@ -19,6 +19,8 @@ import 'package:stray_pets_mu/screens/gamification/leaderboard_screen.dart';
 import 'package:stray_pets_mu/screens/rescue/rescue_report_screen.dart';
 import 'package:stray_pets_mu/screens/foster/my_fosters_screen.dart';
 import 'package:stray_pets_mu/screens/sightings/sightings_screen.dart';
+import 'package:stray_pets_mu/screens/info/adoption_quiz_screen.dart';
+import 'package:stray_pets_mu/screens/info/care_guide_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -121,6 +123,20 @@ class AppDrawer extends StatelessWidget {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const MyFostersScreen()));
                     },
                   ),
+                _DrawerTile(
+                  icon: Icons.quiz_outlined,
+                  title: AppStrings.get('quiz_title', lang),
+                  subtitle: AppStrings.get('quiz_subtitle', lang),
+                  color: Colors.indigo,
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const AdoptionQuizScreen())); },
+                ),
+                _DrawerTile(
+                  icon: Icons.menu_book_outlined,
+                  title: AppStrings.get('care_guide', lang),
+                  subtitle: AppStrings.get('care_guide_subtitle', lang),
+                  color: Colors.green,
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const CareGuideScreen())); },
+                ),
                 _DrawerTile(
                   icon: Icons.event_outlined,
                   title: AppStrings.get('events', lang),

@@ -9,6 +9,8 @@ import 'package:stray_pets_mu/screens/pets/upload_pet_screen.dart';
 import 'package:stray_pets_mu/screens/drawer_menu.dart';
 import 'package:stray_pets_mu/providers/auth_provider.dart';
 import 'package:stray_pets_mu/widgets/auth_guard.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
+import 'package:stray_pets_mu/lang/app_strings.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [const PetListScreen(), const FavouritesScreen(), const ProfileScreen()];
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>().lang;
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
@@ -52,17 +55,17 @@ class _HomeScreenState extends State<HomeScreen> {
         }),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('List a Pet', style: TextStyle(color: Colors.white)),
+        label: Text(AppStrings.get('list_pet', lang), style: const TextStyle(color: Colors.white)),
       ) : null,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         selectedItemColor: AppTheme.primary,
         unselectedItemColor: Colors.grey,
         onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.pets), label: 'Pets'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_outline), label: 'Saved'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.pets), label: AppStrings.get('pets', lang)),
+          BottomNavigationBarItem(icon: const Icon(Icons.favorite_outline), label: AppStrings.get('saved', lang)),
+          BottomNavigationBarItem(icon: const Icon(Icons.person_outline), label: AppStrings.get('profile', lang)),
         ],
       ),
     );

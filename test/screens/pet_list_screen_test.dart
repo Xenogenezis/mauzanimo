@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:stray_pets_mu/screens/pets/pet_list_screen.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/providers/pet_provider.dart';
+import 'package:stray_pets_mu/models/pet_filters.dart';
 
 class MockLanguageProvider extends Mock implements LanguageProvider {}
 
@@ -13,6 +14,8 @@ class MockPetProvider extends Mock implements PetProvider {}
 void main() {
   late MockLanguageProvider mockLanguageProvider;
   late MockPetProvider mockPetProvider;
+
+  setUpAll(() => registerFallbackValue(PetFilters.none));
 
   setUp(() {
     mockLanguageProvider = MockLanguageProvider();
@@ -24,6 +27,8 @@ void main() {
     when(() => mockPetProvider.filters).thenReturn(['All', 'Dogs', 'Cats', 'Others']);
     when(() => mockPetProvider.selectedFilter).thenReturn('All');
     when(() => mockPetProvider.isLoadingMore).thenReturn(false);
+    when(() => mockPetProvider.listFilters).thenReturn(PetFilters.none);
+    when(() => mockPetProvider.searchQuery).thenReturn('');
   });
 
   Widget createTestWidget() {
@@ -87,5 +92,29 @@ void main() {
 
       expect(find.byIcon(Icons.pets), findsOneWidget);
     });
+  });
+
+  testWidgets('filter button opens the filter sheet', (tester) async {
+    await tester.pumpWidget(createTestWidget());
+    await tester.tap(find.byIcon(Icons.tune));
+    await tester.pumpAndSettle();
+    expect(find.text('Filter & sort'), findsWidgets);
+    expect(find.text('Newest'), findsOneWidget);
+    expect(find.text('Show pets'), findsOneWidget);
+  });
+
+  testWidgets('applying the sheet passes filters to the provider',
+      (tester) async {
+    await tester.pumpWidget(createTestWidget());
+    await tester.tap(find.byIcon(Icons.tune));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Female'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('Show pets'));
+    await tester.tap(find.text('Show pets'));
+    await tester.pumpAndSettle();
+    final captured =
+        verify(() => mockPetProvider.setListFilters(captureAny())).captured;
+    expect((captured.single as PetFilters).gender, 'female');
   });
 }
