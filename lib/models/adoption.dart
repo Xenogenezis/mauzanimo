@@ -25,7 +25,9 @@ class StageRecord {
 
   Map<String, dynamic> toMap() => {
         'stage': stage.name,
-        'timestamp': FieldValue.serverTimestamp(),
+        // Firestore rejects serverTimestamp() inside arrays (stageHistory is
+        // written with arrayUnion), which made every stage update fail.
+        'timestamp': Timestamp.fromDate(timestamp),
         'notes': notes,
         'changedBy': changedBy,
       };
