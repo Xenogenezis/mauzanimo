@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/sighting.dart';
 import '../utils/geo_utils.dart';
+import '../utils/offline_write.dart';
 import '../utils/result.dart';
 
 class SightingRepository {
@@ -10,10 +11,12 @@ class SightingRepository {
   SightingRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  Future<Result<String>> create(Sighting sighting) async {
+  /// Returns whether the write reached the server or is queued offline.
+  Future<Result<WriteOutcome>> create(Sighting sighting) async {
     try {
-      final ref = await _firestore.collection(collection).add(sighting.toMap());
-      return Result.success(ref.id);
+      final ref = _firestore.collection(collection).doc();
+      final outcome = await writeOfflineFirst(ref.set(sighting.toMap()));
+      return Result.success(outcome);
     } on FirebaseException catch (e) {
       return Result.failure(e.message ?? 'Could not save sighting', error: e);
     } catch (e) {

@@ -15,6 +15,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/geo_utils.dart';
 import '../../utils/location_service.dart';
 import '../../utils/result.dart';
+import '../../utils/offline_write.dart';
 import '../../widgets/location_picker.dart';
 
 /// Take a photo of an animal in the street; GPS is captured automatically and
@@ -155,7 +156,9 @@ class _ReportSightingScreenState extends State<ReportSightingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_t('sighting_thanks'))));
+    final queued = result.dataOrNull == WriteOutcome.queued;
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_t(queued ? 'saved_offline' : 'sighting_thanks'))));
     Navigator.pop(context, true);
   }
 

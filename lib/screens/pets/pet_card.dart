@@ -1,5 +1,5 @@
+import 'package:stray_pets_mu/widgets/app_image.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 
 class PetCard extends StatelessWidget {
@@ -25,14 +25,8 @@ class PetCard extends StatelessWidget {
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-                child: pet['imageUrl'] != null
-                  ? CachedNetworkImage(
-                      imageUrl: pet['imageUrl'],
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      placeholder: (_, __) => _placeholder(),
-                      errorWidget: (_, __, ___) => _placeholder(),
-                    )
+                child: (pet['imageUrl'] as String? ?? '').isNotEmpty
+                  ? AppImage(pet['imageUrl'] as String?, width: double.infinity, decodeWidth: 240)
                   : _placeholder(),
               ),
             ),

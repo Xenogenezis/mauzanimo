@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/utils/location_service.dart';
+import 'package:stray_pets_mu/utils/offline_write.dart';
 import 'package:stray_pets_mu/widgets/location_picker.dart';
 
 class AddLostFoundScreen extends StatefulWidget {
@@ -70,7 +71,7 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
     }
     setState(() => _isLoading = true);
     try {
-      await FirebaseFirestore.instance.collection('lostfound').add({
+      await writeOfflineFirst(FirebaseFirestore.instance.collection('lostfound').doc().set({
         'type': _type, 'animalType': _animalType,
         'description': _descriptionController.text.trim(),
         'location': _locationController.text.trim(),
@@ -81,7 +82,7 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
         if (_pin != null) 'geo': GeoPoint(_pin!.latitude, _pin!.longitude),
         'userId': FirebaseAuth.instance.currentUser?.uid,
         'createdAt': FieldValue.serverTimestamp(),
-      });
+      }));
       if (mounted) setState(() => _submitted = true);
     } catch (e) {
       if (!mounted) return;

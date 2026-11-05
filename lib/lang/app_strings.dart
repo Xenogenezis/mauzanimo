@@ -361,6 +361,8 @@ class AppStrings {
       'pin_location': 'Pin location on map',
       'pin_location_hint': 'Helps neighbours and volunteers find the animal',
       'no_location_pinned': 'No location pinned',
+      'offline_banner': 'Offline - showing saved data. Changes will sync later.',
+      'saved_offline': 'Saved on your phone - it will upload when you are back online.',
     },
     'fr': {
       'app_name': 'MauZanimo',
@@ -723,6 +725,8 @@ class AppStrings {
       'pin_location': 'Placer sur la carte',
       'pin_location_hint': 'Aide les voisins et benevoles a retrouver l\'animal',
       'no_location_pinned': 'Aucun lieu place',
+      'offline_banner': 'Hors ligne - donnees enregistrees. Synchronisation plus tard.',
+      'saved_offline': 'Enregistre sur votre telephone - envoi des le retour du reseau.',
     },
     'mfe': {
       'app_name': 'MauZanimo',
@@ -1084,6 +1088,8 @@ class AppStrings {
       'pin_location': 'Met lor kart',
       'pin_location_hint': 'Ed vwazin ek volonter trouv zanimo-la',
       'no_location_pinned': 'Pa ena plas lor kart',
+      'offline_banner': 'Offline - pe montre done ki finn sove. Pou sinkronize apre.',
+      'saved_offline': 'Finn sove lor ou telefonn - pou anvoy kan ena rezo.',
     },
   };
 

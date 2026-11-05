@@ -1,6 +1,5 @@
+import 'package:stray_pets_mu/widgets/app_image.dart';
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/adoption/adoption_workflow_screen.dart';
 import 'package:stray_pets_mu/screens/reviews/add_review_screen.dart';
@@ -221,7 +220,10 @@ class PetDetailScreen extends StatelessWidget {
                         final phone = pet['contact'] ?? '';
                         final name = pet['name'] ?? 'this pet';
                         final message = 'Hi, I am interested in adopting ' + name + ' from MauZanimo!';
-                        final url = '${'https://wa.me/' + phone.replaceAll(' ', '')}?text=${Uri.encodeComponent(message)}';
+                        // wa.me only accepts digits; strip anything else from the user-entered contact.
+                        var digits = phone.toString().replaceAll(RegExp(r'[^0-9]'), '');
+                        if (digits.length == 7 || digits.length == 8) digits = '230$digits'; // local Mauritian number
+                        final url = 'https://wa.me/$digits?text=${Uri.encodeComponent(message)}';
                         if (await canLaunchUrl(Uri.parse(url))) {
                           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                         }
@@ -284,40 +286,8 @@ class PetDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImage(String imageUrl) {
-    if (imageUrl.startsWith('data:image')) {
-      // Base64 encoded image with error handling
-      try {
-        final base64String = imageUrl.split(',').last;
-        // Validate base64 string
-        if (base64String.isEmpty) {
-          return _placeholder();
-        }
-        final decodedBytes = base64Decode(base64String);
-        // Validate decoded data
-        if (decodedBytes.isEmpty) {
-          return _placeholder();
-        }
-        return Image.memory(
-          decodedBytes,
-          fit: BoxFit.cover,
-          errorBuilder: (c, e, s) => _placeholder(),
-        );
-      } catch (e) {
-        // Log error for debugging
-        debugPrint('Error decoding base64 image: $e');
-        return _placeholder();
-      }
-    } else {
-      // Network image URL
-      return CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => _placeholder(),
-        errorWidget: (_, __, ___) => _placeholder(),
-      );
-    }
-  }
+  Widget _buildImage(String imageUrl) =>
+      AppImage(imageUrl, width: double.infinity, decodeWidth: 800);
 
   Widget _placeholder() => Container(color: AppTheme.lightGrey,
     child: const Center(child: Icon(Icons.pets, size: 80, color: AppTheme.primary)));

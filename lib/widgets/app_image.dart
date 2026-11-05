@@ -13,6 +13,10 @@ class AppImage extends StatelessWidget {
   final BoxFit fit;
   final IconData placeholderIcon;
 
+  /// Logical width the image is decoded at. Decoding a 1024px photo for a
+  /// 160px card wastes memory and causes jank while scrolling.
+  final double decodeWidth;
+
   const AppImage(
     this.source, {
     super.key,
@@ -20,6 +24,7 @@ class AppImage extends StatelessWidget {
     this.height,
     this.fit = BoxFit.cover,
     this.placeholderIcon = Icons.pets,
+    this.decodeWidth = 480,
   });
 
   static final Map<String, Uint8List> _decoded = {};
@@ -50,12 +55,15 @@ class AppImage extends StatelessWidget {
       child: Icon(placeholderIcon, color: Colors.grey.shade400, size: 32),
     );
     if (src.isEmpty) return placeholder;
+    final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2.0;
+    final cacheWidth = (decodeWidth * dpr).round();
 
     if (src.startsWith('data:')) {
       final bytes = _decode(src);
       if (bytes == null) return placeholder;
       return Image.memory(bytes,
           width: width, height: height, fit: fit, gaplessPlayback: true,
+          cacheWidth: cacheWidth,
           errorBuilder: (_, __, ___) => placeholder);
     }
     if (src.startsWith('http')) {
@@ -64,6 +72,7 @@ class AppImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
+        memCacheWidth: cacheWidth,
         placeholder: (_, __) => placeholder,
         errorWidget: (_, __, ___) => placeholder,
       );
