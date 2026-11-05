@@ -84,7 +84,8 @@ service cloud.firestore {
           && (!(request.resource.data.get('role', '') in ['admin', 'superAdmin'])
               && !(resource.data.get('role', '') in ['admin', 'superAdmin'])
               || isSuperAdmin()));
-      allow delete: if isSuperAdmin();
+      // Owners may erase their own profile (account deletion, DPA 2017).
+      allow delete: if isOwner(userId) || isSuperAdmin();
     }
 
     match /pending_users/{id} {

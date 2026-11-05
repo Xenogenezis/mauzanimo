@@ -4,6 +4,7 @@ import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
 import 'package:stray_pets_mu/screens/auth/register_screen.dart';
+import 'package:stray_pets_mu/screens/account/account_section.dart';
 import 'package:stray_pets_mu/screens/pets/my_pets_screen.dart';
 import 'package:stray_pets_mu/screens/adoption/my_adoptions_screen.dart';
 import 'package:stray_pets_mu/providers/auth_provider.dart';
@@ -371,6 +372,8 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
               ],
+              const AccountSection(),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
