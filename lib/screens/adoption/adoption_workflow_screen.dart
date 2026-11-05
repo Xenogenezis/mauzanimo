@@ -8,6 +8,7 @@ import 'package:stray_pets_mu/providers/adoption_provider.dart';
 import 'package:stray_pets_mu/providers/auth_provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/widgets/adoption_stage_tips.dart';
 
 class AdoptionWorkflowScreen extends StatefulWidget {
   final Map<String, dynamic> pet;
@@ -233,6 +234,8 @@ class _AdoptionWorkflowScreenState extends State<AdoptionWorkflowScreen> {
                 ]),
               ),
             ],
+            const SizedBox(height: 16),
+            AdoptionStageTips(stage: _currentStage ?? AdoptionStage.application),
             if (isAdmin &&
                 _currentStage != AdoptionStage.completed &&
                 _currentStage != AdoptionStage.rejected) ...[
