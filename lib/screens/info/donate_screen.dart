@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/adaptive_colors.dart';
 import '../../lang/app_strings.dart';
 import '../../providers/language_provider.dart';
 
@@ -11,6 +12,7 @@ class DonateScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context).lang;
+    final textColor = context.textStrong;
 
     return Scaffold(
       appBar: AppBar(
@@ -28,10 +30,11 @@ class DonateScreen extends StatelessWidget {
             Center(
               child: Text(
                 AppStrings.get('support_mauzanimo', lang),
-                style: const TextStyle(
+                textAlign: TextAlign.center,
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
+                  color: textColor,
                 ),
               ),
             ),
@@ -42,7 +45,7 @@ class DonateScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppTheme.textDark.withOpacity(0.6),
+                  color: textColor.withValues(alpha: 0.6),
                 ),
               ),
             ),
@@ -70,17 +73,17 @@ class DonateScreen extends StatelessWidget {
             const SizedBox(height: 32),
             Text(
               AppStrings.get('bank_transfer_details', lang),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textDark,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.lightGrey,
+                color: context.mutedFill,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -88,22 +91,22 @@ class DonateScreen extends StatelessWidget {
                 children: [
                   Text(
                     AppStrings.get('bank_mcb_mauritius', lang),
-                    style: const TextStyle(fontSize: 14, color: AppTheme.textDark),
+                    style: TextStyle(fontSize: 14, color: textColor),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     AppStrings.get('account_name_jci_grand_baie', lang),
-                    style: const TextStyle(fontSize: 14, color: AppTheme.textDark),
+                    style: TextStyle(fontSize: 14, color: textColor),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     AppStrings.get('account_no_xxxxxxxxxxxx', lang),
-                    style: const TextStyle(fontSize: 14, color: AppTheme.textDark),
+                    style: TextStyle(fontSize: 14, color: textColor),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     AppStrings.get('reference_mauzanimo_donation', lang),
-                    style: const TextStyle(fontSize: 14, color: AppTheme.textDark),
+                    style: TextStyle(fontSize: 14, color: textColor),
                   ),
                 ],
               ),
@@ -127,16 +130,8 @@ class DonateScreen extends StatelessWidget {
 
   Future<void> _contactForAlternativePayment(BuildContext context, String lang) async {
     const email = 'jcigrandbaie@gmail.com';
-    final subject = Uri.encodeComponent(
-      lang == 'fr'
-          ? 'Demande de don - Autres methodes de paiement'
-          : 'Donation Inquiry - Alternative Payment Methods',
-    );
-    final body = Uri.encodeComponent(
-      lang == 'fr'
-          ? 'Bonjour,\n\nJe souhaite faire un don a MauZanimo et jaimerais connaitre les autres methodes de paiement disponibles.\n\nCordialement,'
-          : 'Hello,\n\nI would like to make a donation to MauZanimo and would like to know about alternative payment methods available.\n\nBest regards,',
-    );
+    final subject = Uri.encodeComponent(AppStrings.get('ui_donate_email_subject', lang));
+    final body = Uri.encodeComponent(AppStrings.get('ui_donate_email_body', lang));
 
     final uri = Uri.parse('mailto:$email?subject=$subject&body=$body');
 
@@ -146,11 +141,7 @@ class DonateScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              lang == 'fr'
-                  ? 'Impossible d\'ouvrir l\'application email'
-                  : 'Could not open email app',
-            ),
+            content: Text(AppStrings.get('ui_could_not_open_email', lang)),
           ),
         );
       }
@@ -176,11 +167,11 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -191,7 +182,7 @@ class _InfoCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color),
@@ -203,9 +194,9 @@ class _InfoCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textDark,
+                    color: context.textStrong,
                   ),
                 ),
                 const SizedBox(height: 4),

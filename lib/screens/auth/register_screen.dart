@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
+import 'package:stray_pets_mu/theme/adaptive_colors.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/screens/home_screen.dart';
@@ -53,8 +54,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>().lang;
+    final textColor = context.textStrong;
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: context.pageBackground,
       appBar: AppBar(title: Text(AppStrings.get('create_account', lang))),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -66,10 +68,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const Center(child: Icon(Icons.pets, size: 64, color: AppTheme.primary)),
               const SizedBox(height: 16),
               Center(child: Text(AppStrings.get('join_mauzanimo', lang),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor))),
               const SizedBox(height: 8),
               Center(child: Text(AppStrings.get('create_an_account_to_start_adopting', lang),
-                style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6)))),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: textColor.withValues(alpha: 0.6)))),
               const SizedBox(height: 32),
               _field(_nameController, AppStrings.get('full_name', lang), Icons.person_outline),
               const SizedBox(height: 16),
@@ -81,11 +84,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 24),
               Text(
                 AppStrings.get('i_am_a', lang),
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textDark),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
               ),
               const SizedBox(height: 12),
               ...selfAssignableRoles.map((role) => _RoleOption(
                 role: role,
+                lang: lang,
                 isSelected: _selectedRole == role,
                 onTap: () => setState(() => _selectedRole = role),
               )),
@@ -110,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: RichText(
                     text: TextSpan(
                       text: '${AppStrings.get('already_have_account', lang)} ',
-                      style: TextStyle(color: AppTheme.textDark.withOpacity(0.6)),
+                      style: TextStyle(color: textColor.withValues(alpha: 0.6)),
                       children: [
                         TextSpan(
                           text: AppStrings.get('sign_in', lang),
@@ -139,11 +143,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
 class _RoleOption extends StatelessWidget {
   final UserRole role;
+  final String lang;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _RoleOption({
     required this.role,
+    required this.lang,
     required this.isSelected,
     required this.onTap,
   });
@@ -156,7 +162,7 @@ class _RoleOption extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary.withValues(alpha: 0.1) : Colors.white,
+          color: isSelected ? AppTheme.primary.withValues(alpha: 0.1) : context.cardBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppTheme.primary : Colors.grey.shade300,
@@ -176,15 +182,17 @@ class _RoleOption extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    role.displayName,
+                    _label('ui_role_${role.name}', role.displayName),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? AppTheme.textDark : Colors.grey.shade700,
+                      color: isSelected
+                          ? context.textStrong
+                          : (context.isDarkMode ? Colors.grey.shade400 : Colors.grey.shade700),
                     ),
                   ),
                   Text(
-                    role.description,
+                    _label('ui_role_${role.name}_desc', role.description),
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                   ),
                 ],
@@ -196,6 +204,13 @@ class _RoleOption extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Translated role text, falling back to the English model text for
+  /// roles without a ui string (they are not self-assignable).
+  String _label(String key, String fallback) {
+    final value = AppStrings.get(key, lang);
+    return value == key ? fallback : value;
   }
 
   IconData _getRoleIcon() {

@@ -4,6 +4,7 @@ import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/screens/info/care_guide_screen.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
+import 'package:stray_pets_mu/theme/adaptive_colors.dart';
 
 /// Number of questions; strings are `quiz_q1`..`quiz_qN` and the matching
 /// advice shown for a "no" answer is `quiz_tip1`..`quiz_tipN`.
@@ -68,7 +69,7 @@ class _AdoptionQuizScreenState extends State<AdoptionQuizScreen> {
           LinearProgressIndicator(
             value: (_index + 1) / kQuizQuestionCount,
             color: AppTheme.primary,
-            backgroundColor: AppTheme.lightGrey,
+            backgroundColor: context.mutedFill,
             minHeight: 6,
             borderRadius: BorderRadius.circular(3),
           ),
@@ -81,10 +82,10 @@ class _AdoptionQuizScreenState extends State<AdoptionQuizScreen> {
           Text(
             t('quiz_q${_index + 1}'),
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textDark,
+                color: context.textStrong,
                 height: 1.4),
           ),
           const Spacer(),
@@ -139,23 +140,23 @@ class _AdoptionQuizScreenState extends State<AdoptionQuizScreen> {
         const SizedBox(height: 8),
         Text(t(key),
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontSize: 16, color: AppTheme.textDark, height: 1.5)),
+            style: TextStyle(
+                fontSize: 16, color: context.textStrong, height: 1.5)),
         if (tips.isNotEmpty) ...[
           const SizedBox(height: 24),
           Text(t('quiz_tips_heading'),
-              style: const TextStyle(
+              style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: AppTheme.textDark)),
+                  color: context.textStrong)),
           const SizedBox(height: 8),
           for (final tip in tips)
             Card(
               elevation: 0,
               color: AppTheme.accent.withValues(alpha: 0.15),
               child: ListTile(
-                leading: const Icon(Icons.lightbulb_outline,
-                    color: AppTheme.textDark),
+                leading: Icon(Icons.lightbulb_outline,
+                    color: context.textStrong),
                 title: Text(tip, style: const TextStyle(height: 1.4)),
               ),
             ),

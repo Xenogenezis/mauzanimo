@@ -27,9 +27,9 @@ class LanguageSelectScreen extends StatelessWidget {
                   const Text('MauZanimo',
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
                   const SizedBox(height: 8),
-                  Text('Choose your language / Choisissez votre langue',
+                  Text('Choose your language / Choisissez votre langue / Swazir ou lang',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6))),
+                    style: TextStyle(fontSize: 14, color: AppTheme.textDark.withValues(alpha: 0.6))),
                   const SizedBox(height: 48),
                   _LangButton(
                     flag: 'EN',
@@ -47,8 +47,8 @@ class LanguageSelectScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _LangButton(
                     flag: 'FR',
-                    label: 'Francais',
-                    sublabel: 'Continuer en Francais',
+                    label: 'Français',
+                    sublabel: 'Continuer en français',
                     isSelected: langProvider.lang == 'fr',
                     onTap: () async {
                       langProvider.setLanguage('fr');
@@ -107,13 +107,13 @@ class _LangButton extends StatelessWidget {
           color: isSelected ? AppTheme.primary : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: isSelected ? AppTheme.primary : Colors.grey.shade200, width: 2),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Row(children: [
           Container(
             width: 48, height: 48,
             decoration: BoxDecoration(
-              color: isSelected ? Colors.white.withOpacity(0.2) : AppTheme.primary.withOpacity(0.1),
+              color: isSelected ? Colors.white.withValues(alpha: 0.2) : AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12)),
             child: Center(child: Text(flag,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,
@@ -124,7 +124,7 @@ class _LangButton extends StatelessWidget {
             Text(label, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
               color: isSelected ? Colors.white : AppTheme.textDark)),
             Text(sublabel, style: TextStyle(fontSize: 13,
-              color: isSelected ? Colors.white.withOpacity(0.8) : Colors.grey)),
+              color: isSelected ? Colors.white.withValues(alpha: 0.8) : Colors.grey)),
           ]),
           const Spacer(),
           Icon(isSelected ? Icons.check_circle : Icons.arrow_forward_ios,

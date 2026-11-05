@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
+import 'package:stray_pets_mu/theme/adaptive_colors.dart';
 
 /// Topics in display order. Each has `care_<id>_title` and `care_<id>_body`
 /// strings; bodies use one tip per line.
@@ -51,8 +52,8 @@ class CareGuideScreen extends StatelessWidget {
                   child: Icon(icon, color: color, size: 22),
                 ),
                 title: Text(t('care_${id}_title'),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, color: AppTheme.textDark)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600, color: context.textStrong)),
                 childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 expandedCrossAxisAlignment: CrossAxisAlignment.start,
                 children: [

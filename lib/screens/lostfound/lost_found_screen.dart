@@ -223,9 +223,9 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                       children: [
                         Icon(Icons.error_outline, size: 64, color: Colors.grey.shade300),
                         const SizedBox(height: 16),
-                        const Text(
-                          'Error loading reports',
-                          style: TextStyle(color: Colors.grey),
+                        Text(
+                          AppStrings.get('ui_lf_error_loading', lang),
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       ],
                     ),
@@ -295,9 +295,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
       builder: (context) => AlertDialog(
         title: Text(AppStrings.get('delete_listing', lang)),
         content: Text(
-          lang == 'fr'
-              ? 'Voulez-vous vraiment supprimer ce signalement ? Cette action est irreversible.'
-              : 'Are you sure you want to delete this report? This cannot be undone.',
+          AppStrings.get('ui_lf_delete_confirm', lang),
         ),
         actions: [
           TextButton(

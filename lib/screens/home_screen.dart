@@ -38,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
               if (!authProvider.isAuthenticated) return const SizedBox.shrink();
               return IconButton(
                 icon: const Icon(Icons.logout),
+                tooltip: AppStrings.get('sign_out', lang),
                 onPressed: () async {
                   await authProvider.signOut();
                   if (!context.mounted) return;
