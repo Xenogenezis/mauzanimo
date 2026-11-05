@@ -66,11 +66,18 @@ class _ReportSightingScreenState extends State<ReportSightingScreen> {
   void initState() {
     super.initState();
     _animalType = _types.contains(widget.initialAnimalType) ? widget.initialAnimalType! : 'Dog';
-    // Start the GPS fix straight away so it is ready by the time the photo is taken.
-    _locate();
-    if (widget.openCameraOnStart) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _pick(ImageSource.camera));
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _start());
+  }
+
+  /// If location is already allowed, get the GPS fix while the camera is open
+  /// so it's ready when the photo is taken. Otherwise ask for location after
+  /// the photo: showing a permission dialog while the camera is launching can
+  /// cancel one of the two on Android.
+  Future<void> _start() async {
+    final granted = await _location.hasPermission().catchError((_) => false);
+    if (granted) _locate();
+    if (widget.openCameraOnStart) await _pick(ImageSource.camera);
+    if (!granted && mounted) await _locate();
   }
 
   @override

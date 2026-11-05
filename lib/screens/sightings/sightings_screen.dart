@@ -49,7 +49,12 @@ class _SightingsScreenState extends State<SightingsScreen> {
         _me = LatLng(fix.latitude, fix.longitude);
         _radiusKm = km;
       });
-      _mapController.move(_me!, km <= 2 ? 14 : 12);
+      // The controller only works while the map is on screen.
+      if (_showMap) {
+        try {
+          _mapController.move(_me!, km <= 2 ? 14 : 12);
+        } catch (_) {}
+      }
     } on LocationException {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
