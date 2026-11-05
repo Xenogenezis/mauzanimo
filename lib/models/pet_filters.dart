@@ -55,17 +55,20 @@ class PetFilters {
         sort: sort ?? this.sort,
       );
 
+  /// Whether [p] passes every active filter (sort is ignored).
+  bool matches(Pet p) {
+    if (gender != null && p.gender.toLowerCase() != gender) return false;
+    if (vaccinatedOnly && !p.vaccinated) return false;
+    if (sterilizedOnly && !p.sterilized) return false;
+    if (availableOnly && p.status != 'available') return false;
+    if (ageGroup != AgeGroup.any && ageGroupOf(p.age) != ageGroup) {
+      return false;
+    }
+    return true;
+  }
+
   List<Pet> apply(List<Pet> pets) {
-    final out = pets.where((p) {
-      if (gender != null && p.gender.toLowerCase() != gender) return false;
-      if (vaccinatedOnly && !p.vaccinated) return false;
-      if (sterilizedOnly && !p.sterilized) return false;
-      if (availableOnly && p.status != 'available') return false;
-      if (ageGroup != AgeGroup.any && ageGroupOf(p.age) != ageGroup) {
-        return false;
-      }
-      return true;
-    }).toList();
+    final out = pets.where(matches).toList();
 
     switch (sort) {
       case PetSort.newest:
@@ -77,6 +80,45 @@ class PetFilters {
     }
     return out;
   }
+
+  Map<String, dynamic> toJson() => {
+        if (gender != null) 'gender': gender,
+        'ageGroup': ageGroup.name,
+        'vaccinatedOnly': vaccinatedOnly,
+        'sterilizedOnly': sterilizedOnly,
+        'availableOnly': availableOnly,
+        'sort': sort.name,
+      };
+
+  /// Lenient: unknown or missing values fall back to the defaults, so
+  /// searches saved by an older app version still load.
+  factory PetFilters.fromJson(Map<String, dynamic> json) {
+    T byName<T extends Enum>(List<T> values, Object? name, T fallback) =>
+        values.firstWhere((v) => v.name == name, orElse: () => fallback);
+    final g = json['gender'];
+    return PetFilters(
+      gender: g == 'male' || g == 'female' ? g as String : null,
+      ageGroup: byName(AgeGroup.values, json['ageGroup'], AgeGroup.any),
+      vaccinatedOnly: json['vaccinatedOnly'] == true,
+      sterilizedOnly: json['sterilizedOnly'] == true,
+      availableOnly: json['availableOnly'] == true,
+      sort: byName(PetSort.values, json['sort'], PetSort.newest),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is PetFilters &&
+      other.gender == gender &&
+      other.ageGroup == ageGroup &&
+      other.vaccinatedOnly == vaccinatedOnly &&
+      other.sterilizedOnly == sterilizedOnly &&
+      other.availableOnly == availableOnly &&
+      other.sort == sort;
+
+  @override
+  int get hashCode => Object.hash(
+      gender, ageGroup, vaccinatedOnly, sterilizedOnly, availableOnly, sort);
 
   static DateTime _date(Pet p) =>
       p.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);

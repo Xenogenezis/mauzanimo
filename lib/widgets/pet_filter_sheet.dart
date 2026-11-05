@@ -3,22 +3,89 @@ import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/models/pet_filters.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 
+/// Saves the search under a name; returns false when it was refused
+/// (for example the saved-search limit is reached).
+typedef SaveSearchCallback = Future<bool> Function(
+    String name, PetFilters filters);
+
 /// Bottom sheet for sorting and filtering the pet list.
 /// Returns the chosen [PetFilters], or null if dismissed.
+/// When [onSaveSearch] is given, a "Save this search" button is shown.
 Future<PetFilters?> showPetFilterSheet(
-    BuildContext context, PetFilters current, String lang) {
+    BuildContext context, PetFilters current, String lang,
+    {SaveSearchCallback? onSaveSearch}) {
   return showModalBottomSheet<PetFilters>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _PetFilterSheet(initial: current, lang: lang),
+    builder: (_) => _PetFilterSheet(
+        initial: current, lang: lang, onSaveSearch: onSaveSearch),
   );
+}
+
+/// Asks for a saved-search name. Returns the trimmed name, or null.
+Future<String?> showSaveSearchNameDialog(BuildContext context, String lang) =>
+    showDialog<String>(
+      context: context,
+      builder: (_) => _SaveSearchNameDialog(lang: lang),
+    );
+
+class _SaveSearchNameDialog extends StatefulWidget {
+  final String lang;
+  const _SaveSearchNameDialog({required this.lang});
+
+  @override
+  State<_SaveSearchNameDialog> createState() => _SaveSearchNameDialogState();
+}
+
+class _SaveSearchNameDialogState extends State<_SaveSearchNameDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String _t(String key) => AppStrings.get(key, widget.lang);
+
+  void _submit() {
+    final name = _controller.text.trim();
+    if (name.isNotEmpty) Navigator.pop(context, name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(_t('alerts_save_search')),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        maxLength: 40,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+        decoration: InputDecoration(
+          labelText: _t('alerts_name_label'),
+          hintText: _t('alerts_name_hint'),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(_t('alerts_cancel')),
+        ),
+        ElevatedButton(onPressed: _submit, child: Text(_t('alerts_save'))),
+      ],
+    );
+  }
 }
 
 class _PetFilterSheet extends StatefulWidget {
   final PetFilters initial;
   final String lang;
-  const _PetFilterSheet({required this.initial, required this.lang});
+  final SaveSearchCallback? onSaveSearch;
+  const _PetFilterSheet(
+      {required this.initial, required this.lang, this.onSaveSearch});
 
   @override
   State<_PetFilterSheet> createState() => _PetFilterSheetState();
@@ -43,6 +110,17 @@ class _PetFilterSheetState extends State<_PetFilterSheet> {
         selectedColor: AppTheme.primary,
         labelStyle: TextStyle(color: selected ? Colors.white : AppTheme.textDark),
       );
+
+  Future<void> _saveSearch() async {
+    final name = await showSaveSearchNameDialog(context, widget.lang);
+    if (name == null || !mounted) return;
+    final saved = await widget.onSaveSearch!(name, _f);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(_t(saved ? 'alerts_saved' : 'alerts_limit'))));
+    // A saved search is also applied, so the list matches what was saved.
+    if (saved) Navigator.pop(context, _f);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,6 +193,17 @@ class _PetFilterSheetState extends State<_PetFilterSheet> {
                 child: Text(_t('filter_apply')),
               ),
             ),
+            if (widget.onSaveSearch != null) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _saveSearch,
+                  icon: const Icon(Icons.bookmark_add_outlined),
+                  label: Text(_t('alerts_save_search')),
+                ),
+              ),
+            ],
           ],
         ),
       ),

@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../repositories/pet_repository.dart';
 import '../models/pet.dart';
 import '../models/pet_preferences.dart';
 import '../models/pet_filters.dart';
+import '../models/saved_search.dart';
+import '../utils/new_since.dart';
 import '../utils/result.dart';
 
 class PetProvider extends ChangeNotifier {
@@ -21,8 +24,17 @@ class PetProvider extends ChangeNotifier {
   StreamSubscription<List<Pet>>? _subscription;
   PetPreferences? _preferences;
 
-  PetProvider(this._petRepository) {
+  /// SharedPreferences keys for the device-local list features.
+  static const lastVisitKey = 'pet_list_last_visit_ms';
+  static const savedSearchesKey = 'pet_saved_searches';
+
+  final Future<SharedPreferences> Function() _prefs;
+
+  PetProvider(this._petRepository,
+      {Future<SharedPreferences> Function()? prefs})
+      : _prefs = prefs ?? SharedPreferences.getInstance {
     _setupStream();
+    _loadLocalState();
   }
 
   // Getters
@@ -104,6 +116,132 @@ class PetProvider extends ChangeNotifier {
   void setListFilters(PetFilters filters) {
     _listFilters = filters;
     _applyFilters();
+  }
+
+  // ---- "New since your last visit" (device-local) ----
+
+  /// Time of the previous visit, read once at start-up. It stays fixed for
+  /// this session, so ribbons do not vanish when the user briefly leaves.
+  DateTime? _lastVisit;
+  bool _newBannerDismissed = false;
+  List<SavedSearch> _savedSearches = [];
+
+  DateTime? get lastVisit => _lastVisit;
+
+  /// Whether [pet] was created after the previous visit.
+  bool isNewPet(Pet pet) => isNewSince(pet, _lastVisit);
+
+  /// New pets among those currently shown.
+  int get newPetCount => countNewSince(_filteredPets, _lastVisit);
+
+  bool get showNewBanner => !_newBannerDismissed && newPetCount > 0;
+
+  void dismissNewBanner() {
+    _newBannerDismissed = true;
+    notifyListeners();
+  }
+
+  Future<void> _loadLocalState() async {
+    try {
+      final prefs = await _prefs();
+      final ms = prefs.getInt(lastVisitKey);
+      _lastVisit = ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+      _savedSearches =
+          SavedSearch.decodeList(prefs.getString(savedSearchesKey));
+      notifyListeners();
+    } catch (_) {
+      // No storage (tests, private browsing): the features stay off.
+    }
+  }
+
+  /// Records "now" as the last visit. Called when the user leaves the pet
+  /// list or the app, not on open, so the current visit still shows what
+  /// was added since the previous one.
+  Future<void> markVisited([DateTime? now]) async {
+    try {
+      final prefs = await _prefs();
+      await prefs.setInt(
+          lastVisitKey, (now ?? DateTime.now()).millisecondsSinceEpoch);
+    } catch (_) {}
+  }
+
+  // ---- Saved searches / local pet alerts ----
+
+  List<SavedSearch> get savedSearches => List.unmodifiable(_savedSearches);
+
+  bool get canSaveSearch => _savedSearches.length < SavedSearch.maxCount;
+
+  Future<void> _persistSavedSearches() async {
+    try {
+      final prefs = await _prefs();
+      await prefs.setString(
+          savedSearchesKey, SavedSearch.encodeList(_savedSearches));
+    } catch (_) {}
+  }
+
+  /// Saves the current type chip, sheet [filters] (defaults to the active
+  /// ones) and search text under [name]. Returns false when the limit of
+  /// [SavedSearch.maxCount] is reached or the name is empty.
+  Future<bool> saveCurrentSearch(String name, {PetFilters? filters}) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty || !canSaveSearch) return false;
+    final now = DateTime.now();
+    _savedSearches = [
+      ..._savedSearches,
+      SavedSearch(
+        id: now.microsecondsSinceEpoch.toString(),
+        name: trimmed,
+        typeFilter: _selectedFilter,
+        filters: filters ?? _listFilters,
+        query: _searchQuery,
+        lastOpened: now,
+      ),
+    ];
+    notifyListeners();
+    await _persistSavedSearches();
+    return true;
+  }
+
+  Future<void> deleteSavedSearch(String id) async {
+    _savedSearches = _savedSearches.where((s) => s.id != id).toList();
+    notifyListeners();
+    await _persistSavedSearches();
+  }
+
+  /// Applies [search] to the list and marks the alert as opened now.
+  Future<void> applySavedSearch(SavedSearch search) async {
+    _searchQuery = search.query;
+    _listFilters = search.filters;
+    if (_selectedFilter != search.typeFilter) {
+      _selectedFilter = search.typeFilter;
+      _currentLimit = 20;
+      _hasMore = true;
+      _setupStream();
+    }
+    _applyFilters();
+    _savedSearches = [
+      for (final s in _savedSearches)
+        s.id == search.id ? s.copyWith(lastOpened: DateTime.now()) : s,
+    ];
+    notifyListeners();
+    await _persistSavedSearches();
+  }
+
+  /// Recent pets of every type, used to count new matches for the alerts.
+  /// Uses the same query as the list (no extra index).
+  Future<List<Pet>> recentPetsForAlerts({int limit = 100}) async {
+    final result =
+        _petRepository.getPetsStream(typeFilter: 'All', limit: limit);
+    return result.when(
+      success: (stream) async {
+        try {
+          return await stream.first.timeout(const Duration(seconds: 10));
+        } catch (_) {
+          return _pets;
+        }
+      },
+      failure: (_) async => _pets,
+    );
   }
 
   void setPreferences(PetPreferences? prefs) {

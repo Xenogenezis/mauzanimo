@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
@@ -89,25 +90,16 @@ class DonateScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    AppStrings.get('bank_mcb_mauritius', lang),
-                    style: TextStyle(fontSize: 14, color: textColor),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    AppStrings.get('account_name_jci_grand_baie', lang),
-                    style: TextStyle(fontSize: 14, color: textColor),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    AppStrings.get('account_no_xxxxxxxxxxxx', lang),
-                    style: TextStyle(fontSize: 14, color: textColor),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    AppStrings.get('reference_mauzanimo_donation', lang),
-                    style: TextStyle(fontSize: 14, color: textColor),
-                  ),
+                  for (final key in const [
+                    'bank_mcb_mauritius',
+                    'account_name_jci_grand_baie',
+                    'account_no_xxxxxxxxxxxx',
+                    'reference_mauzanimo_donation',
+                  ])
+                    CopyableDetail(
+                      text: AppStrings.get(key, lang),
+                      lang: lang,
+                    ),
                 ],
               ),
             ),
@@ -146,6 +138,54 @@ class DonateScreen extends StatelessWidget {
         );
       }
     }
+  }
+}
+
+/// The part of a "Label: value" line worth copying (the value).
+String copyValueOf(String line) {
+  final i = line.indexOf(':');
+  if (i < 0) return line.trim();
+  final value = line.substring(i + 1).trim();
+  return value.isEmpty ? line.trim() : value;
+}
+
+/// A payment detail line; tapping copies its value to the clipboard.
+class CopyableDetail extends StatelessWidget {
+  final String text;
+  final String lang;
+
+  const CopyableDetail({super.key, required this.text, required this.lang});
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = context.textStrong;
+    return Tooltip(
+      message: AppStrings.get('alerts_tap_to_copy', lang),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () async {
+          final messenger = ScaffoldMessenger.of(context);
+          final copied = AppStrings.get('alerts_copied', lang);
+          await Clipboard.setData(ClipboardData(text: copyValueOf(text)));
+          messenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(
+                content: Text(copied),
+                duration: const Duration(seconds: 2)));
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(children: [
+            Expanded(
+              child: Text(text,
+                  style: TextStyle(fontSize: 14, color: textColor)),
+            ),
+            Icon(Icons.copy, size: 16,
+                color: textColor.withValues(alpha: 0.5)),
+          ]),
+        ),
+      ),
+    );
   }
 }
 

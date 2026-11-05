@@ -7,6 +7,7 @@ import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/providers/pet_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/widgets/pet_filter_sheet.dart';
+import 'package:stray_pets_mu/widgets/saved_searches_sheet.dart';
 import 'package:stray_pets_mu/models/pet_filters.dart';
 import 'package:stray_pets_mu/utils/responsive.dart';
 
@@ -16,18 +17,40 @@ class PetListScreen extends StatefulWidget {
   State<PetListScreen> createState() => _PetListScreenState();
 }
 
-class _PetListScreenState extends State<PetListScreen> {
+class _PetListScreenState extends State<PetListScreen>
+    with WidgetsBindingObserver {
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
+  PetProvider? _petProvider;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _petProvider = context.read<PetProvider>();
+  }
+
+  /// The last visit is recorded when the user leaves (app backgrounded or
+  /// list closed), not on open, so this visit still shows the NEW ribbons.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      _petProvider?.markVisited();
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _petProvider?.markVisited();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _searchController.dispose();
@@ -39,6 +62,55 @@ class _PetListScreenState extends State<PetListScreen> {
         _scrollController.position.maxScrollExtent - 200) {
       context.read<PetProvider>().loadMore();
     }
+  }
+
+  Future<void> _openFilters(PetProvider petProvider, String lang) async {
+    final chosen = await showPetFilterSheet(
+      context,
+      petProvider.listFilters,
+      lang,
+      onSaveSearch: (name, filters) =>
+          petProvider.saveCurrentSearch(name, filters: filters),
+    );
+    if (chosen != null) petProvider.setListFilters(chosen);
+  }
+
+  Future<void> _openAlerts(PetProvider petProvider, String lang) async {
+    final search = await showSavedSearchesSheet(context, lang);
+    if (search == null || !mounted) return;
+    _searchController.text = search.query;
+    await petProvider.applySavedSearch(search);
+  }
+
+  Widget _newBanner(PetProvider petProvider, String lang) {
+    final n = petProvider.newPetCount;
+    final text = n == 1
+        ? AppStrings.get('alerts_new_banner_one', lang)
+        : AppStrings.get('alerts_new_banner', lang).replaceAll('{n}', '$n');
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        padding: const EdgeInsets.only(left: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.accent.withValues(alpha: 0.25),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(children: [
+          const Icon(Icons.fiber_new, color: AppTheme.textDark),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text,
+                style: const TextStyle(
+                    color: AppTheme.textDark, fontWeight: FontWeight.w600)),
+          ),
+          IconButton(
+            tooltip: AppStrings.get('alerts_dismiss', lang),
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: petProvider.dismissNewBanner,
+          ),
+        ]),
+      ),
+    );
   }
 
   @override
@@ -73,7 +145,7 @@ class _PetListScreenState extends State<PetListScreen> {
               Text(
                 AppStrings.get('give_home', lang),
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 14,
                 ),
               ),
@@ -117,11 +189,18 @@ class _PetListScreenState extends State<PetListScreen> {
                     label: Text('${petProvider.listFilters.activeCount}'),
                     child: const Icon(Icons.tune, color: AppTheme.primary),
                   ),
-                  onPressed: () async {
-                    final chosen = await showPetFilterSheet(
-                        context, petProvider.listFilters, lang);
-                    if (chosen != null) petProvider.setListFilters(chosen);
-                  },
+                  onPressed: () => _openFilters(petProvider, lang),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                child: IconButton(
+                  tooltip: AppStrings.get('alerts_my_alerts', lang),
+                  icon: const Icon(Icons.bookmarks_outlined,
+                      color: AppTheme.primary),
+                  onPressed: () => _openAlerts(petProvider, lang),
                 ),
               ),
               ]),
@@ -161,6 +240,7 @@ class _PetListScreenState extends State<PetListScreen> {
           ),
         ),
         const SizedBox(height: 16),
+        if (petProvider.showNewBanner) _newBanner(petProvider, lang),
         Expanded(
           child: petProvider.isLoading && petProvider.pets.isEmpty
               ? const Center(
@@ -217,6 +297,9 @@ class _PetListScreenState extends State<PetListScreen> {
                         return PetCard(
                           pet: pet.toMap(),
                           petId: pet.id,
+                          isNew: petProvider.isNewPet(pet),
+                          newLabel:
+                              AppStrings.get('alerts_new_ribbon', lang),
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(

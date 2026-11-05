@@ -5,7 +5,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:stray_pets_mu/screens/pets/pet_list_screen.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/providers/pet_provider.dart';
+import 'package:stray_pets_mu/models/pet.dart';
 import 'package:stray_pets_mu/models/pet_filters.dart';
+import 'package:stray_pets_mu/screens/pets/pet_card.dart';
 
 class MockLanguageProvider extends Mock implements LanguageProvider {}
 
@@ -15,7 +17,22 @@ void main() {
   late MockLanguageProvider mockLanguageProvider;
   late MockPetProvider mockPetProvider;
 
-  setUpAll(() => registerFallbackValue(PetFilters.none));
+  Pet pet(String id) => Pet(
+        id: id,
+        name: id,
+        type: 'dogs',
+        location: 'Grand Baie',
+        description: '',
+        age: '2 years',
+        gender: 'Male',
+        contact: '',
+        createdAt: DateTime(2026, 11, 3),
+      );
+
+  setUpAll(() {
+    registerFallbackValue(PetFilters.none);
+    registerFallbackValue(pet('fallback'));
+  });
 
   setUp(() {
     mockLanguageProvider = MockLanguageProvider();
@@ -29,6 +46,11 @@ void main() {
     when(() => mockPetProvider.isLoadingMore).thenReturn(false);
     when(() => mockPetProvider.listFilters).thenReturn(PetFilters.none);
     when(() => mockPetProvider.searchQuery).thenReturn('');
+    when(() => mockPetProvider.showNewBanner).thenReturn(false);
+    when(() => mockPetProvider.newPetCount).thenReturn(0);
+    when(() => mockPetProvider.isNewPet(any())).thenReturn(false);
+    when(() => mockPetProvider.markVisited()).thenAnswer((_) async {});
+    when(() => mockPetProvider.savedSearches).thenReturn(const []);
   });
 
   Widget createTestWidget() {
@@ -116,5 +138,50 @@ void main() {
     final captured =
         verify(() => mockPetProvider.setListFilters(captureAny())).captured;
     expect((captured.single as PetFilters).gender, 'female');
+  });
+
+  testWidgets('shows the new-pets banner and NEW ribbon', (tester) async {
+    final fresh = pet('Fresh');
+    final old = pet('Old');
+    when(() => mockPetProvider.pets).thenReturn([fresh, old]);
+    when(() => mockPetProvider.showNewBanner).thenReturn(true);
+    when(() => mockPetProvider.newPetCount).thenReturn(1);
+    when(() => mockPetProvider.isNewPet(fresh)).thenReturn(true);
+    when(() => mockPetProvider.isNewPet(old)).thenReturn(false);
+    when(() => mockPetProvider.hasMore).thenReturn(false);
+
+    await tester.pumpWidget(createTestWidget());
+    await tester.pump();
+
+    expect(find.text('1 new pet since your last visit'), findsOneWidget);
+    expect(find.text('NEW'), findsOneWidget);
+    final cards = tester.widgetList<PetCard>(find.byType(PetCard)).toList();
+    expect(cards.map((c) => c.isNew), [true, false]);
+
+    await tester.tap(find.byTooltip('Dismiss'));
+    verify(() => mockPetProvider.dismissNewBanner()).called(1);
+  });
+
+  testWidgets('filter sheet offers Save this search', (tester) async {
+    await tester.pumpWidget(createTestWidget());
+    await tester.tap(find.byIcon(Icons.tune));
+    await tester.pumpAndSettle();
+    expect(find.text('Save this search'), findsOneWidget);
+  });
+
+  testWidgets('My alerts button opens the saved searches sheet',
+      (tester) async {
+    when(() => mockPetProvider.recentPetsForAlerts())
+        .thenAnswer((_) async => []);
+    await tester.pumpWidget(createTestWidget());
+    await tester.tap(find.byTooltip('My alerts'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No saved searches yet'), findsOneWidget);
+  });
+
+  testWidgets('leaving the list records the visit', (tester) async {
+    await tester.pumpWidget(createTestWidget());
+    await tester.pumpWidget(const SizedBox());
+    verify(() => mockPetProvider.markVisited()).called(1);
   });
 }
