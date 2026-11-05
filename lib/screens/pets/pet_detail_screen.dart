@@ -12,6 +12,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:stray_pets_mu/widgets/auth_guard.dart';
+import 'package:provider/provider.dart';
+import 'package:stray_pets_mu/providers/recently_viewed_provider.dart';
 
 class PetDetailScreen extends StatelessWidget {
   final Map<String, dynamic> pet;
@@ -35,7 +37,7 @@ class PetDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return _RecordRecentlyViewed(petId: petId, child: Scaffold(
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -283,7 +285,7 @@ class PetDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildImage(String imageUrl) =>
@@ -311,4 +313,29 @@ class PetDetailScreen extends StatelessWidget {
     if (s == 'pending') return Colors.orange;
     return Colors.green;
   }
+}
+
+/// Records the pet as recently viewed once, when the screen is first shown.
+class _RecordRecentlyViewed extends StatefulWidget {
+  final String petId;
+  final Widget child;
+  const _RecordRecentlyViewed({required this.petId, required this.child});
+
+  @override
+  State<_RecordRecentlyViewed> createState() => _RecordRecentlyViewedState();
+}
+
+class _RecordRecentlyViewedState extends State<_RecordRecentlyViewed> {
+  @override
+  void initState() {
+    super.initState();
+    try {
+      context.read<RecentlyViewedProvider>().record(widget.petId);
+    } on ProviderNotFoundException {
+      // Not provided (e.g. in isolated widget tests); nothing to record.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

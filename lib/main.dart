@@ -19,6 +19,7 @@ import 'providers/review_provider.dart';
 import 'providers/rescue_provider.dart';
 import 'providers/foster_provider.dart';
 import 'providers/pet_update_provider.dart';
+import 'providers/recently_viewed_provider.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/pet_repository.dart';
 import 'repositories/lost_found_repository.dart';
@@ -67,6 +68,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AdoptionProvider(adoptionRepository)),
         ChangeNotifierProvider(create: (_) => RescueProvider(rescueRepository)),
         ChangeNotifierProvider(create: (_) => FosterProvider(fosterRepository)),
+        ChangeNotifierProvider(create: (_) => RecentlyViewedProvider()),
       ],
       child: Builder(
         builder: (context) {
