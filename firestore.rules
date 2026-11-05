@@ -258,6 +258,7 @@ service cloud.firestore {
       allow create: if isAuthenticated() && validReport();
       allow read: if ownsDoc('reporterId') || isAdmin();
       allow update, delete: if isAdmin();
+    }
 
     // --- notifications ---
     // In-app notifications, written by the client that causes the event.
