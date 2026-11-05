@@ -197,7 +197,6 @@ bool _isLoading = false;
 'status': 'available',
         'contact': _contactController.text.trim(),
         'uploadedBy': user?.uid,
-        'uploaderEmail': user?.email,
         'isUserUpload': true,
         'createdAt': FieldValue.serverTimestamp(),
       });

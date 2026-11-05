@@ -44,6 +44,24 @@ service cloud.firestore {
       return isAuthenticated() && resource.data.get(field, null) == request.auth.uid;
     }
 
+    // Caps on user-supplied content. Images are stored as base64 data URIs
+    // in the document (Firestore max doc size is 1 MiB), so bound them to
+    // stop oversized writes and bill-inflating spam.
+    function saneContent() {
+      let d = request.resource.data;
+      return (!('imageUrl' in d) || d.imageUrl == null
+              || (d.imageUrl is string && d.imageUrl.size() <= 850000))
+        && (!('description' in d) || d.description == null
+              || (d.description is string && d.description.size() <= 5000));
+    }
+
+    // Pets are public, so don't let new writes publish the uploader's email.
+    function noPublicEmail() {
+      return !('uploaderEmail' in request.resource.data)
+        || request.resource.data.uploaderEmail == null
+        || (resource != null && resource.data.get('uploaderEmail', null) == request.resource.data.uploaderEmail);
+    }
+
     // Optional GeoPoint must be a GeoPoint when present.
     function validGeo() {
       return !('geo' in request.resource.data) || request.resource.data.geo is latlng;
@@ -78,8 +96,9 @@ service cloud.firestore {
     // ---------------------------------------------------------------------
     match /pets/{petId} {
       allow read: if true;
-      allow create: if createsAsSelf('uploadedBy') && validGeo() || isAdmin();
-      allow update: if ownsDoc('uploadedBy') && validGeo()
+      allow create: if (createsAsSelf('uploadedBy') && validGeo() && saneContent() && noPublicEmail())
+        || isAdmin();
+      allow update: if (ownsDoc('uploadedBy') && validGeo() && saneContent() && noPublicEmail())
         || isAdmin()
         // Any signed-in adopter starting the adoption workflow may flag the pet as pending.
         || (isAuthenticated() && onlyChanges(['status'])
@@ -95,7 +114,7 @@ service cloud.firestore {
 
     match /pet_updates/{updateId} {
       allow read: if true;
-      allow create: if createsAsSelf('userId');
+      allow create: if createsAsSelf('userId') && saneContent();
       allow update, delete: if ownsDoc('userId') || isAdmin();
     }
 
@@ -134,8 +153,8 @@ service cloud.firestore {
     // ---------------------------------------------------------------------
     match /lostfound/{reportId} {
       allow read: if true;
-      allow create: if createsAsSelf('userId') && validGeo();
-      allow update: if (ownsDoc('userId') && validGeo()) || isAdmin();
+      allow create: if createsAsSelf('userId') && validGeo() && saneContent();
+      allow update: if (ownsDoc('userId') && validGeo() && saneContent()) || isAdmin();
       allow delete: if ownsDoc('userId') || isAdmin();
     }
 
@@ -144,7 +163,8 @@ service cloud.firestore {
       allow read: if true;
       allow create: if createsAsSelf('reporterId')
         && request.resource.data.geo is latlng
-        && request.resource.data.get('status', 'open') == 'open';
+        && request.resource.data.get('status', 'open') == 'open'
+        && saneContent();
       allow update: if ownsDoc('reporterId') || isAdmin()
         // Volunteers may triage (status only).
         || (isVolunteerOrAbove() && onlyChanges(['status', 'handledBy', 'updatedAt']));
@@ -153,13 +173,13 @@ service cloud.firestore {
 
     match /stories/{storyId} {
       allow read: if true;
-      allow create: if createsAsSelf('userId');
+      allow create: if createsAsSelf('userId') && saneContent();
       allow update, delete: if ownsDoc('userId') || isAdmin();
     }
 
     match /rescue_reports/{reportId} {
       allow read: if true;
-      allow create: if createsAsSelf('reporterId') && validGeo();
+      allow create: if createsAsSelf('reporterId') && validGeo() && saneContent();
       allow update: if ownsDoc('reporterId') || isAdmin()
         // Volunteers may self-assign or resolve, nothing else.
         || (isVolunteerOrAbove() && onlyChanges(

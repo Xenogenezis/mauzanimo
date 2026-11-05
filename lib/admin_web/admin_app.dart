@@ -208,7 +208,7 @@ class _AdminShellState extends State<AdminShell> {
           Col('Age', _f('age')),
           Col('Location', _f('location')),
           Col('Contact', _f('contact')),
-          Col('Uploaded by', _f('uploaderEmail')),
+          Col('Uploaded by (uid)', _f('uploadedBy')),
           Col('Created', _f('createdAt')),
         ],
         status: StatusCol(

@@ -128,7 +128,7 @@ class _ReportSightingScreenState extends State<ReportSightingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_t('sighting_need_location'))));
       return;
     }
-    if (_photo!.lengthInBytes > 700 * 1024) {
+    if (_photo!.lengthInBytes > 600 * 1024) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_t('sighting_photo_too_large'))));
       return;
     }
