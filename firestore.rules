@@ -2,7 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -11,26 +13,181 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function isAdmin() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'adopter');
     }
 
-    // Public collections: anyone can read, only authenticated can write
+    // Matches UserProfile.isAdmin in the app: admin OR superAdmin.
+    function isAdmin() {
+      return isAuthenticated() && userRole() in ['admin', 'superAdmin'];
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && userRole() == 'superAdmin';
+    }
+
+    function isVolunteerOrAbove() {
+      return isAuthenticated() && userRole() in ['volunteer', 'partner', 'admin', 'superAdmin'];
+    }
+
+    // Only these fields changed between the stored doc and the write.
+    function onlyChanges(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // The new doc's owner field must be the caller.
+    function createsAsSelf(field) {
+      return isAuthenticated() && request.resource.data.get(field, null) == request.auth.uid;
+    }
+
+    function ownsDoc(field) {
+      return isAuthenticated() && resource.data.get(field, null) == request.auth.uid;
+    }
+
+    // Optional GeoPoint must be a GeoPoint when present.
+    function validGeo() {
+      return !('geo' in request.resource.data) || request.resource.data.geo is latlng;
+    }
+
+    // ---------------------------------------------------------------------
+    // Users
+    // ---------------------------------------------------------------------
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      // Self-registration may only pick a self-assignable role.
+      allow create: if isOwner(userId)
+        && request.resource.data.get('role', 'adopter') in ['adopter', 'rehomer', 'volunteer'];
+      // Owners may edit their profile but never their role or verification.
+      allow update: if (isOwner(userId)
+          && !request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(['role', 'verificationLevel', 'badges']))
+        // Admins manage roles; only a superAdmin can grant or revoke admin rights.
+        || (isAdmin()
+          && (!(request.resource.data.get('role', '') in ['admin', 'superAdmin'])
+              && !(resource.data.get('role', '') in ['admin', 'superAdmin'])
+              || isSuperAdmin()));
+      allow delete: if isSuperAdmin();
+    }
+
+    match /pending_users/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Pets
+    // ---------------------------------------------------------------------
     match /pets/{petId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (resource.data.uploadedBy == request.auth.uid || isAdmin());
-      allow delete: if isAuthenticated() && (resource.data.uploadedBy == request.auth.uid || isAdmin());
+      allow create: if createsAsSelf('uploadedBy') && validGeo() || isAdmin();
+      allow update: if ownsDoc('uploadedBy') && validGeo()
+        || isAdmin()
+        // Any signed-in adopter starting the adoption workflow may flag the pet as pending.
+        || (isAuthenticated() && onlyChanges(['status'])
+            && resource.data.get('status', 'available') == 'available'
+            && request.resource.data.status == 'pending');
+      allow delete: if ownsDoc('uploadedBy') || isAdmin();
     }
 
+    match /favourites/{favId} {
+      allow read, update, delete: if ownsDoc('userId');
+      allow create: if createsAsSelf('userId');
+    }
+
+    match /pet_updates/{updateId} {
+      allow read: if true;
+      allow create: if createsAsSelf('userId');
+      allow update, delete: if ownsDoc('userId') || isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if createsAsSelf('reviewerId')
+        && request.resource.data.reviewerId != request.resource.data.targetUserId;
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Adoption
+    // ---------------------------------------------------------------------
+    match /inquiries/{inquiryId} {
+      allow read: if ownsDoc('userId') || isAdmin();
+      allow create: if createsAsSelf('userId');
+      allow update, delete: if isAdmin();
+    }
+
+    match /adoptions/{adoptionId} {
+      allow read: if ownsDoc('adopterId') || isAdmin();
+      allow create: if createsAsSelf('adopterId')
+        && request.resource.data.currentStage == 'application';
+      allow update, delete: if isAdmin();
+    }
+
+    match /fosters/{fosterId} {
+      allow read: if ownsDoc('fosterUserId') || isAdmin();
+      allow create: if createsAsSelf('fosterUserId')
+        && request.resource.data.get('status', 'pending') == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Community content (code uses `lostfound` and `stories`)
+    // ---------------------------------------------------------------------
+    match /lostfound/{reportId} {
+      allow read: if true;
+      allow create: if createsAsSelf('userId') && validGeo();
+      allow update: if (ownsDoc('userId') && validGeo()) || isAdmin();
+      allow delete: if ownsDoc('userId') || isAdmin();
+    }
+
+    // Photo + GPS sightings of strays or of animals reported lost.
+    match /sightings/{sightingId} {
+      allow read: if true;
+      allow create: if createsAsSelf('reporterId')
+        && request.resource.data.geo is latlng
+        && request.resource.data.get('status', 'open') == 'open';
+      allow update: if ownsDoc('reporterId') || isAdmin()
+        // Volunteers may triage (status only).
+        || (isVolunteerOrAbove() && onlyChanges(['status', 'handledBy', 'updatedAt']));
+      allow delete: if ownsDoc('reporterId') || isAdmin();
+    }
+
+    match /stories/{storyId} {
+      allow read: if true;
+      allow create: if createsAsSelf('userId');
+      allow update, delete: if ownsDoc('userId') || isAdmin();
+    }
+
+    match /rescue_reports/{reportId} {
+      allow read: if true;
+      allow create: if createsAsSelf('reporterId') && validGeo();
+      allow update: if ownsDoc('reporterId') || isAdmin()
+        // Volunteers may self-assign or resolve, nothing else.
+        || (isVolunteerOrAbove() && onlyChanges(
+              ['status', 'assignedVolunteerId', 'assignedVolunteerName', 'resolvedAt']));
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Events
+    // ---------------------------------------------------------------------
     match /events/{eventId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    match /success_stories/{storyId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
+    match /event_registrations/{regId} {
+      allow read: if ownsDoc('userId') || isAdmin();
+      allow create: if createsAsSelf('userId');
+      // Users may cancel their own registration; admins manage status.
+      allow update: if (ownsDoc('userId') && onlyChanges(['status', 'cancelledAt'])
+                        && request.resource.data.status == 'cancelled')
+        || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /volunteers/{volunteerId} {
+      allow read: if isAdmin();
+      allow create: if createsAsSelf('userId');
       allow update, delete: if isAdmin();
     }
 
@@ -39,85 +196,21 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /reviews/{reviewId} {
+    // ---------------------------------------------------------------------
+    // Gamification (code uses `user_gamification`)
+    // NOTE: points are computed on the client, so a determined user can
+    // inflate their own score. Move awarding into a Cloud Function before
+    // the leaderboard carries any real reward.
+    // ---------------------------------------------------------------------
+    match /user_gamification/{userId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
-    }
-
-    match /pet_updates/{updateId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
-    }
-
-    match /lost_found/{reportId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
-    }
-
-    match /rescue_reports/{reportId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
+      allow create, update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
-    }
 
-    // Leaderboard is public read
-    match /gamification/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /leaderboard/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Authenticated-only collections
-    match /favourites/{favId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-    }
-
-    match /inquiries/{inquiryId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
-    }
-
-    match /adoptions/{adoptionId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
-    }
-
-    match /fosters/{fosterId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
-    }
-
-    match /event_registrations/{regId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
-    }
-
-    match /volunteers/{volunteerId} {
-      allow read: if isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
-    }
-
-    // Users collection: users can read/write their own doc, admins can read/write any
-    match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if isAdmin();
+      match /{sub=**} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if isOwner(userId) || isAdmin();
+      }
     }
   }
 }
