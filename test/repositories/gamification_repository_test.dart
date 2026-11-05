@@ -1,3 +1,9 @@
+// Mocktail test fakes implement sealed cloud_firestore types (Query,
+// DocumentReference, DocumentSnapshot, ...). This is the usual way to
+// mock Firestore in unit tests and is safe here because these fakes never
+// reach production code.
+// ignore_for_file: subtype_of_sealed_class
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

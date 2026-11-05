@@ -8,6 +8,16 @@ import '../../providers/language_provider.dart';
 import '../../widgets/login_required_view.dart';
 import 'add_lost_found_screen.dart';
 import 'edit_lost_found_screen.dart';
+import '../sightings/report_sighting_screen.dart';
+import '../sightings/sightings_screen.dart';
+import '../../widgets/app_image.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../utils/distance_sort.dart';
+import '../../utils/geo_utils.dart';
+import '../../utils/location_service.dart';
+import '../../utils/moderation.dart';
+import '../../widgets/report_button.dart';
+import 'lost_poster_screen.dart';
 
 class LostFoundScreen extends StatefulWidget {
   const LostFoundScreen({super.key});
@@ -19,6 +29,70 @@ class LostFoundScreen extends StatefulWidget {
 class _LostFoundScreenState extends State<LostFoundScreen> {
   String _filter = 'All';
   final _filters = ['All', 'Lost', 'Found'];
+  static const _filterLabelKeys = {
+    'All': 'all',
+    'Lost': 'lf_filter_lost',
+    'Found': 'lf_filter_found',
+  };
+
+  final _location = const LocationService();
+  LocationFix? _myFix;
+  bool _sortByDistance = false;
+  bool _locating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _locateSilently();
+  }
+
+  /// Shows distances straight away when location is already allowed,
+  /// without ever triggering a permission dialog.
+  Future<void> _locateSilently() async {
+    try {
+      if (!await _location.hasPermission()) return;
+      final fix = await _location.currentFix();
+      if (mounted) setState(() => _myFix = fix);
+    } catch (_) {
+      // Distances are optional; stay quiet.
+    }
+  }
+
+  Future<void> _toggleNearMe(String lang) async {
+    if (_sortByDistance) {
+      setState(() => _sortByDistance = false);
+      return;
+    }
+    setState(() => _locating = true);
+    try {
+      final fix = await _location.currentFix();
+      if (!mounted) return;
+      setState(() {
+        _myFix = fix;
+        _sortByDistance = true;
+      });
+    } on LocationException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.get(
+            e.reason == LocationFailure.deniedForever
+                ? 'gps_denied_forever'
+                : 'gps_unknown_error',
+            lang,
+          )),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  double? _distanceKm(Map<String, dynamic> data) {
+    final fix = _myFix;
+    if (fix == null) return null;
+    return distanceKmToGeo(data['geo'], fix.latitude, fix.longitude);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +126,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.orange.withOpacity(0.1),
+            color: Colors.orange.withValues(alpha: 0.1),
             child: Row(
               children: [
                 const Icon(Icons.info_outline, color: Colors.orange, size: 18),
@@ -75,14 +149,43 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _filters.length,
+              itemCount: _filters.length + 1,
               itemBuilder: (context, index) {
+                if (index == _filters.length) {
+                  return ChoiceChip(
+                    avatar: _locating
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.orange),
+                          )
+                        : Icon(
+                            Icons.near_me,
+                            size: 16,
+                            color: _sortByDistance ? Colors.white : AppTheme.textDark,
+                          ),
+                    showCheckmark: false,
+                    label: Text(AppStrings.get('lf_near_me', lang)),
+                    selected: _sortByDistance,
+                    onSelected: _locating ? null : (_) => _toggleNearMe(lang),
+                    selectedColor: Colors.orange,
+                    labelStyle: TextStyle(
+                      color: _sortByDistance ? Colors.white : AppTheme.textDark,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    backgroundColor: AppTheme.lightGrey,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  );
+                }
                 final f = _filters[index];
                 final isSelected = f == _filter;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    label: Text(f),
+                    label: Text(AppStrings.get(_filterLabelKeys[f]!, lang)),
                     selected: isSelected,
                     onSelected: (selected) {
                       if (selected) setState(() => _filter = f);
@@ -123,7 +226,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                         Icon(Icons.error_outline, size: 64, color: Colors.grey.shade300),
                         const SizedBox(height: 16),
                         Text(
-                          'Error loading reports',
+                          AppStrings.get('ui_lf_error_loading', lang),
                           style: const TextStyle(color: Colors.grey),
                         ),
                       ],
@@ -136,7 +239,14 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                   );
                 }
 
-                final docs = snapshot.data?.docs ?? [];
+                var docs = withoutHidden(snapshot.data?.docs ?? <QueryDocumentSnapshot>[],
+                    (d) => d.data() as Map<String, dynamic>?);
+                if (_sortByDistance && _myFix != null) {
+                  docs = sortByDistance(
+                    docs,
+                    (d) => _distanceKm(d.data() as Map<String, dynamic>),
+                  );
+                }
 
                 if (docs.isEmpty) {
                   return Center(
@@ -169,6 +279,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                       data: data,
                       isLost: isLost,
                       isOwner: isOwner,
+                      distanceKm: _distanceKm(data),
                       onDelete: () => _confirmDelete(context, reportId, lang),
                     );
                   },
@@ -187,9 +298,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
       builder: (context) => AlertDialog(
         title: Text(AppStrings.get('delete_listing', lang)),
         content: Text(
-          lang == 'fr'
-              ? 'Voulez-vous vraiment supprimer ce signalement ? Cette action est irreversible.'
-              : 'Are you sure you want to delete this report? This cannot be undone.',
+          AppStrings.get('ui_lf_delete_confirm', lang),
         ),
         actions: [
           TextButton(
@@ -235,6 +344,7 @@ class _ReportCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final bool isLost;
   final bool isOwner;
+  final double? distanceKm;
   final VoidCallback onDelete;
 
   const _ReportCard({
@@ -243,6 +353,7 @@ class _ReportCard extends StatelessWidget {
     required this.isLost,
     required this.isOwner,
     required this.onDelete,
+    this.distanceKm,
   });
 
   @override
@@ -256,7 +367,7 @@ class _ReportCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -274,12 +385,12 @@ class _ReportCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: isLost
-                        ? Colors.red.withOpacity(0.1)
-                        : Colors.green.withOpacity(0.1),
+                        ? Colors.red.withValues(alpha: 0.1)
+                        : Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    data['type'] ?? 'Lost',
+                    AppStrings.get(isLost ? 'lf_filter_lost' : 'lf_filter_found', lang),
                     style: TextStyle(
                       fontSize: 11,
                       color: isLost ? Colors.red : Colors.green,
@@ -287,18 +398,37 @@ class _ReportCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  data['animalType'] ?? 'Animal',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      data['animalType'] ?? 'Animal',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    if (!isOwner)
+                      ReportButton(
+                        targetCollection: 'lostfound',
+                        targetId: reportId,
+                        color: Colors.grey,
+                        iconSize: 18,
+                      ),
+                  ],
                 ),
               ],
             ),
+            if ((data['imageUrl'] as String? ?? '').isNotEmpty) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AppImage(data['imageUrl'] as String?, height: 160, width: double.infinity),
+              ),
+            ],
             const SizedBox(height: 8),
             Text(
               data['description'] ?? '',
               style: TextStyle(
                 fontSize: 14,
-                color: AppTheme.textDark.withOpacity(0.7),
+                color: AppTheme.textDark.withValues(alpha: 0.7),
                 height: 1.5,
               ),
             ),
@@ -308,24 +438,116 @@ class _ReportCard extends StatelessWidget {
                 const Icon(Icons.location_on_outlined,
                     size: 14, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text(
-                  data['location'] ?? '',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                Expanded(
+                  child: Text(
+                    data['location'] ?? '',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ),
+                if (data['geo'] is GeoPoint)
+                  InkWell(
+                    onTap: () {
+                      final g = data['geo'] as GeoPoint;
+                      launchUrl(
+                        Uri.parse('https://www.google.com/maps/search/?api=1&query=${g.latitude},${g.longitude}'),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(Icons.map_outlined, size: 18, color: AppTheme.primary),
+                    ),
+                  ),
               ],
             ),
+            if (distanceKm != null) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.near_me_outlined, size: 14, color: Colors.orange),
+                  const SizedBox(width: 4),
+                  Text(
+                    AppStrings.get('lf_distance_away', lang)
+                        .replaceAll('{distance}', formatDistance(distanceKm!)),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.orange,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 4),
             Row(
               children: [
                 const Icon(Icons.phone_outlined,
                     size: 14, color: AppTheme.primary),
                 const SizedBox(width: 4),
-                Text(
-                  data['contact'] ?? '',
-                  style: const TextStyle(fontSize: 12, color: AppTheme.primary),
+                Expanded(
+                  child: Text(
+                    data['contact'] ?? '',
+                    style: const TextStyle(fontSize: 12, color: AppTheme.primary),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => LostPosterScreen(data: data),
+                    ),
+                  ),
+                  icon: const Icon(Icons.campaign_outlined, size: 16),
+                  label: Text(AppStrings.get('lf_poster', lang)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: isLost ? Colors.red : Colors.green,
+                    visualDensity: VisualDensity.compact,
+                  ),
                 ),
               ],
             ),
+            if (isLost) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (!isOwner)
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ReportSightingScreen(
+                              lostReportId: reportId,
+                              lostReportSummary:
+                                  '${data['animalType'] ?? ''} - ${data['description'] ?? ''}',
+                              initialAnimalType: data['animalType'] as String?,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Icons.add_a_photo, size: 16),
+                        label: Text(AppStrings.get('i_saw_this_animal', lang)),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                      ),
+                    ),
+                  if (!isOwner) const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SightingsScreen(
+                            lostReportId: reportId,
+                            title: AppStrings.get('view_sightings', lang),
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.location_searching, size: 16),
+                      label: Text(AppStrings.get('view_sightings', lang)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             if (isOwner) ...[
               const SizedBox(height: 12),
               const Divider(),

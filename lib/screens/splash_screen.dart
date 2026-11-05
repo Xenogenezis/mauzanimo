@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/screens/language_select_screen.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'home_screen.dart';
@@ -60,6 +63,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>().lang;
     return Scaffold(
       backgroundColor: const Color(0xFFFDF6EC),
       body: FadeTransition(
@@ -85,17 +89,18 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Rehome responsibly. Adopt locally.',
+                AppStrings.get('tagline', lang),
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  color: AppTheme.textDark.withOpacity(0.6),
+                  color: AppTheme.textDark.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 48),
-              Text('Powered by',
+              Text(AppStrings.get('ui_powered_by', lang),
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppTheme.textDark.withOpacity(0.4),
+                  color: AppTheme.textDark.withValues(alpha: 0.4),
                   letterSpacing: 1,
                 ),
               ),

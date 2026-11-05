@@ -9,6 +9,10 @@ import 'package:stray_pets_mu/screens/pets/upload_pet_screen.dart';
 import 'package:stray_pets_mu/screens/drawer_menu.dart';
 import 'package:stray_pets_mu/providers/auth_provider.dart';
 import 'package:stray_pets_mu/widgets/auth_guard.dart';
+import 'package:stray_pets_mu/providers/language_provider.dart';
+import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/widgets/adaptive_nav_scaffold.dart';
+import 'package:stray_pets_mu/screens/notifications/notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [const PetListScreen(), const FavouritesScreen(), const ProfileScreen()];
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final lang = context.watch<LanguageProvider>().lang;
+    return AdaptiveNavScaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Row(children: [
@@ -29,11 +34,13 @@ class _HomeScreenState extends State<HomeScreen> {
           Text('MauZanimo', style: TextStyle(fontWeight: FontWeight.bold)),
         ]),
         actions: [
+          const NotificationBell(),
           Consumer<AuthProvider>(
             builder: (context, authProvider, _) {
               if (!authProvider.isAuthenticated) return const SizedBox.shrink();
               return IconButton(
                 icon: const Icon(Icons.logout),
+                tooltip: AppStrings.get('sign_out', lang),
                 onPressed: () async {
                   await authProvider.signOut();
                   if (!context.mounted) return;
@@ -52,19 +59,15 @@ class _HomeScreenState extends State<HomeScreen> {
         }),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('List a Pet', style: TextStyle(color: Colors.white)),
+        label: Text(AppStrings.get('list_pet', lang), style: const TextStyle(color: Colors.white)),
       ) : null,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        selectedItemColor: AppTheme.primary,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.pets), label: 'Pets'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_outline), label: 'Saved'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-        ],
-      ),
+      currentIndex: _currentIndex,
+      onDestinationSelected: (index) => setState(() => _currentIndex = index),
+      destinations: [
+        AdaptiveNavDestination(icon: Icons.pets, label: AppStrings.get('pets', lang)),
+        AdaptiveNavDestination(icon: Icons.favorite_outline, label: AppStrings.get('saved', lang)),
+        AdaptiveNavDestination(icon: Icons.person_outline, label: AppStrings.get('profile', lang)),
+      ],
     );
   }
 }

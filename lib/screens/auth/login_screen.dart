@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
+import 'package:stray_pets_mu/theme/adaptive_colors.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/screens/home_screen.dart';
@@ -51,11 +52,12 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _verifyAdminAccess() async {
+    final lang = context.read<LanguageProvider>().lang;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Access denied. Please sign in first.')),
+        SnackBar(content: Text(AppStrings.get('access_denied_sign_in', lang))),
       );
       return;
     }
@@ -71,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Access denied. Admin privileges required.')),
+        SnackBar(content: Text(AppStrings.get('access_denied_admin', lang))),
       );
     }
   }
@@ -111,8 +113,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context).lang;
+    final textColor = context.textStrong;
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: context.pageBackground,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -161,10 +164,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               Center(child: Text(AppStrings.get('app_name', lang),
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textColor))),
               const SizedBox(height: 8),
               Center(child: Text(AppStrings.get('sign_in_to_continue', lang),
-                style: TextStyle(fontSize: 14, color: AppTheme.textDark.withOpacity(0.6)))),
+                style: TextStyle(fontSize: 14, color: textColor.withValues(alpha: 0.6)))),
               const SizedBox(height: 48),
               TextField(
                 controller: _emailController,
@@ -220,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: RichText(
                     text: TextSpan(
                       text: '${AppStrings.get('no_account', lang)} ',
-                      style: TextStyle(color: AppTheme.textDark.withOpacity(0.6)),
+                      style: TextStyle(color: textColor.withValues(alpha: 0.6)),
                       children: [
                         TextSpan(
                           text: AppStrings.get('sign_up', lang),

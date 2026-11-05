@@ -20,6 +20,9 @@ class Pet {
   final DateTime? createdAt;
   final AdoptionFee? adoptionFee;
 
+  /// Hidden by a moderator after a report; lists filter these out.
+  final bool hidden;
+
   Pet({
     required this.id,
     required this.name,
@@ -39,6 +42,7 @@ class Pet {
     this.isUserUpload = false,
     this.createdAt,
     this.adoptionFee,
+    this.hidden = false,
   });
 
   factory Pet.fromMap(String id, Map<String, dynamic> map) {
@@ -65,6 +69,7 @@ class Pet {
       adoptionFee: map['adoptionFee'] != null
           ? AdoptionFee.fromMap(map['adoptionFee'] as Map<String, dynamic>)
           : null,
+      hidden: map['hidden'] == true,
     );
   }
 
@@ -108,6 +113,7 @@ class Pet {
     bool? isUserUpload,
     DateTime? createdAt,
     AdoptionFee? adoptionFee,
+    bool? hidden,
   }) {
     return Pet(
       id: id ?? this.id,
@@ -128,6 +134,7 @@ class Pet {
       isUserUpload: isUserUpload ?? this.isUserUpload,
       createdAt: createdAt ?? this.createdAt,
       adoptionFee: adoptionFee ?? this.adoptionFee,
+      hidden: hidden ?? this.hidden,
     );
   }
 }

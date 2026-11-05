@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/adaptive_colors.dart';
 import '../../lang/app_strings.dart';
 import '../../providers/language_provider.dart';
 
@@ -30,6 +31,15 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
 
   final _types = ['Lost', 'Found'];
   final _animalTypes = ['Dog', 'Cat', 'Other'];
+
+  /// Display keys for the stored English values.
+  static const _typeLabelKeys = {'Lost': 'lf_filter_lost', 'Found': 'lf_filter_found'};
+  static const _animalLabelKeys = {'Dog': 'dog', 'Cat': 'cat', 'Other': 'other'};
+
+  String _label(Map<String, String> keys, String value, String lang) {
+    final key = keys[value];
+    return key == null ? value : AppStrings.get(key, lang);
+  }
 
   @override
   void initState() {
@@ -134,9 +144,9 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
           children: [
             Text(
               AppStrings.get('report_type', lang),
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: AppTheme.textDark,
+                color: context.textStrong,
               ),
             ),
             const SizedBox(height: 8),
@@ -145,17 +155,17 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
               children: _types.map((t) {
                 final isSelected = _type == t;
                 return ChoiceChip(
-                  label: Text(t),
+                  label: Text(_label(_typeLabelKeys, t, lang)),
                   selected: isSelected,
                   onSelected: (selected) {
                     if (selected) setState(() => _type = t);
                   },
                   selectedColor: t == 'Lost' ? Colors.red : Colors.green,
                   labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : AppTheme.textDark,
+                    color: isSelected ? Colors.white : context.textStrong,
                     fontWeight: FontWeight.w500,
                   ),
-                  backgroundColor: AppTheme.lightGrey,
+                  backgroundColor: context.mutedFill,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -165,9 +175,9 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
             const SizedBox(height: 16),
             Text(
               AppStrings.get('animal_type', lang),
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: AppTheme.textDark,
+                color: context.textStrong,
               ),
             ),
             const SizedBox(height: 8),
@@ -176,17 +186,17 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
               children: _animalTypes.map((t) {
                 final isSelected = _animalType == t;
                 return ChoiceChip(
-                  label: Text(t),
+                  label: Text(_label(_animalLabelKeys, t, lang)),
                   selected: isSelected,
                   onSelected: (selected) {
                     if (selected) setState(() => _animalType = t);
                   },
                   selectedColor: AppTheme.primary,
                   labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : AppTheme.textDark,
+                    color: isSelected ? Colors.white : context.textStrong,
                     fontWeight: FontWeight.w500,
                   ),
-                  backgroundColor: AppTheme.lightGrey,
+                  backgroundColor: context.mutedFill,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -216,7 +226,7 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
             const SizedBox(height: 16),
             _field(
               _imageUrlController,
-              'Photo URL (${lang == 'fr' ? 'optionnel' : 'optional'})',
+              AppStrings.get('ui_photo_url_optional', lang),
               Icons.image_outlined,
             ),
             const SizedBox(height: 32),

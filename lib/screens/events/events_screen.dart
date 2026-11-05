@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,6 +10,9 @@ import '../../providers/event_provider.dart';
 import '../../providers/auth_provider.dart' as app_provider;
 import '../../models/event_registration.dart';
 import '../../widgets/login_required_view.dart';
+import '../../utils/event_calendar.dart';
+import '../../utils/calendar_export.dart';
+import '../../utils/poster_export.dart' show shareOriginOf;
 
 class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
@@ -149,7 +153,7 @@ class EventCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -189,7 +193,7 @@ class EventCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.1),
+                        color: AppTheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -217,7 +221,7 @@ class EventCard extends StatelessWidget {
                   data['description'] ?? '',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.textDark.withOpacity(0.7),
+                    color: AppTheme.textDark.withValues(alpha: 0.7),
                     height: 1.5,
                   ),
                 ),
@@ -262,6 +266,8 @@ class EventCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
+                AddToCalendarButton(eventId: eventId, data: data),
+                const SizedBox(height: 8),
                 if (user != null)
                   EventRegistrationButton(
                     eventId: eventId,
@@ -292,6 +298,72 @@ class EventCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// "Add to calendar": Google Calendar link or an .ics file
+/// (shared on mobile, downloaded on the web).
+class AddToCalendarButton extends StatelessWidget {
+  final String eventId;
+  final Map<String, dynamic> data;
+
+  const AddToCalendarButton(
+      {super.key, required this.eventId, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context).lang;
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        icon: const Icon(Icons.event_available_outlined),
+        label: Text(AppStrings.get('alerts_add_calendar', lang)),
+        onPressed: () => _choose(context, lang),
+      ),
+    );
+  }
+
+  Future<void> _choose(BuildContext context, String lang) async {
+    final messenger = ScaffoldMessenger.of(context);
+    void say(String key) => messenger
+        .showSnackBar(SnackBar(content: Text(AppStrings.get(key, lang))));
+
+    final event = CalendarEvent.fromEventData(data, id: eventId);
+    if (event == null) {
+      say('alerts_date_unknown');
+      return;
+    }
+    final origin = shareOriginOf(context);
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            leading: const Icon(Icons.calendar_month_outlined,
+                color: AppTheme.primary),
+            title: Text(AppStrings.get('alerts_google_calendar', lang)),
+            onTap: () => Navigator.pop(c, 'google'),
+          ),
+          ListTile(
+            leading: const Icon(kIsWeb ? Icons.download : Icons.ios_share,
+                color: AppTheme.primary),
+            title: Text(AppStrings.get('alerts_ics', lang)),
+            onTap: () => Navigator.pop(c, 'ics'),
+          ),
+        ]),
+      ),
+    );
+    try {
+      if (choice == 'google') {
+        if (!await openGoogleCalendar(event)) say('alerts_calendar_error');
+      } else if (choice == 'ics') {
+        final result = await exportIcs(event, shareOrigin: origin);
+        if (result == IcsExportResult.downloaded) say('alerts_ics_downloaded');
+      }
+    } catch (_) {
+      say('alerts_calendar_error');
+    }
   }
 }
 
@@ -652,7 +724,7 @@ class _RegistrationCard extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: AppTheme.primary.withOpacity(0.1),
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
               child: const Icon(Icons.event, color: AppTheme.primary),
             ),
             title: Text(eventTitle),

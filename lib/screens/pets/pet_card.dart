@@ -1,12 +1,26 @@
+import 'package:stray_pets_mu/widgets/app_image.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 
 class PetCard extends StatelessWidget {
   final Map<String, dynamic> pet;
   final String petId;
   final VoidCallback onTap;
-  const PetCard({super.key, required this.pet, required this.petId, required this.onTap});
+
+  /// Shows a small "NEW" ribbon (pet added since the last visit).
+  final bool isNew;
+
+  /// Ribbon text; callers pass the translated label.
+  final String newLabel;
+
+  const PetCard({
+    super.key,
+    required this.pet,
+    required this.petId,
+    required this.onTap,
+    this.isNew = false,
+    this.newLabel = 'NEW',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +31,7 @@ class PetCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.07), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,15 +39,27 @@ class PetCard extends StatelessWidget {
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-                child: pet['imageUrl'] != null
-                  ? CachedNetworkImage(
-                      imageUrl: pet['imageUrl'],
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      placeholder: (_, __) => _placeholder(),
-                      errorWidget: (_, __, ___) => _placeholder(),
-                    )
-                  : _placeholder(),
+                child: Stack(fit: StackFit.expand, children: [
+                  (pet['imageUrl'] as String? ?? '').isNotEmpty
+                    ? AppImage(pet['imageUrl'] as String?, width: double.infinity, decodeWidth: 240)
+                    : _placeholder(),
+                  if (isNew)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accent,
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 4)],
+                        ),
+                        child: Text(newLabel,
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold,
+                            color: AppTheme.textDark, letterSpacing: 0.5)),
+                      ),
+                    ),
+                ]),
               ),
             ),
             Padding(
@@ -53,7 +79,7 @@ class PetCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: AppTheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                     child: Text(pet['type'] ?? 'Pet',
                       style: const TextStyle(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w500)),
                   ),

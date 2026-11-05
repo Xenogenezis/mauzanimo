@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
+import 'package:stray_pets_mu/theme/adaptive_colors.dart';
+import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
 
@@ -15,39 +17,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _controller = PageController();
   int _currentPage = 0;
 
+  static const List<(IconData, Color)> _pageStyles = [
+    (Icons.pets, AppTheme.primary),
+    (Icons.search, Colors.orange),
+    (Icons.favorite_outline, Colors.red),
+    (Icons.volunteer_activism_outlined, Colors.purple),
+  ];
+
   List<Map<String, dynamic>> _pages(String lang) => [
-    {
-      'icon': Icons.pets,
-      'color': AppTheme.primary,
-      'title': lang == 'fr' ? 'Bienvenue sur MauZanimo' : 'Welcome to MauZanimo',
-      'subtitle': lang == 'fr'
-        ? 'Connecter les animaux errants avec des foyers aimants a travers Maurice.'
-        : 'Helping owners rehome responsibly and families adopt locally across Mauritius.',
-    },
-    {
-      'icon': Icons.search,
-      'color': Colors.orange,
-      'title': lang == 'fr' ? 'Trouver un nouveau foyer' : 'Find a New Home',
-      'subtitle': lang == 'fr'
-        ? 'Parcourez les chiens, chats et autres animaux cherchant un foyer.'
-        : 'Browse pets listed by caring owners looking for a loving new home.',
-    },
-    {
-      'icon': Icons.favorite_outline,
-      'color': Colors.red,
-      'title': lang == 'fr' ? 'Adoptez en confiance' : 'Adopt with Confidence',
-      'subtitle': lang == 'fr'
-        ? 'Soumettez une demande et notre equipe vous guidera pas a pas.'
-        : 'Apply to adopt and connect directly with the pet owner. Simple, safe and transparent.',
-    },
-    {
-      'icon': Icons.volunteer_activism_outlined,
-      'color': Colors.purple,
-      'title': lang == 'fr' ? 'Faites partie du changement' : 'Be Part of the Change',
-      'subtitle': lang == 'fr'
-        ? 'Listez votre animal, faites du benevolat, donnez ou devenez partenaire.'
-        : 'List your pet for rehoming, volunteer, donate or become a partner.',
-    },
+    for (var i = 0; i < _pageStyles.length; i++)
+      {
+        'icon': _pageStyles[i].$1,
+        'color': _pageStyles[i].$2,
+        'title': AppStrings.get('ui_onb_title_${i + 1}', lang),
+        'subtitle': AppStrings.get('ui_onb_body_${i + 1}', lang),
+      },
   ];
 
   Future<void> _finish() async {
@@ -61,8 +45,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context).lang;
     final pages = _pages(lang);
+    final textColor = context.textStrong;
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: context.pageBackground,
       body: SafeArea(
         child: Column(
           children: [
@@ -70,7 +55,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               alignment: Alignment.topRight,
               child: TextButton(
                 onPressed: _finish,
-                child: Text(lang == 'fr' ? 'Passer' : 'Skip', style: const TextStyle(color: Colors.grey)),
+                child: Text(AppStrings.get('ui_skip', lang), style: const TextStyle(color: Colors.grey)),
               ),
             ),
             Expanded(
@@ -88,7 +73,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Container(
                           padding: const EdgeInsets.all(32),
                           decoration: BoxDecoration(
-                            color: (page['color'] as Color).withOpacity(0.1),
+                            color: (page['color'] as Color).withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(page['icon'] as IconData, size: 80, color: page['color'] as Color),
@@ -96,11 +81,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         const SizedBox(height: 40),
                         Text(page['title'] as String,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor)),
                         const SizedBox(height: 16),
                         Text(page['subtitle'] as String,
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 15, color: AppTheme.textDark.withOpacity(0.6), height: 1.6)),
+                          style: TextStyle(fontSize: 15, color: textColor.withValues(alpha: 0.6), height: 1.6)),
                       ],
                     ),
                   );
@@ -136,8 +121,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       },
                       child: Text(
                         _currentPage < pages.length - 1
-                          ? (lang == 'fr' ? 'Suivant' : 'Next')
-                          : (lang == 'fr' ? 'Commencer' : 'Get Started'),
+                          ? AppStrings.get('ui_next', lang)
+                          : AppStrings.get('ui_get_started', lang),
                         style: const TextStyle(fontSize: 16)),
                     ),
                   ),

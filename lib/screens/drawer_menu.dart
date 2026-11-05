@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
+import 'package:stray_pets_mu/theme/adaptive_colors.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/providers/theme_provider.dart';
 import 'package:stray_pets_mu/providers/auth_provider.dart';
@@ -18,6 +19,9 @@ import 'package:stray_pets_mu/screens/events/events_screen.dart';
 import 'package:stray_pets_mu/screens/gamification/leaderboard_screen.dart';
 import 'package:stray_pets_mu/screens/rescue/rescue_report_screen.dart';
 import 'package:stray_pets_mu/screens/foster/my_fosters_screen.dart';
+import 'package:stray_pets_mu/screens/sightings/sightings_screen.dart';
+import 'package:stray_pets_mu/screens/info/adoption_quiz_screen.dart';
+import 'package:stray_pets_mu/screens/info/care_guide_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -43,7 +47,7 @@ class AppDrawer extends StatelessWidget {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(height: 4),
                 Text(isAuthenticated ? (authProvider.email ?? AppStrings.get('guest', lang)) : AppStrings.get('guest', lang),
-                  style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8))),
+                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.8))),
               ],
             ),
           ),
@@ -91,6 +95,13 @@ class AppDrawer extends StatelessWidget {
                   color: Colors.orange,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const LostFoundScreen())); },
                 ),
+                _DrawerTile(
+                  icon: Icons.add_location_alt_outlined,
+                  title: AppStrings.get('sightings', lang),
+                  subtitle: AppStrings.get('sightings_subtitle', lang),
+                  color: Colors.teal,
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const SightingsScreen())); },
+                ),
                 if (isAuthenticated)
                   _DrawerTile(
                     icon: Icons.warning_amber_rounded,
@@ -113,6 +124,20 @@ class AppDrawer extends StatelessWidget {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const MyFostersScreen()));
                     },
                   ),
+                _DrawerTile(
+                  icon: Icons.quiz_outlined,
+                  title: AppStrings.get('quiz_title', lang),
+                  subtitle: AppStrings.get('quiz_subtitle', lang),
+                  color: Colors.indigo,
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const AdoptionQuizScreen())); },
+                ),
+                _DrawerTile(
+                  icon: Icons.menu_book_outlined,
+                  title: AppStrings.get('care_guide', lang),
+                  subtitle: AppStrings.get('care_guide_subtitle', lang),
+                  color: Colors.green,
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const CareGuideScreen())); },
+                ),
                 _DrawerTile(
                   icon: Icons.event_outlined,
                   title: AppStrings.get('events', lang),
@@ -176,11 +201,11 @@ class AppDrawer extends StatelessWidget {
                     return ListTile(
                       leading: Container(
                         padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                        decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                         child: const Icon(Icons.language, color: Colors.blue, size: 22),
                       ),
                       title: Text(AppStrings.get('language', langProvider.lang),
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textDark)),
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: context.textStrong)),
                       subtitle: Text(langProvider.currentLanguageDisplayName,
                         style: const TextStyle(fontSize: 11, color: Colors.grey)),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
@@ -192,11 +217,11 @@ class AppDrawer extends StatelessWidget {
                   builder: (context, themeProvider, _) => ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.purple.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(color: Colors.purple.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                       child: Icon(themeProvider.isDark ? Icons.light_mode : Icons.dark_mode, color: Colors.purple, size: 22),
                     ),
-                    title: Text(themeProvider.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textDark)),
+                    title: Text(AppStrings.get(themeProvider.isDark ? 'ui_switch_light' : 'ui_switch_dark', lang),
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: context.textStrong)),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
                     onTap: () => themeProvider.toggleTheme(),
                   ),
@@ -218,7 +243,7 @@ class AppDrawer extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(AppStrings.get('powered_by', lang),
+            child: Text('${AppStrings.get('ui_powered_by', lang)} JCI Grand Baie',
               style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
           ),
         ],
@@ -248,12 +273,12 @@ class _DrawerTile extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: color, size: 22),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textDark)),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: context.textStrong)),
       subtitle: subtitle.isNotEmpty ? Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey)) : null,
       trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
       onTap: onTap,

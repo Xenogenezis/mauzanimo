@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>MauZanimo uses the camera to photograph pets and animals you report.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MauZanimo lets you choose a photo of a pet or an animal you saw.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>MauZanimo tags where you saw a stray or lost animal so volunteers and owners can find it.</string>
 </dict>
 </plist>

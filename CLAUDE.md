@@ -21,6 +21,10 @@ flutter run              # Run on connected device/emulator
 flutter build apk        # Build Android APK
 flutter build web        # Build web version
 flutter build windows    # Build Windows desktop
+flutter run -d chrome -t lib/main_admin.dart                  # Web admin panel
+flutter build web -t lib/main_admin.dart --base-href /admin/  # Build web admin
+cd test_rules && npm install && npm test   # Firestore rules tests (emulator; needs Java)
+firebase deploy --only firestore:rules,firestore:indexes
 ```
 
 ## Architecture
@@ -29,7 +33,11 @@ flutter build windows    # Build Windows desktop
 
 - **Framework:** Flutter (Dart)
 - **Backend:** Firebase (Auth, Firestore, Cloud Storage)
-- **State Management:** Provider (`LanguageProvider` for i18n)
+- **State Management:** Provider (language, theme, auth and per-feature providers)
+- **Maps / GPS:** `flutter_map` with OpenStreetMap tiles (no API key), `geolocator`
+- **Offline:** Firestore persistence (100 MB cache); user-facing creates use
+  `writeOfflineFirst()` in `lib/utils/offline_write.dart` so they don't hang
+  without signal; `OfflineBanner` (connectivity_plus) wraps the app
 - **Auth:** Firebase Auth + Google Sign-in
 - **Local Storage:** SharedPreferences (onboarding flag, language preference)
 
@@ -47,7 +55,13 @@ main() → Firebase.initializeApp() → ChangeNotifierProvider(LanguageProvider)
 
 **HomeScreen** uses bottom tab navigation: Pets | Saved | Profile, plus a drawer with Lost & Found, Events, Success Stories, Donate, Partners, Volunteer, About, Contact.
 
-**Admin access:** Long-press on the login screen icon reveals the hidden admin dashboard.
+**Admin access:** tapping the login screen icon 5 times opens the in-app admin dashboard
+(role `admin`/`superAdmin` required). There is also a desktop **web admin**
+(`lib/main_admin.dart` → `lib/admin_web/`) built on a generic `CollectionTable`
+(search, filter, inline status edit, CSV export). Access is enforced by `firestore.rules`.
+
+**Sightings:** `sightings` collection, photo + `geo` GeoPoint, optional `lostReportId`
+linking to a `lostfound` doc. Screens in `lib/screens/sightings/`.
 
 ### Directory Structure
 
@@ -72,15 +86,21 @@ lib/
 
 ### Localization
 
-All user-facing strings live in `lib/lang/app_strings.dart` as a map keyed by language code (`en`/`fr`). Access strings via `LanguageProvider` from the widget tree. The root directory contains `auto_translate.js` which uses the Anthropic Claude API to generate French translations automatically.
+All user-facing strings live in `lib/lang/app_strings.dart` as a map keyed by language code (`en`, `fr`, `mfe` = Kreol Morisien). Use `AppStrings.get(key, lang)` with `lang` from `LanguageProvider`. Add every new key to all three maps, and avoid duplicate keys (the last duplicate silently wins).
 
 ### Firebase / Firestore
 
 - Primary collection: `pets` (pet profiles for adoption)
 - Pet list screen uses `StreamBuilder` for real-time updates
-- Pet images stored in Cloud Storage
+- Images are stored as base64 `data:` URIs inside documents (rules cap them at ~850 KB). Always render with `AppImage` (`lib/widgets/app_image.dart`), which handles both data URIs and https URLs and decodes at display size
+- Collection names that matter for rules: `lostfound` (not lost_found), `stories`, `user_gamification`; owner fields: pets `uploadedBy`, adoptions `adopterId`, fosters `fosterUserId`, sightings/rescue `reporterId`
+- Any rules change must keep `test_rules/` green; add a test for new access paths
 - Firebase is configured for Android and Web; iOS/macOS/Windows/Linux require additional FlutterFire CLI setup
 
-### Code Generation Scripts
+### Deployment
 
-The root directory contains ~46 Node.js `.js` scripts used to generate Dart screen files. These were used during initial development to scaffold features. The generated output lives in `lib/screens/`. Do not run these scripts unless regenerating screens from scratch — editing the generated Dart files directly is the standard workflow.
+`deploy/` contains a Dockerfile (builds app at `/` and admin at `/admin/`), nginx config (security headers set only at server level — never add `add_header` inside a location), Caddy for HTTPS and `deploy.sh`. See README.
+
+### Security
+
+See `SECURITY_AUDIT.md` for the audit and the open recommendations (App Check, API key restrictions, moving gamification to Cloud Functions).

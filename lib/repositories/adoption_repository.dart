@@ -1,11 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import '../models/adoption.dart';
+import 'notification_repository.dart';
 import '../utils/result.dart';
 
 class AdoptionRepository {
   final FirebaseFirestore _firestore;
-  AdoptionRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  final NotificationRepository _notifications;
+  AdoptionRepository({FirebaseFirestore? firestore, NotificationRepository? notifications})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _notifications = notifications ?? NotificationRepository(firestore: firestore);
 
   Future<Result<void>> createAdoption(Adoption adoption) async {
     try {
@@ -26,6 +30,8 @@ class AdoptionRepository {
         'currentStage': stage.name,
         'stageHistory': FieldValue.arrayUnion([record.toMap()]),
       });
+      // Fire-and-forget: never blocks or fails the stage change.
+      unawaited(_notifications.notifyAdoptionStage(adoptionId: id, stage: stage.name));
       return Result.success(null);
     } on FirebaseException catch (e) {
       return Result.failure(e.message ?? 'Firestore error', error: e);
@@ -40,6 +46,8 @@ class AdoptionRepository {
         'currentStage': AdoptionStage.rejected.name,
         'rejectionReason': reason,
       });
+      unawaited(_notifications.notifyAdoptionStage(
+          adoptionId: id, stage: AdoptionStage.rejected.name));
       return Result.success(null);
     } on FirebaseException catch (e) {
       return Result.failure(e.message ?? 'Firestore error', error: e);

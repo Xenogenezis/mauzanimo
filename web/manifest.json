@@ -1,12 +1,13 @@
 {
-    "name": "stray_pets_mu",
-    "short_name": "stray_pets_mu",
+    "name": "MauZanimo",
+    "short_name": "MauZanimo",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#2A9D8F",
+    "theme_color": "#2A9D8F",
+    "description": "Rehome responsibly. Adopt locally. Pet rehoming in Mauritius by JCI Grand Baie.",
+    "lang": "en",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
