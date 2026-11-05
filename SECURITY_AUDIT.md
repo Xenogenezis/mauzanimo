@@ -3,8 +3,8 @@
 Scope: `firestore.rules`, Dart client code in `lib/`, platform config
 (Android/iOS/web), committed secrets, and the new web admin and VPS deploy.
 
-Rules fixes are verified by 51 Firestore emulator tests in `test_rules/`
-(`cd test_rules && npm install && npm test`).
+Rules fixes are verified by Firestore emulator tests in `test_rules/`
+(`cd test_rules && npm install && npm test`; `rules.test.mjs` alone has 122).
 
 ## Fixed
 
@@ -23,6 +23,55 @@ Rules fixes are verified by 51 Firestore emulator tests in `test_rules/`
 | 11 | Low | WhatsApp link built from raw user-entered contact. | Contact reduced to digits; `+230` added for local numbers. |
 | 12 | Low | Writes `await`ed server acknowledgement, so SOS and sighting reports hung forever without signal. | Offline-first writes (`lib/utils/offline_write.dart`). |
 | 13 | Low | Users could create foster records already `active`, adoptions already `completed`, or mark themselves `attended` at events. | Creates must start in the initial state; users can only cancel their own registration. |
+
+## Rules hardening (Nov 2026)
+
+Schema checks for every user-writable collection except `users`, `pending_users`
+and `favourites`. The field lists come from what the Dart code writes and are
+tested with those exact payloads.
+
+- **Field whitelists on create** (`keys().hasOnly`) for `pets`, `pet_updates`, `reviews`,
+  `inquiries`, `adoptions`, `fosters`, `lostfound`, `sightings`, `stories`,
+  `rescue_reports`, `event_registrations`, `volunteers`, `user_gamification` and
+  `impact_history`. Clients can't add fields such as `hidden`, `featured` or `verified`.
+- **Owner field must be the caller** on create (`uploadedBy`, `userId`, `reviewerId`,
+  `adopterId`, `fosterUserId`, `reporterId`). On update it is immutable, because
+  non-admin updates may only change listed fields (`diff().affectedKeys().hasOnly`).
+- **No backdating.** `createdAt`, `registeredAt` and `startDate` must equal
+  `request.time` (server timestamp) when present. `updatedAt`, `resolvedAt` and
+  `cancelledAt` must be server time when changed. `createdAt` can't be edited.
+- **Length and type caps.** Pet name and story pet name 80; location 200;
+  contact 60; phone 40; person names 100 (254 where the app falls back to the
+  email); messages, notes and stories 5,000; captions and review comments
+  2,000; sighting description 1,000 (the UI allows 500). Booleans must be bool,
+  `geo` must be a GeoPoint and `accuracyMeters` a number.
+- **Initial states.** New pets must be `available`. Inquiries start `pending`.
+  Adoptions start at `application` with an empty `stageHistory` and no
+  `rejectionReason`. Fosters have no `endDate`. Rescue reports start unassigned
+  and unresolved. Registrations start `registered`.
+- **Reviews:** `rating` must be an int from 1 to 5, and authors can't edit reviews.
+  The app uses auto ids, so one review per user per target is **not** enforced.
+  That needs a `{reviewerId}_{targetUserId}` doc id in `ReviewRepository`.
+- **Moderation:** only admins can set or clear `hidden` on pets, lost & found,
+  sightings, stories and reviews. Reporters also can't reopen a sighting whose
+  `status` an admin set to `hidden`.
+- **Narrower owner and volunteer updates:**
+  - Sighting reporters may only set `open` or `resolved`.
+  - Volunteers must sign triage as themselves.
+  - Rescue reporters can no longer reassign the volunteer.
+  - Volunteers can only claim `pending` reports for themselves, and only the
+    assigned volunteer can resolve.
+  - Users can cancel only a `registered` registration.
+- **Gamification:** clients can't change `leaderboardRank` or `createdAt`.
+  `totalPoints` can't go down or rise by more than 100 (the largest single
+  action) per write. History is append-only. Points are still client-trusted
+  (see next steps).
+- **Left as is (public reads kept):**
+  - `rescue_reports` are world-readable and include `reporterPhone`.
+  - `sightings`, `rescue_reports`, `reviews` and `pet_updates` store a display
+    name that falls back to the user's **email**.
+  - Consider dropping the email fallback in the app, or limiting rescue reads
+    to volunteers.
 
 ## Checked and OK
 
