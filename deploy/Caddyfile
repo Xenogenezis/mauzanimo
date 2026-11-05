@@ -2,8 +2,23 @@
 	email {$ACME_EMAIL}
 }
 
+# TLS terminates here, so HSTS is sent here. Every other security header
+# (CSP, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, cache
+# headers) comes from deploy/nginx.conf and is passed through unchanged; the
+# `?` defaults below only apply if nginx ever stops sending them.
 {$DOMAIN} {
 	encode zstd gzip
-	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
-	reverse_proxy web:80
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		?X-Content-Type-Options "nosniff"
+		?X-Frame-Options "DENY"
+		?Referrer-Policy "strict-origin-when-cross-origin"
+		?Permissions-Policy "camera=(self), geolocation=(self), microphone=()"
+		# Don't advertise the server software.
+		-Server
+		-Via
+	}
+	reverse_proxy web:80 {
+		header_down -Server
+	}
 }

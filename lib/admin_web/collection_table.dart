@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../widgets/app_image.dart';
+import 'audit.dart';
 import 'csv_download.dart';
 
 typedef Doc = QueryDocumentSnapshot<Map<String, dynamic>>;
@@ -149,7 +152,11 @@ class _CollectionTableState extends State<CollectionTable> {
       ),
     );
     if (ok != true) return;
-    await _guard(() => doc.reference.delete(), 'Deleted');
+    await _guard(() async {
+      await doc.reference.delete();
+      unawaited(logAdminAction(
+          action: 'delete', collection: widget.collection, docId: doc.id, summary: 'Deleted from ${widget.title}'));
+    }, 'Deleted');
   }
 
   Future<void> _guard(Future<void> Function() op, String success) async {
@@ -294,10 +301,19 @@ class _Source extends DataTableSource {
           ],
           onChanged: (v) {
             if (v == null) return;
+            final before = d[st.field] ?? st.fallback;
             guard(
-              () => st.onChange != null
-                  ? st.onChange!(doc, v)
-                  : doc.reference.update({st.field: v, 'updatedAt': FieldValue.serverTimestamp()}),
+              () async {
+                await (st.onChange != null
+                    ? st.onChange!(doc, v)
+                    : doc.reference.update({st.field: v, 'updatedAt': FieldValue.serverTimestamp()}));
+                unawaited(logAdminAction(
+                  action: w.collection == 'users' && st.field == 'role' ? 'role_change' : 'status_change',
+                  collection: w.collection,
+                  docId: doc.id,
+                  summary: '${st.field}: $before → $v',
+                ));
+              },
               '${st.label} → $v',
             );
           },

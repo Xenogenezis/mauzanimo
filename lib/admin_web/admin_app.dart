@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,9 +14,13 @@ import '../theme/app_theme.dart';
 import '../utils/geo_utils.dart';
 import '../widgets/app_image.dart';
 import '../widgets/location_picker.dart';
+import 'audit.dart';
+import 'audit_log_page.dart';
 import 'collection_table.dart';
 import 'overview.dart';
 import 'reports_section.dart';
+
+import 'session_timeout.dart';
 
 const _adminRoles = ['admin', 'superAdmin'];
 const _allRoles = ['adopter', 'rehomer', 'volunteer', 'partner', 'admin', 'superAdmin'];
@@ -73,7 +78,7 @@ class _AuthGate extends StatelessWidget {
                 ),
               );
             }
-            return AdminShell(user: user, role: role);
+            return IdleSignOut(child: AdminShell(user: user, role: role));
           },
         );
       },
@@ -201,6 +206,7 @@ class _AdminShellState extends State<AdminShell> {
     _Section('Stories', Icons.auto_stories_outlined, _stories),
     _Section('Volunteers', Icons.volunteer_activism_outlined, _volunteers),
     _Section('Users', Icons.people_outline, _users),
+    _Section('Audit log', Icons.history, () => const AuditLogPage()),
   ];
 
   /// Navigates to the section with this label (used by the Overview page).
@@ -276,6 +282,12 @@ class _AdminShellState extends State<AdminShell> {
                 _ => 'pending',
               };
               batch.update(FirebaseFirestore.instance.collection('pets').doc(petId), {'status': petStatus});
+              await batch.commit();
+              // The stage change itself is logged by CollectionTable.
+              unawaited(logAdminAction(
+                  action: 'status_change', collection: 'pets', docId: petId,
+                  summary: 'status → $petStatus (adoption ${doc.id} moved to $value)'));
+              return;
             }
             await batch.commit();
             unawaited(NotificationRepository().notifyAdoptionStage(
@@ -478,7 +490,7 @@ class _AdminShellState extends State<AdminShell> {
       ),
     );
     if (ok != true || title.text.trim().isEmpty) return;
-    await FirebaseFirestore.instance.collection('events').add({
+    final ref = await FirebaseFirestore.instance.collection('events').add({
       'title': title.text.trim(),
       'date': date.text.trim(),
       'time': time.text.trim(),
@@ -487,6 +499,7 @@ class _AdminShellState extends State<AdminShell> {
       'imageUrl': imageUrl.text.trim(),
       'createdAt': FieldValue.serverTimestamp(),
     });
+    unawaited(logAdminAction(action: 'create', collection: 'events', docId: ref.id, summary: title.text.trim()));
   }
 
   @override

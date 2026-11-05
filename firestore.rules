@@ -322,5 +322,29 @@ service cloud.firestore {
       allow create: if isAuthenticated() && validNotificationBase()
         && (validAdoptionStageNotification() || validSightingNotification());
     }
+
+    // --- admin_audit ---
+    // Append-only trail of writes made from the web admin. Admins create
+    // entries for themselves only (actorUid + server time are enforced) and
+    // can read them; nobody can edit or delete an entry from a client.
+    match /admin_audit/{entryId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasAll(['actorUid', 'action', 'collection', 'docId', 'at'])
+        && request.resource.data.keys().hasOnly(['actorUid', 'action', 'collection', 'docId', 'summary', 'at'])
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.action is string
+        && request.resource.data.action.size() > 0
+        && request.resource.data.action.size() <= 64
+        && request.resource.data.collection is string
+        && request.resource.data.collection.size() <= 64
+        && request.resource.data.docId is string
+        && request.resource.data.docId.size() <= 128
+        && (!('summary' in request.resource.data)
+            || (request.resource.data.summary is string
+                && request.resource.data.summary.size() <= 500))
+        && request.resource.data.at == request.time;
+      allow update, delete: if false;
+    }
   }
 }

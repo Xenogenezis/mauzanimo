@@ -55,3 +55,63 @@ Rules fixes are verified by 51 Firestore emulator tests in `test_rules/`
    (needed for Google sign-in on the web admin).
 8. **Moderation:** sightings and lost & found posts are public as soon as they're posted.
    The web admin can hide or delete them; consider a report-abuse button in the app.
+
+## Web hardening (VPS deploy and web admin)
+
+**HTTP headers** (`deploy/nginx.conf`, `deploy/Caddyfile`). Caddy terminates TLS and
+sends `Strict-Transport-Security` (1 year, subdomains) and strips `Server`/`Via`. nginx
+(`server_tokens off`) sends the rest on every response: `X-Content-Type-Options: nosniff`,
+`X-Frame-Options: DENY` + CSP `frame-ancestors 'none'`, `Referrer-Policy:
+strict-origin-when-cross-origin`, `Permissions-Policy: camera=(self), geolocation=(self),
+microphone=()`, and cache headers (`no-cache` for `index.html`, `flutter_bootstrap.js`,
+`main.dart.js`, `version.json`, service worker and manifest, since Flutter doesn't hash
+file names; one week for CanvasKit, images and fonts). Caddy only fills in the
+non-CSP headers if nginx ever stops sending them.
+
+**Content-Security-Policy.** Enforced on `/admin/`; `Content-Security-Policy-Report-Only`
+on the public app. Why: the admin is the high-value target and has a small, known set
+of origins; the public app shows user-supplied image URLs and more third-party
+flows, and there is no `report-uri` collector yet, so a mistake there would only show
+up as broken features for users. To enforce everywhere, change the `default` lines of
+`$mz_csp_enforce` / `$mz_csp_report` in `nginx.conf` as its comment describes.
+
+The policy does not need `'unsafe-inline'` or `'unsafe-eval'` for scripts: it uses
+`'wasm-unsafe-eval'` (CanvasKit) and **sha256 hashes for five inline scripts**: the two
+`<script>` blocks in `web/index.html` and the three loaders FlutterFire injects for
+`firebase_core`, `firebase_firestore` and `firebase_auth` (they embed the Firebase JS SDK
+version, currently 12.9.0). Builds use `--no-web-resources-cdn`, so CanvasKit comes from
+`'self'`, not gstatic. **After editing those inline scripts in `web/index.html` or
+upgrading any `firebase_*` plugin, the hashes change and the admin will stay on a blank
+splash screen.** Re-check before deploying:
+
+```bash
+flutter build web --release -t lib/main_admin.dart --no-web-resources-cdn
+NODE_PATH=$(npm root -g) node deploy/csp_check.cjs build/web deploy/nginx.conf
+```
+
+It loads the build in headless Chromium with the policy injected as `<meta>` and prints
+every CSP violation plus the hash of each inline script on the page (exit code 1 on
+violations). Verified 5 Nov 2026: **0 violations** for the admin build. Without network
+access Firebase never initialises, so the check covers bootstrap, CanvasKit and the
+Firebase loaders, not Firestore/Auth traffic, fonts or map tiles after sign-in: watch
+the browser console on the first real deploy. Known limit: CanvasKit fetches network
+images with XHR, so an image hosted outside `connect-src` (e.g. an event `imageUrl` on
+some other site) won't display. Base64 images and Google-hosted ones are fine.
+
+Suggestions for `web/index.html` (not changed here): move the two inline scripts to a
+file such as `web/boot.js` so no hashes are needed for them, and set
+`window.flutterfire_ignore_scripts` with explicit `<script type="module">` Firebase
+imports to drop the FlutterFire hashes.
+
+**Admin audit log.** Every write the web admin makes (status/stage changes, role
+changes, deletes, new events, and the pet status that follows an adoption stage) adds an
+entry to `admin_audit` (`actorUid`, `action`, `collection`, `docId`, optional `summary`,
+`at`). Rules: only admins create, only for themselves, with `at == request.time`; admins
+read; nobody updates or deletes (append-only; tested in `test_rules/admin_audit.test.mjs`).
+Logging is best effort and never blocks the admin action. The admin's "Audit log"
+section lists the latest 200 entries with a filter by action. Note that an admin could
+still skip logging by writing to Firestore directly; a tamper-proof trail needs Cloud
+Functions triggers (Blaze plan).
+
+**Idle sign-out.** The web admin signs out after 30 minutes without pointer or keyboard
+input, after a 60-second "Still there?" countdown (`lib/admin_web/session_timeout.dart`).
