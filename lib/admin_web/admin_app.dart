@@ -9,12 +9,13 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/adoption.dart';
-import '../repositories/notification_repository.dart';
 import '../theme/app_theme.dart';
 import '../utils/geo_utils.dart';
 import '../widgets/app_image.dart';
 import '../widgets/location_picker.dart';
+import 'admin_manage.dart';
 import 'audit.dart';
+import 'detail_panel.dart';
 import 'audit_log_page.dart';
 import 'collection_table.dart';
 import 'overview.dart';
@@ -33,11 +34,7 @@ class AdminWebApp extends StatelessWidget {
     return MaterialApp(
       title: 'MauZanimo Admin',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: AppTheme.primary,
-        useMaterial3: true,
-        visualDensity: VisualDensity.compact,
-      ),
+      theme: _adminTheme(),
       home: const _AuthGate(),
     );
   }
@@ -175,8 +172,13 @@ class _Section {
   final String label;
   final IconData icon;
   final Widget Function() build;
-  const _Section(this.label, this.icon, this.build);
+
+  /// Items needing attention in this section, shown as a sidebar badge.
+  final Query<Map<String, dynamic>>? todo;
+  const _Section(this.label, this.icon, this.build, {this.todo});
 }
+
+final _fs = FirebaseFirestore.instance;
 
 class AdminShell extends StatefulWidget {
   final User user;
@@ -194,14 +196,19 @@ class _AdminShellState extends State<AdminShell> {
 
   late final List<_Section> _sections = [
     _Section('Overview', Icons.dashboard_outlined, () => AdminOverview(onOpen: _openSection, footer: _mapFooter())),
-    _Section('Reports', Icons.flag_outlined, () => const AdminReportsSection()),
+    _Section('Reports', Icons.flag_outlined, () => const AdminReportsSection(),
+        todo: _fs.collection('reports').where('status', isEqualTo: 'open')),
     _Section('Sightings', Icons.add_location_alt_outlined, () => const _SightingsPage()),
     _Section('Pets', Icons.pets, _pets),
-    _Section('Adoptions', Icons.favorite_outline, _adoptions),
-    _Section('Inquiries', Icons.mail_outline, _inquiries),
+    _Section('Adoptions', Icons.favorite_outline, _adoptions,
+        todo: _fs.collection('adoptions').where('currentStage', isEqualTo: 'application')),
+    _Section('Inquiries', Icons.mail_outline, _inquiries,
+        todo: _fs.collection('inquiries').where('status', isEqualTo: 'pending')),
     _Section('Lost & Found', Icons.search, _lostFound),
-    _Section('Rescue SOS', Icons.warning_amber_rounded, _rescue),
-    _Section('Fosters', Icons.home_outlined, _fosters),
+    _Section('Rescue SOS', Icons.warning_amber_rounded, _rescue,
+        todo: _fs.collection('rescue_reports').where('status', isEqualTo: 'pending')),
+    _Section('Fosters', Icons.home_outlined, _fosters,
+        todo: _fs.collection('fosters').where('status', isEqualTo: 'pending')),
     _Section('Events', Icons.event, _events),
     _Section('Stories', Icons.auto_stories_outlined, _stories),
     _Section('Volunteers', Icons.volunteer_activism_outlined, _volunteers),
@@ -226,9 +233,12 @@ class _AdminShellState extends State<AdminShell> {
   Widget _pets() => CollectionTable(
         title: 'Pets',
         collection: 'pets',
+        onOpen: (context, doc) => showPetPanel(context, doc.id, isSuper: _isSuper),
         columns: [
           Col('Photo', _imageOf, image: true),
           Col('Name', _f('name')),
+          Col('Visibility', (d) => d['hidden'] == true ? 'hidden' : 'visible',
+              cell: (d) => d['hidden'] == true ? const StatusPill('hidden') : const Text('Visible')),
           Col('Type', _f('type')),
           Col('Age', _f('age')),
           Col('Location', _f('location')),
@@ -247,56 +257,36 @@ class _AdminShellState extends State<AdminShell> {
   Widget _adoptions() => CollectionTable(
         title: 'Adoptions',
         collection: 'adoptions',
+        onOpen: (context, doc) => showAdoptionPanel(context, doc.id, isSuper: _isSuper),
         columns: [
+          Col('Photo', (d) => null, cell: (d) => PetThumb(d['petId'] as String?)),
           Col('Pet', _f('petName')),
           Col('Adopter', _f('adopterName')),
           Col('Email', _f('adopterEmail')),
           Col('Phone', _f('adopterPhone')),
-          Col('Created', _f('createdAt')),
+          Col('Applied', _f('createdAt')),
+          Col('Meet & greet', _f('meetGreetAt')),
           Col('Rejection reason', _f('rejectionReason')),
+        ],
+        extraActions: (doc) => [
+          IconButton(
+            tooltip: 'View pet post',
+            icon: const Icon(Icons.pets),
+            onPressed: (doc.data()['petId'] as String? ?? '').isEmpty
+                ? null
+                : () => showPetPanel(context, doc.data()['petId'] as String, isSuper: _isSuper),
+          ),
         ],
         status: StatusCol(
           label: 'Stage',
           field: 'currentStage',
           options: AdoptionStage.values.map((s) => s.name).toList(),
           fallback: 'application',
-          onChange: (doc, value) async {
-            final batch = FirebaseFirestore.instance.batch();
-            batch.update(doc.reference, {
-              'currentStage': value,
-              'stageHistory': FieldValue.arrayUnion([
-                {
-                  'stage': value,
-                  'timestamp': Timestamp.now(),
-                  'changedBy': widget.user.email,
-                  'notes': 'Changed in web admin',
-                }
-              ]),
-            });
-            // Keep the pet's public status in step with the adoption.
-            final petId = doc.data()['petId'] as String?;
-            if (petId != null && petId.isNotEmpty) {
-              final petStatus = switch (value) {
-                'completed' => 'adopted',
-                'rejected' => 'available',
-                _ => 'pending',
-              };
-              batch.update(FirebaseFirestore.instance.collection('pets').doc(petId), {'status': petStatus});
-              await batch.commit();
-              // The stage change itself is logged by CollectionTable.
-              unawaited(logAdminAction(
-                  action: 'status_change', collection: 'pets', docId: petId,
-                  summary: 'status → $petStatus (adoption ${doc.id} moved to $value)'));
-              return;
-            }
-            await batch.commit();
-            unawaited(NotificationRepository().notifyAdoptionStage(
-              adoptionId: doc.id,
-              stage: value,
-              adopterId: doc.data()['adopterId'] as String?,
-              petName: doc.data()['petName'] as String?,
-            ));
-          },
+          // Rejections need a reason, so they go through the detail panel.
+          isLocked: (s) => s == 'rejected',
+          // Records history, syncs the pet's status and notifies the adopter.
+          // (The stage change itself is also logged by CollectionTable.)
+          onChange: (doc, value) => setAdoptionStage(doc.reference, doc.data(), value, logStage: false),
         ),
       );
 
@@ -318,6 +308,13 @@ class _AdminShellState extends State<AdminShell> {
           fallback: 'pending',
         ),
         extraActions: (doc) => [
+          IconButton(
+            tooltip: 'View pet post',
+            icon: const Icon(Icons.pets),
+            onPressed: (doc.data()['petId'] as String? ?? '').isEmpty
+                ? null
+                : () => showPetPanel(context, doc.data()['petId'] as String, isSuper: _isSuper),
+          ),
           IconButton(
             tooltip: 'Email applicant',
             icon: const Icon(Icons.email_outlined),
@@ -438,6 +435,7 @@ class _AdminShellState extends State<AdminShell> {
         collection: 'users',
         orderBy: null, // older Google sign-ins may have no createdAt
         allowDelete: _isSuper,
+        onOpen: (context, doc) => showUserPanel(context, doc.id, isSuper: _isSuper),
         columns: [
           Col('Name', _f('name')),
           Col('Email', _f('email')),
@@ -510,12 +508,19 @@ class _AdminShellState extends State<AdminShell> {
       selectedIndex: _index,
       onDestinationSelected: (i) => setState(() => _index = i),
       leading: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.fromLTRB(4, 16, 4, 12),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.pets, color: AppTheme.primary),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: AppTheme.accent, borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.pets, color: AppTheme.textDark, size: 22),
+          ),
           if (wide) ...[
-            const SizedBox(width: 8),
-            const Text('MauZanimo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(width: 10),
+            const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('MauZanimo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.white)),
+              Text('Admin', style: TextStyle(fontSize: 11, color: AppTheme.accent, letterSpacing: 1.2)),
+            ]),
           ],
         ]),
       ),
@@ -525,11 +530,24 @@ class _AdminShellState extends State<AdminShell> {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              if (wide)
-                Text('${widget.user.email}\n${widget.role}',
-                    textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: AppTheme.primary,
+                child: Text((widget.user.email ?? '?')[0].toUpperCase(),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+              if (wide) ...[
+                const SizedBox(height: 6),
+                Text(widget.user.email ?? '',
+                    textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(widget.role, style: const TextStyle(fontSize: 11, color: AppTheme.accent)),
+                ),
+              ],
               IconButton(
                 tooltip: 'Sign out',
+                color: Colors.white70,
                 icon: const Icon(Icons.logout),
                 onPressed: FirebaseAuth.instance.signOut,
               ),
@@ -539,18 +557,23 @@ class _AdminShellState extends State<AdminShell> {
       ),
       destinations: [
         for (final s in _sections)
-          NavigationRailDestination(icon: Icon(s.icon), label: Text(s.label)),
+          NavigationRailDestination(
+            icon: _NavBadge(query: s.todo, icon: Icon(s.icon)),
+            label: Text(s.label),
+          ),
       ],
     );
     return Scaffold(
       body: Row(children: [
-        SingleChildScrollView(
+        Container(
+          color: AppTheme.textDark,
+          child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: MediaQuery.sizeOf(context).height),
             child: IntrinsicHeight(child: rail),
           ),
+          ),
         ),
-        const VerticalDivider(width: 1),
         // KeyedSubtree so each section gets fresh state (and its own stream).
         Expanded(child: KeyedSubtree(key: ValueKey(_index), child: _sections[_index].build())),
       ]),
@@ -558,8 +581,90 @@ class _AdminShellState extends State<AdminShell> {
   }
 }
 
+/// MauZanimo brand look for the admin: teal primary, gold accent, soft
+/// grey canvas with white rounded cards.
+ThemeData _adminTheme() {
+  final scheme = ColorScheme.fromSeed(
+    seedColor: AppTheme.primary,
+    primary: AppTheme.primary,
+    secondary: AppTheme.accent,
+    surface: Colors.white,
+  );
+  return ThemeData(
+    useMaterial3: true,
+    colorScheme: scheme,
+    visualDensity: VisualDensity.compact,
+    scaffoldBackgroundColor: const Color(0xFFF5F7F7),
+    cardTheme: CardThemeData(
+      color: Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: AppTheme.textDark,
+      indicatorColor: AppTheme.primary,
+      selectedIconTheme: const IconThemeData(color: Colors.white),
+      unselectedIconTheme: IconThemeData(color: Colors.white.withValues(alpha: 0.7)),
+      selectedLabelTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+      unselectedLabelTextStyle: TextStyle(color: Colors.white.withValues(alpha: 0.75)),
+    ),
+    inputDecorationTheme: const InputDecorationTheme(filled: true, fillColor: Colors.white),
+    chipTheme: ChipThemeData(backgroundColor: AppTheme.primary.withValues(alpha: 0.08), side: BorderSide.none),
+  );
+}
+
+/// Live count of items needing attention, shown as a badge in the sidebar.
+/// Refreshed every minute with cheap aggregate queries.
+class _NavBadge extends StatefulWidget {
+  final Query<Map<String, dynamic>>? query;
+  final Widget icon;
+  const _NavBadge({required this.query, required this.icon});
+
+  @override
+  State<_NavBadge> createState() => _NavBadgeState();
+}
+
+class _NavBadgeState extends State<_NavBadge> {
+  int _count = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.query == null) return;
+    _refresh();
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) => _refresh());
+  }
+
+  Future<void> _refresh() async {
+    try {
+      final agg = await widget.query!.count().get();
+      if (mounted) setState(() => _count = agg.count ?? 0);
+    } catch (_) {/* badge is best-effort */}
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Badge(
+        isLabelVisible: _count > 0,
+        backgroundColor: AppTheme.accent,
+        textColor: AppTheme.textDark,
+        label: Text(_count > 99 ? '99+' : '$_count'),
+        child: widget.icon,
+      );
+}
+
 Object? Function(Map<String, dynamic>) _f(String field) => (d) => d[field];
 Object? _imageOf(Map<String, dynamic> d) => d['imageUrl'];
+
 
 // ---------------------------------------------------------------------------
 // Activity map (shown under the Overview dashboard)

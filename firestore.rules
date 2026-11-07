@@ -662,5 +662,19 @@ service cloud.firestore {
         && request.resource.data.at == request.time;
       allow update, delete: if false;
     }
+
+    // --- admin_notes ---
+    // Private notes the web admin keeps about a record (id = "<collection>_<docId>").
+    // Kept apart from the record itself because owners can read their own
+    // adoptions/profiles; these notes must stay admin-only.
+    match /admin_notes/{noteId} {
+      allow read, delete: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['text', 'updatedBy', 'updatedAt'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 4000
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+    }
   }
 }

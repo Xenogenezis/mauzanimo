@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../widgets/app_image.dart';
 import 'audit.dart';
 import 'csv_download.dart';
+import 'detail_panel.dart';
 
 typedef Doc = QueryDocumentSnapshot<Map<String, dynamic>>;
 
@@ -18,7 +19,11 @@ class Col {
   /// Render as a small thumbnail (value must be a URL or data URI).
   final bool image;
   final double? width;
-  const Col(this.label, this.value, {this.image = false, this.width});
+
+  /// Custom cell widget (e.g. a status pill or a looked-up thumbnail).
+  /// [value] is still used for search and CSV export.
+  final Widget Function(Map<String, dynamic> d)? cell;
+  const Col(this.label, this.value, {this.image = false, this.width, this.cell});
 
   /// Convenience for a plain field, formatting Timestamps as dates.
   factory Col.field(String label, String field, {double? width}) =>
@@ -70,6 +75,9 @@ class CollectionTable extends StatefulWidget {
   final List<Widget> Function(Doc doc)? extraActions;
   final Widget? header;
 
+  /// Opens when a row is clicked. Defaults to a panel listing every field.
+  final void Function(BuildContext context, Doc doc)? onOpen;
+
   const CollectionTable({
     super.key,
     required this.title,
@@ -81,6 +89,7 @@ class CollectionTable extends StatefulWidget {
     this.limit = 1000,
     this.extraActions,
     this.header,
+    this.onOpen,
   });
 
   @override
@@ -200,8 +209,12 @@ class _CollectionTableState extends State<CollectionTable> {
                 runSpacing: 12,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text(widget.title, style: Theme.of(context).textTheme.headlineSmall),
-                  Chip(label: Text('${docs.length} / ${all.length}')),
+                  Text(widget.title,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
+                  Chip(
+                    avatar: const Icon(Icons.filter_list, size: 16),
+                    label: Text(docs.length == all.length ? '${all.length}' : '${docs.length} of ${all.length}'),
+                  ),
                   SizedBox(
                     width: 280,
                     child: TextField(
@@ -235,12 +248,22 @@ class _CollectionTableState extends State<CollectionTable> {
             if (widget.header != null) widget.header!,
             Expanded(
               child: docs.isEmpty
-                  ? const Center(child: Text('Nothing here.'))
+                  ? Center(
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(Icons.inbox_outlined, size: 56, color: Colors.grey.shade400),
+                        const SizedBox(height: 8),
+                        Text(all.isEmpty ? 'Nothing here yet.' : 'No matches for this search or filter.',
+                            style: TextStyle(color: Colors.grey.shade600)),
+                      ]),
+                    )
                   : SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       child: PaginatedDataTable(
                         rowsPerPage: docs.length < 25 ? docs.length.clamp(1, 25) : 25,
                         showFirstLastButtons: true,
+                        showCheckboxColumn: false,
+                        headingRowColor: WidgetStatePropertyAll(
+                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.06)),
                         columns: [
                           for (final c in widget.columns) DataColumn(label: Text(c.label)),
                           if (st != null) DataColumn(label: Text(st.label)),
@@ -271,9 +294,16 @@ class _Source extends DataTableSource {
     final doc = docs[index];
     final d = doc.data();
     final st = w.status;
-    return DataRow(cells: [
+    return DataRow(
+        onSelectChanged: (_) => w.onOpen != null
+            ? w.onOpen!(context, doc)
+            : showDetailPanel(context,
+                title: '${w.title} · ${doc.id}', child: GenericFields(id: doc.id, data: doc.data())),
+        cells: [
       for (final c in w.columns)
-        DataCell(c.image
+        DataCell(c.cell != null
+            ? c.cell!(d)
+            : c.image
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(6),
                 child: AppImage(c.value(d) as String?, width: 44, height: 44, decodeWidth: 44),
@@ -330,10 +360,12 @@ class _Source extends DataTableSource {
     ]);
   }
 
+  // Row taps open the detail panel; nothing is ever "selected".
+  @override
+  int get selectedRowCount => 0;
+
   @override
   bool get isRowCountApproximate => false;
   @override
   int get rowCount => docs.length;
-  @override
-  int get selectedRowCount => 0;
 }
