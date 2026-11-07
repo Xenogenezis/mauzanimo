@@ -20,8 +20,6 @@ class LanguageSelectScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/images/jci_grand_baie.png', height: 100),
-                  const SizedBox(height: 32),
                   const Icon(Icons.pets, size: 64, color: AppTheme.primary),
                   const SizedBox(height: 16),
                   const Text('MauZanimo',

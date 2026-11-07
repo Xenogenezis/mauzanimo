@@ -248,7 +248,7 @@ String buildIcs(CalendarEvent e, {DateTime? now}) {
   final lines = <String>[
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//JCI Grand Baie//MauZanimo//EN',
+    'PRODID:-//MauZanimo//MauZanimo//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',

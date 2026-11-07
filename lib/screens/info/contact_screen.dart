@@ -1,3 +1,4 @@
+import 'package:stray_pets_mu/utils/app_contact.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
@@ -27,7 +28,7 @@ class ContactScreen extends StatelessWidget {
             style: TextStyle(fontSize: 14, color: textColor.withValues(alpha: 0.6)))),
           const SizedBox(height: 32),
           _ContactTile(icon: Icons.email_outlined, color: AppTheme.primary,
-            title: AppStrings.get('ui_email_us', lang), subtitle: 'jcigrandbaie@gmail.com'),
+            title: AppStrings.get('ui_email_us', lang), subtitle: kContactEmail),
           const SizedBox(height: 12),
           _ContactTile(icon: Icons.phone_outlined, color: Colors.green,
             title: AppStrings.get('ui_call_us', lang), subtitle: '+230 5704 7576'),

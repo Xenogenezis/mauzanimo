@@ -47,17 +47,6 @@ class AboutScreen extends StatelessWidget {
             title: AppStrings.get('ui_value_community', lang),
             description: AppStrings.get('ui_value_community_desc', lang)),
           const SizedBox(height: 24),
-          Container(padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('${AppStrings.get('ui_powered_by', lang)} JCI Grand Baie',
-                style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
-              const SizedBox(height: 4),
-              Text(AppStrings.get('junior_chamber_international_grand_baie_', lang),
-                style: const TextStyle(fontSize: 12, color: Colors.grey, height: 1.5)),
-            ]),
-          ),
-          const SizedBox(height: 16),
           Center(child: Text(
             AppStrings.get('ui_version', lang).replaceAll('{version}', kAppVersion),
             style: TextStyle(fontSize: 12, color: Colors.grey.shade400))),

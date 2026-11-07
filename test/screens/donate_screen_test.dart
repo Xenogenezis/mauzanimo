@@ -5,10 +5,25 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/screens/info/donate_screen.dart';
+import 'package:stray_pets_mu/utils/app_contact.dart';
 
 class MockLanguageProvider extends Mock implements LanguageProvider {}
 
 void main() {
+  testWidgets('bank section is hidden while no donation account is set',
+      (tester) async {
+    final lang = MockLanguageProvider();
+    when(() => lang.lang).thenReturn('en');
+    await tester.pumpWidget(ChangeNotifierProvider<LanguageProvider>.value(
+      value: lang,
+      child: const MaterialApp(home: DonateScreen()),
+    ));
+    expect(kDonationBankDetails, isEmpty);
+    expect(find.byType(CopyableDetail), findsNothing);
+    expect(find.text('Bank Transfer Details'), findsNothing);
+    expect(find.textContaining('JCI'), findsNothing);
+  });
+
   testWidgets('tapping a payment detail copies its value', (tester) async {
     final lang = MockLanguageProvider();
     when(() => lang.lang).thenReturn('en');
@@ -26,16 +41,17 @@ void main() {
 
     await tester.pumpWidget(ChangeNotifierProvider<LanguageProvider>.value(
       value: lang,
-      child: const MaterialApp(home: DonateScreen()),
+      child: const MaterialApp(
+        home: Scaffold(
+          body: CopyableDetail(text: 'Account No: 1234-5678', lang: 'en'),
+        ),
+      ),
     ));
 
-    expect(find.byType(CopyableDetail), findsNWidgets(4));
-    final account = find.text('Account No: XXXX-XXXX-XXXX');
-    await tester.ensureVisible(account);
-    await tester.tap(account);
+    await tester.tap(find.text('Account No: 1234-5678'));
     await tester.pump();
 
-    expect(copied, 'XXXX-XXXX-XXXX');
+    expect(copied, '1234-5678');
     expect(find.text('Copied'), findsOneWidget);
   });
 }

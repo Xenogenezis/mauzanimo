@@ -1,4 +1,4 @@
-package com.jcigrandbaie.mauzanimo
+package com.mauzanimo.app
 
 import io.flutter.embedding.android.FlutterActivity
 
