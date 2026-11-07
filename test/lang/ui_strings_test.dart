@@ -84,7 +84,7 @@ void main() {
       expect(find.text(AppStrings.get('our_mission', 'fr')), findsOneWidget);
       expect(find.text('Chaque animal compte'), findsOneWidget);
       expect(find.text('Communauté'), findsOneWidget);
-      expect(find.text('Propulsé par JCI Grand Baie'), findsOneWidget);
+      expect(find.textContaining('JCI'), findsNothing);
       expect(find.text('Version $kAppVersion'), findsOneWidget);
       expect(find.text('Our values'), findsNothing);
       expect(find.text('Every animal matters'), findsNothing);

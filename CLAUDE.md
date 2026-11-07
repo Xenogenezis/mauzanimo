@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**MauZanimo** is a Flutter mobile/web app for responsible pet rehoming in Mauritius, built by JCI Grand Baie. It connects people rehoming stray pets with local adopters.
+**MauZanimo** is a Flutter mobile/web app for responsible pet rehoming in Mauritius. It connects people rehoming stray pets with local adopters.
 
 - **Package name:** `stray_pets_mu`
 - **Version:** 1.0.0+1

@@ -1,7 +1,7 @@
 # MauZanimo
 
 **Rehome responsibly. Adopt locally.** A Flutter + Firebase app for pet rehoming
-and stray-animal welfare in Mauritius, by JCI Grand Baie. Available in English,
+and stray-animal welfare in Mauritius. Available in English,
 French and Kreol Morisien.
 
 ## Features

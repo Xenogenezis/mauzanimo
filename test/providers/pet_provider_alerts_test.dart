@@ -194,7 +194,7 @@ void main() {
 
   test('donate copyValueOf keeps the value after the label', () {
     expect(copyValueOf('Account No: XXXX-XXXX-XXXX'), 'XXXX-XXXX-XXXX');
-    expect(copyValueOf('Nom Kont: JCI Grand Baie'), 'JCI Grand Baie');
+    expect(copyValueOf('Nom Kont: MauZanimo'), 'MauZanimo');
     expect(copyValueOf('No label'), 'No label');
     expect(copyValueOf('Empty:'), 'Empty:');
   });

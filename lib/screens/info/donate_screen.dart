@@ -1,3 +1,4 @@
+import 'package:stray_pets_mu/utils/app_contact.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -71,6 +72,7 @@ class DonateScreen extends StatelessWidget {
               title: AppStrings.get('awareness_campaigns', lang),
               description: AppStrings.get('awareness_campaigns_desc', lang),
             ),
+            if (kDonationBankDetails.isNotEmpty) ...[
             const SizedBox(height: 32),
             Text(
               AppStrings.get('bank_transfer_details', lang),
@@ -90,19 +92,15 @@ class DonateScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final key in const [
-                    'bank_mcb_mauritius',
-                    'account_name_jci_grand_baie',
-                    'account_no_xxxxxxxxxxxx',
-                    'reference_mauzanimo_donation',
-                  ])
+                  for (final line in kDonationBankDetails)
                     CopyableDetail(
-                      text: AppStrings.get(key, lang),
+                      text: line,
                       lang: lang,
                     ),
                 ],
               ),
             ),
+            ],
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -121,7 +119,7 @@ class DonateScreen extends StatelessWidget {
   }
 
   Future<void> _contactForAlternativePayment(BuildContext context, String lang) async {
-    const email = 'jcigrandbaie@gmail.com';
+    const email = kContactEmail;
     final subject = Uri.encodeComponent(AppStrings.get('ui_donate_email_subject', lang));
     final body = Uri.encodeComponent(AppStrings.get('ui_donate_email_body', lang));
 

@@ -41,7 +41,7 @@ class AppDrawer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset('assets/images/jci_grand_baie.png', height: 60),
+                const Icon(Icons.pets, size: 48, color: Colors.white),
                 const SizedBox(height: 16),
                 const Text('MauZanimo',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -243,7 +243,7 @@ class AppDrawer extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text('${AppStrings.get('ui_powered_by', lang)} JCI Grand Baie',
+            child: Text(AppStrings.get('tagline', lang),
               style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
           ),
         ],

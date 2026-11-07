@@ -1,3 +1,4 @@
+import 'package:stray_pets_mu/utils/app_contact.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +8,7 @@ import 'package:stray_pets_mu/theme/adaptive_colors.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 
 /// Contact address for privacy requests (same as the Contact screen).
-const String privacyContactEmail = 'jcigrandbaie@gmail.com';
+const String privacyContactEmail = kContactEmail;
 
 /// Privacy policy under the Mauritius Data Protection Act 2017.
 class PrivacyScreen extends StatelessWidget {

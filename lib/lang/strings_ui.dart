@@ -3,7 +3,6 @@
 const Map<String, Map<String, String>> uiStrings = {
   'en': {
     // About
-    'ui_powered_by': 'Powered by',
     'ui_version': 'Version {version}',
     'ui_value_compassion': 'Compassion',
     'ui_value_compassion_desc': 'Every animal matters',
@@ -63,7 +62,6 @@ const Map<String, Map<String, String>> uiStrings = {
   },
   'fr': {
     // About
-    'ui_powered_by': 'Propulsé par',
     'ui_version': 'Version {version}',
     'ui_value_compassion': 'Compassion',
     'ui_value_compassion_desc': 'Chaque animal compte',
@@ -123,7 +121,6 @@ const Map<String, Map<String, String>> uiStrings = {
   },
   'mfe': {
     // About
-    'ui_powered_by': 'Avek sipor',
     'ui_version': 'Versyon {version}',
     'ui_value_compassion': 'Konpasion',
     'ui_value_compassion_desc': 'Sak zanimo konte',

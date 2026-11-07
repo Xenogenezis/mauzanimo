@@ -7,7 +7,7 @@ import '../utils/geo_utils.dart';
 /// OpenStreetMap tiles. OSM's tile policy requires an identifying user agent.
 TileLayer osmTileLayer() => TileLayer(
       urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-      userAgentPackageName: 'com.jcigrandbaie.mauzanimo',
+      userAgentPackageName: 'com.mauzanimo.app',
       maxZoom: 19,
     );
 

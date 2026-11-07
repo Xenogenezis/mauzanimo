@@ -155,7 +155,7 @@ Map<String, Object?> buildAccountExport({
   return {
     'exportedAt': exportedAt.toUtc().toIso8601String(),
     'app': 'MauZanimo',
-    'controller': 'JCI Grand Baie',
+    'controller': 'MauZanimo',
     'uid': uid,
     if (email != null) 'email': email,
     'profile': sanitizeForExport(profile),
