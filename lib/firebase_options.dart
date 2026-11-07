@@ -48,7 +48,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCoS_sDoVgwcN71xQmkU_6zIiMYGmhoJ6E',
-    appId: '1:573750997910:android:83fdd4e778e17a940163b7',
+    appId: '1:573750997910:android:883ee7b8c9379e2a0163b7',
     messagingSenderId: '573750997910',
     projectId: 'stray-pets-mu',
     storageBucket: 'stray-pets-mu.firebasestorage.app',

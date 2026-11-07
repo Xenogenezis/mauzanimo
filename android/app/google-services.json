@@ -7,41 +7,20 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:573750997910:android:3533f7c1c6d62d780163b7",
+        "mobilesdk_app_id": "1:573750997910:android:883ee7b8c9379e2a0163b7",
         "android_client_info": {
-          "package_name": "com.jcigrandbaie.mauzanimo"
+          "package_name": "com.mauzanimo.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "573750997910-0vnp300osgpk1u6gh6ll0jr59c20355c.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCoS_sDoVgwcN71xQmkU_6zIiMYGmhoJ6E"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "573750997910-0vnp300osgpk1u6gh6ll0jr59c20355c.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:573750997910:android:4edee6d2a2b002440163b7",
-        "android_client_info": {
-          "package_name": "mu.jcigrandbaie.mauzanimo"
-        }
-      },
-      "oauth_client": [
+          "client_id": "573750997910-9rtpmjnmrp519tsu9jqd6qcvnhistsi1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mauzanimo.app",
+            "certificate_hash": "0e12fbecb423217c18925d2ee41bad6ad49a3eab"
+          }
+        },
         {
           "client_id": "573750997910-0vnp300osgpk1u6gh6ll0jr59c20355c.apps.googleusercontent.com",
           "client_type": 3
