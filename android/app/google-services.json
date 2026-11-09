@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "573750997910-6lfgdl8qoisavi2ombb5lnar856oumk6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mauzanimo.app",
+            "certificate_hash": "cdd4dd04049ed119f4626becb6e384f2fb973d5f"
+          }
+        },
+        {
           "client_id": "573750997910-9rtpmjnmrp519tsu9jqd6qcvnhistsi1.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
