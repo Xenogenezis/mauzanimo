@@ -10,6 +10,7 @@ import '../../providers/event_provider.dart';
 import '../../providers/auth_provider.dart' as app_provider;
 import '../../models/event_registration.dart';
 import '../../widgets/login_required_view.dart';
+import '../admin/add_event_screen.dart';
 import '../../utils/event_calendar.dart';
 import '../../utils/calendar_export.dart';
 import '../../utils/poster_export.dart' show shareOriginOf;
@@ -58,6 +59,18 @@ class _EventsScreenState extends State<EventsScreen> {
           ),
         ],
       ),
+      // Only admins can write to `events` (firestore.rules).
+      floatingActionButton: context.watch<app_provider.AuthProvider>().isAdminMode
+          ? FloatingActionButton.extended(
+              key: const ValueKey('add-event'),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AddEventScreen()),
+              ),
+              icon: const Icon(Icons.add),
+              label: Text(AppStrings.get('ui_event_add', lang)),
+            )
+          : null,
       body: StreamBuilder<QuerySnapshot>(
         stream: _stream,
         builder: (context, snapshot) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/screens/admin/add_pet_screen.dart';
+import 'package:stray_pets_mu/screens/admin/add_event_screen.dart';
 import 'package:stray_pets_mu/screens/admin/inquiries_screen.dart';
 import 'package:stray_pets_mu/screens/admin/adoption_management_screen.dart';
 import 'package:stray_pets_mu/models/user_role.dart';
@@ -117,6 +118,16 @@ class _OverviewTab extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AddPetScreen()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ActionTile(
+            icon: Icons.event_outlined,
+            title: 'Add Event',
+            subtitle: 'Publish an adoption event',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddEventScreen()),
             ),
           ),
           const SizedBox(height: 12),
