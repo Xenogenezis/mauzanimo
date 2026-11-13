@@ -21,6 +21,8 @@ import 'providers/foster_provider.dart';
 import 'providers/pet_update_provider.dart';
 import 'providers/recently_viewed_provider.dart';
 import 'providers/notifications_provider.dart';
+import 'providers/rescue_alerts_provider.dart';
+import 'models/user_role.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/pet_repository.dart';
 import 'repositories/lost_found_repository.dart';
@@ -130,6 +132,15 @@ class MauZanimoApp extends StatelessWidget {
               create: (_) => NotificationsProvider(NotificationRepository()),
               update: (_, auth, p) => (p ?? NotificationsProvider(NotificationRepository()))
                 ..setUid(auth.uid),
+            ),
+            // "Rescues near you" for volunteers/rescuers and above.
+            ChangeNotifierProxyProvider<AuthProvider, RescueAlertsProvider>(
+              create: (_) => RescueAlertsProvider(RescueRepository().pendingReportsStream),
+              update: (_, auth, p) => (p ?? RescueAlertsProvider(RescueRepository().pendingReportsStream))
+                ..setUser(
+                  auth.uid,
+                  canRescue: auth.userProfile?.role.canAccess(UserRole.volunteer) ?? false,
+                ),
             ),
           ],
           child: MaterialApp(

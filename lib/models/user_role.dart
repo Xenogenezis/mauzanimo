@@ -2,7 +2,7 @@
 enum UserRole {
   adopter,    // Default - can adopt pets
   rehomer,    // Can list pets for rehoming
-  volunteer,  // Can help with events, rescue
+  volunteer,  // Volunteer/Rescuer: helps with events and takes rescue requests
   partner,    // Vets, shelters, NGOs - Admin created only
   admin,      // Full system access - Admin created only
   superAdmin, // Can manage other admins - Admin created only
@@ -14,7 +14,7 @@ extension UserRoleExtension on UserRole {
     return switch (this) {
       UserRole.adopter => 'Adopter',
       UserRole.rehomer => 'Rehomer',
-      UserRole.volunteer => 'Volunteer',
+      UserRole.volunteer => 'Volunteer/Rescuer',
       UserRole.partner => 'Partner',
       UserRole.admin => 'Admin',
       UserRole.superAdmin => 'Super Admin',
@@ -26,7 +26,7 @@ extension UserRoleExtension on UserRole {
     return switch (this) {
       UserRole.adopter => 'Looking to adopt a pet',
       UserRole.rehomer => 'Need to rehome a pet',
-      UserRole.volunteer => 'Want to help at events',
+      UserRole.volunteer => 'Want to help at events and rescues',
       UserRole.partner => 'Vet clinic, shelter, or NGO',
       UserRole.admin => 'System administrator',
       UserRole.superAdmin => 'Super administrator',

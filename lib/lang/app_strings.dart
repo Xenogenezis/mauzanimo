@@ -9,6 +9,7 @@ import 'strings_report.dart';
 import 'strings_account.dart';
 import 'strings_notify.dart';
 import 'strings_alerts.dart';
+import 'strings_rescue.dart';
 
 class AppStrings {
   static Map<String, Map<String, String>> translations = {
@@ -1284,6 +1285,7 @@ class AppStrings {
     accountStrings,
     notifyStrings,
     alertsStrings,
+    rescueStrings,
   ];
 
   static String? _lookup(String key, String lang) {

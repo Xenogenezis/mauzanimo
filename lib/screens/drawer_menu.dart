@@ -19,6 +19,8 @@ import 'package:stray_pets_mu/screens/lostfound/lost_found_screen.dart';
 import 'package:stray_pets_mu/screens/events/events_screen.dart';
 import 'package:stray_pets_mu/screens/gamification/leaderboard_screen.dart';
 import 'package:stray_pets_mu/screens/rescue/rescue_report_screen.dart';
+import 'package:stray_pets_mu/screens/rescue/rescue_list_screen.dart';
+import 'package:stray_pets_mu/providers/rescue_alerts_provider.dart';
 import 'package:stray_pets_mu/screens/foster/my_fosters_screen.dart';
 import 'package:stray_pets_mu/screens/sightings/sightings_screen.dart';
 import 'package:stray_pets_mu/screens/info/adoption_quiz_screen.dart';
@@ -124,6 +126,20 @@ class AppDrawer extends StatelessWidget {
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const RescueReportScreen()));
+                    },
+                  ),
+                // Volunteers/rescuers (and above) can take rescue requests;
+                // the badge counts open ones inside their alert area.
+                if (context.watch<RescueAlertsProvider?>()?.canRescue ?? false)
+                  _DrawerTile(
+                    icon: Icons.volunteer_activism,
+                    title: AppStrings.get('ra_requests', lang),
+                    subtitle: AppStrings.get('ra_requests_subtitle', lang),
+                    color: Colors.red,
+                    badge: context.watch<RescueAlertsProvider?>()?.nearby.length ?? 0,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const RescueListScreen()));
                     },
                   ),
                 if (isAuthenticated)
@@ -272,12 +288,16 @@ class _DrawerTile extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
+  /// Count shown in a pill instead of the arrow; hidden when 0.
+  final int badge;
+
   const _DrawerTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.color,
     required this.onTap,
+    this.badge = 0,
   });
 
   @override
@@ -293,7 +313,14 @@ class _DrawerTile extends StatelessWidget {
       ),
       title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: context.textStrong)),
       subtitle: subtitle.isNotEmpty ? Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey)) : null,
-      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+      trailing: badge > 0
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(10)),
+              child: Text('$badge',
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            )
+          : const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
       onTap: onTap,
     );
   }

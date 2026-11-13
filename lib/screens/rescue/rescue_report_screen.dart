@@ -7,6 +7,9 @@ import 'package:stray_pets_mu/models/rescue_report.dart';
 import 'package:stray_pets_mu/providers/rescue_provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:stray_pets_mu/utils/location_service.dart';
+import 'package:stray_pets_mu/widgets/location_picker.dart';
 
 class RescueReportScreen extends StatefulWidget {
   const RescueReportScreen({super.key});
@@ -23,8 +26,26 @@ class _RescueReportScreenState extends State<RescueReportScreen> {
   String _urgency = 'high';
   bool _isSubmitting = false;
   bool _submitted = false;
+  // Optional map pin, so rescuers with alerts for this area can be told.
+  LatLng? _gps;
+  LatLng? _pin;
+  bool _locating = false;
 
   String _(String key) => AppStrings.get(key, context.read<LanguageProvider>().lang);
+
+  Future<void> _useGps() async {
+    setState(() => _locating = true);
+    try {
+      final fix = await const LocationService().currentFix();
+      if (mounted) setState(() => _gps = _pin = LatLng(fix.latitude, fix.longitude));
+    } on LocationException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_('ui_lf_gps_failed'))));
+      }
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
 
   @override
   void initState() {
@@ -62,6 +83,8 @@ class _RescueReportScreenState extends State<RescueReportScreen> {
         reporterName: user.displayName ?? user.email ?? 'User',
         reporterPhone: _phoneController.text.trim(),
         createdAt: DateTime.now(),
+        latitude: _pin?.latitude,
+        longitude: _pin?.longitude,
       );
 
       final provider = context.read<RescueProvider>();
@@ -207,6 +230,26 @@ class _RescueReportScreenState extends State<RescueReportScreen> {
           _field(_descriptionController, _('description'), Icons.description, maxLines: 3),
           const SizedBox(height: 16),
           _field(_locationController, _('location'), Icons.location_on_outlined),
+          const SizedBox(height: 16),
+          Row(children: [
+            Expanded(
+              child: Text(_('ra_pin_title'),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
+            ),
+            TextButton.icon(
+              onPressed: _locating ? null : _useGps,
+              icon: _locating
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.my_location, size: 18),
+              label: Text(_('ui_lf_use_gps')),
+            ),
+          ]),
+          const SizedBox(height: 4),
+          LocationPicker(initial: _gps, height: 200, onChanged: (p) => setState(() => _pin = p)),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(_('ra_pin_hint'), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          ),
           const SizedBox(height: 16),
           _field(_phoneController, _('phone'), Icons.phone_outlined, keyboardType: TextInputType.phone),
           const SizedBox(height: 32),

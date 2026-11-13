@@ -13,6 +13,7 @@ import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/widgets/adaptive_nav_scaffold.dart';
 import 'package:stray_pets_mu/screens/notifications/notifications_screen.dart';
+import 'package:stray_pets_mu/widgets/nearby_rescue_banner.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -52,7 +53,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _screens[_currentIndex],
+      body: Column(children: [
+        const NearbyRescueBanner(),
+        Expanded(child: _screens[_currentIndex]),
+      ]),
       floatingActionButton: _currentIndex == 0 ? FloatingActionButton.extended(
         onPressed: () => AuthGuard.requireAuth(context, () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const UploadPetScreen()));

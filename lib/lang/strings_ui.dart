@@ -33,8 +33,8 @@ const Map<String, Map<String, String>> uiStrings = {
     'ui_role_adopter_desc': 'Looking to adopt a pet',
     'ui_role_rehomer': 'Rehomer',
     'ui_role_rehomer_desc': 'Need to rehome a pet',
-    'ui_role_volunteer': 'Volunteer',
-    'ui_role_volunteer_desc': 'Want to help at events',
+    'ui_role_volunteer': 'Volunteer/Rescuer',
+    'ui_role_volunteer_desc': 'Want to help at events and rescue animals',
     // Onboarding
     'ui_onb_title_1': 'Welcome to MauZanimo',
     'ui_onb_body_1': 'Helping owners rehome responsibly and families adopt locally across Mauritius.',
@@ -107,8 +107,8 @@ const Map<String, Map<String, String>> uiStrings = {
     'ui_role_adopter_desc': 'Je souhaite adopter un animal',
     'ui_role_rehomer': 'Propriétaire',
     'ui_role_rehomer_desc': 'Je dois trouver un nouveau foyer à mon animal',
-    'ui_role_volunteer': 'Bénévole',
-    'ui_role_volunteer_desc': 'Je veux aider lors des événements',
+    'ui_role_volunteer': 'Bénévole/Sauveteur',
+    'ui_role_volunteer_desc': 'Je veux aider lors des événements et secourir des animaux',
     // Onboarding
     'ui_onb_title_1': 'Bienvenue sur MauZanimo',
     'ui_onb_body_1': 'Nous aidons les propriétaires à replacer leur animal de façon responsable et les familles à adopter près de chez elles, partout à Maurice.',
@@ -181,8 +181,8 @@ const Map<String, Map<String, String>> uiStrings = {
     'ui_role_adopter_desc': 'Mo anvi adopte enn zanimo',
     'ui_role_rehomer': 'Proprieter',
     'ui_role_rehomer_desc': 'Mo bizin trouv enn nouvo lakaz pou mo zanimo',
-    'ui_role_volunteer': 'Volonter',
-    'ui_role_volunteer_desc': 'Mo anvi ede dan bann evennman',
+    'ui_role_volunteer': 'Volonter/Sovter',
+    'ui_role_volunteer_desc': 'Mo anvi ede dan bann evennman ek sov bann zanimo',
     // Onboarding
     'ui_onb_title_1': 'Byenveni lor MauZanimo',
     'ui_onb_body_1': 'Nou ed bann proprieter trouv enn bon nouvo lakaz pou zot zanimo, ek bann fami adopte pre kot zot, partou dan Moris.',

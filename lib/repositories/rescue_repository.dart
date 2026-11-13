@@ -34,6 +34,13 @@ class RescueRepository {
     }
   }
 
+  /// Reports nobody has taken yet, for the "rescues near you" alerts.
+  Stream<List<RescueReport>> pendingReportsStream() => _firestore
+      .collection('rescue_reports')
+      .where('status', isEqualTo: 'pending')
+      .snapshots()
+      .map((s) => s.docs.map((d) => RescueReport.fromMap(d.id, d.data())).toList());
+
   Result<Stream<List<RescueReport>>> getReportsStream() {
     try {
       final stream = _firestore
