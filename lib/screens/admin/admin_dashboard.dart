@@ -7,6 +7,12 @@ import 'package:stray_pets_mu/screens/admin/adoption_management_screen.dart';
 import 'package:stray_pets_mu/models/user_role.dart';
 import 'package:stray_pets_mu/models/verification_badge.dart';
 import 'package:stray_pets_mu/repositories/auth_repository.dart';
+import 'package:stray_pets_mu/admin_web/activity_map.dart';
+import 'package:stray_pets_mu/admin_web/overview.dart';
+import 'package:stray_pets_mu/screens/foster/foster_management_screen.dart';
+import 'package:stray_pets_mu/screens/lostfound/lost_found_screen.dart';
+import 'package:stray_pets_mu/screens/rescue/rescue_list_screen.dart';
+import 'package:stray_pets_mu/screens/sightings/sightings_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -18,11 +24,33 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const _OverviewTab(),
+  late final List<Widget> _pages = [
+    _OverviewTab(onOpen: _openSection),
     const _UserManagementTab(),
     const _RoleRequestsTab(),
   ];
+
+  /// Opens the in-app screen matching a web admin section label (the Overview
+  /// tiles and "Needs attention" groups use the same labels as the web admin).
+  void _openSection(String section) {
+    final Widget? screen = switch (section) {
+      'Adoptions' => const AdoptionManagementScreen(),
+      'Inquiries' => const InquiriesScreen(),
+      'Lost & Found' => const LostFoundScreen(),
+      'Sightings' => const SightingsScreen(),
+      'Rescue SOS' => const RescueListScreen(),
+      'Fosters' => const FosterManagementScreen(),
+      _ => null,
+    };
+    if (screen != null) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    } else if (section == 'Users') {
+      setState(() => _selectedIndex = 1);
+    } else if (section == 'Pets') {
+      // The pet list is the app's home screen, right under this dashboard.
+      Navigator.pop(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,84 +93,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
 }
 
 // Overview Tab
+// The same Overview as the web admin (KPIs, last 30 days, needs attention,
+// activity map), followed by the in-app quick actions.
 class _OverviewTab extends StatelessWidget {
-  const _OverviewTab();
+  final ValueChanged<String> onOpen;
+  const _OverviewTab({required this.onOpen});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
+    return AdminOverview(
+      onOpen: onOpen,
+      footer: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Overview',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textDark,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _StatCard(
-                  label: 'Total Pets',
-                  icon: Icons.pets,
-                  color: AppTheme.primary,
-                  stream: FirebaseFirestore.instance.collection('pets').snapshots(),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  label: 'Inquiries',
-                  icon: Icons.mail_outline,
-                  color: AppTheme.accent,
-                  stream: FirebaseFirestore.instance.collection('inquiries').snapshots(),
-                ),
-              ),
-            ],
-          ),
+          const ActivityMapSection(height: 360),
+          const SizedBox(height: 28),
+          Text('Quick Actions', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _StatCard(
-                  label: 'Adopted',
-                  icon: Icons.favorite,
-                  color: Colors.green,
-                  stream: FirebaseFirestore.instance
-                      .collection('pets')
-                      .where('status', isEqualTo: 'adopted')
-                      .snapshots(),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  label: 'Pending',
-                  icon: Icons.hourglass_empty,
-                  color: Colors.orange,
-                  stream: FirebaseFirestore.instance
-                      .collection('inquiries')
-                      .where('status', isEqualTo: 'pending')
-                      .snapshots(),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          const Text(
-            'Quick Actions',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textDark,
-            ),
-          ),
-          const SizedBox(height: 16),
           _ActionTile(
             icon: Icons.add_circle_outline,
             title: 'Add New Pet',
@@ -557,55 +524,6 @@ class _CreateSpecialUserDialogState extends State<_CreateSpecialUserDialog> {
       }
     }
   }
-}
-
-// Stat Card Widget
-class _StatCard extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final Stream<QuerySnapshot> stream;
-
-  const _StatCard({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.stream,
-  });
-
-  @override
-  Widget build(BuildContext context) => StreamBuilder<QuerySnapshot>(
-        stream: stream,
-        builder: (c, snap) => Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: color, size: 28),
-              const SizedBox(height: 12),
-              Text(
-                (snap.data?.docs.length ?? 0).toString(),
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppTheme.textDark,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
 }
 
 // Action Tile Widget

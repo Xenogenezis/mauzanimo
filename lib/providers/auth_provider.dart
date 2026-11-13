@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../repositories/auth_repository.dart';
 import '../models/user_profile.dart';
 import '../utils/result.dart';
@@ -13,8 +14,15 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isProfileLoading = false;
 
+  // Admins choose at login whether to use the app as an admin or as a
+  // regular user. Only affects what the UI shows; Firestore rules still
+  // decide what the account may do.
+  static const _adminModeKey = 'admin_mode';
+  bool _adminMode = true;
+
   AuthProvider(this._authRepository) {
     _user = _authRepository.currentUser;
+    _loadAdminMode();
     _authRepository.authStateChanges.listen((user) async {
       _user = user;
       if (user != null) {
@@ -35,6 +43,34 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   String? get uid => _user?.uid;
   String? get email => _user?.email;
+
+  /// The account has the admin or superAdmin role.
+  bool get isAdmin => _userProfile?.isAdmin ?? false;
+
+  /// The account is an admin AND chose to use the app as an admin.
+  bool get isAdminMode => isAdmin && _adminMode;
+
+  Future<void> _loadAdminMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _adminMode = prefs.getBool(_adminModeKey) ?? true;
+      notifyListeners();
+    } catch (_) {
+      // Keep the default.
+    }
+  }
+
+  /// Remembers the choice made in the login role prompt.
+  Future<void> setAdminMode(bool value) async {
+    _adminMode = value;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_adminModeKey, value);
+    } catch (_) {
+      // The in-memory value still applies for this session.
+    }
+  }
   String get displayName => _userProfile?.name ?? _user?.email ?? 'User';
 
   // Load user profile from Firestore

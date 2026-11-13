@@ -128,7 +128,7 @@ class _AdoptionWorkflowScreenState extends State<AdoptionWorkflowScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = context.read<AuthProvider>().userProfile?.isAdmin ?? false;
+    final isAdmin = context.read<AuthProvider>().isAdminMode;
 
     return Scaffold(
       appBar: AppBar(

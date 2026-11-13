@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/theme/adaptive_colors.dart';
+import 'package:stray_pets_mu/providers/auth_provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/screens/home_screen.dart';
@@ -102,12 +103,61 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      final asAdmin = await _chooseRoleIfAdmin(lang);
+      if (!mounted) return;
+      final navigator = Navigator.of(context);
+      navigator.pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+      if (asAdmin) {
+        navigator.push(MaterialPageRoute(builder: (_) => const AdminDashboard()));
+      }
     } on FirebaseAuthException catch (e) {
       setState(() { _errorMessage = e.message; });
     } finally {
       setState(() { _isLoading = false; });
     }
+  }
+
+  /// Admins and super admins pick how to use the app for this login: as an
+  /// admin (lands on the dashboard, admin tools visible) or as a regular user.
+  /// Returns true only when an admin chose "Admin"; other accounts are not asked.
+  Future<bool> _chooseRoleIfAdmin(String lang) async {
+    final auth = context.read<AuthProvider>();
+    String? role;
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      role = doc.data()?['role'] as String?;
+    } catch (_) {
+      // Role unknown (e.g. offline): continue as a regular user.
+    }
+    if (role != 'admin' && role != 'superAdmin') return false;
+    if (!mounted) return false;
+
+    final asAdmin = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (c) => AlertDialog(
+            title: Text(AppStrings.get('role_prompt_title', lang)),
+            content: Text(AppStrings.get('role_prompt_body', lang)),
+            actions: [
+              OutlinedButton.icon(
+                key: const ValueKey('role-user'),
+                onPressed: () => Navigator.pop(c, false),
+                icon: const Icon(Icons.person_outline),
+                label: Text(AppStrings.get('role_prompt_user', lang)),
+              ),
+              FilledButton.icon(
+                key: const ValueKey('role-admin'),
+                onPressed: () => Navigator.pop(c, true),
+                icon: const Icon(Icons.admin_panel_settings_outlined),
+                label: Text(AppStrings.get('role_prompt_admin', lang)),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    await auth.setAdminMode(asAdmin);
+    return asAdmin;
   }
 
   @override

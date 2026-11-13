@@ -6,6 +6,7 @@ import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/providers/theme_provider.dart';
 import 'package:stray_pets_mu/providers/auth_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
+import 'package:stray_pets_mu/screens/admin/admin_dashboard.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
 import 'package:stray_pets_mu/screens/auth/register_screen.dart';
 import 'package:stray_pets_mu/screens/info/donate_screen.dart';
@@ -88,6 +89,18 @@ class AppDrawer extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 const SizedBox(height: 8),
+                // Admins who chose "Admin" at login. Firestore rules enforce the actual access.
+                if (authProvider.isAdminMode)
+                  _DrawerTile(
+                    icon: Icons.admin_panel_settings_outlined,
+                    title: AppStrings.get('admin', lang),
+                    subtitle: AppStrings.get('admin_subtitle', lang),
+                    color: Colors.deepPurple,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboard()));
+                    },
+                  ),
                 _DrawerTile(
                   icon: Icons.search,
                   title: AppStrings.get('lost_found', lang),
