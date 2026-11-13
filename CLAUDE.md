@@ -25,6 +25,12 @@ flutter run -d chrome -t lib/main_admin.dart                  # Web admin panel
 flutter build web -t lib/main_admin.dart --base-href /admin/  # Build web admin
 cd test_rules && npm install && npm test   # Firestore rules tests (emulator; needs Java)
 firebase deploy --only firestore:rules,firestore:indexes
+
+# Firebase Hosting (https://stray-pets-mu.web.app, admin at /admin/).
+# Run from PowerShell: Git Bash rewrites the --base-href paths.
+flutter build web -t lib/main.dart --release --no-web-resources-cdn --base-href / --output build/hosting
+flutter build web -t lib/main_admin.dart --release --no-web-resources-cdn --base-href /admin/ --output build/hosting/admin
+firebase deploy --only hosting
 ```
 
 ## Architecture
@@ -98,6 +104,8 @@ All user-facing strings live in `lib/lang/app_strings.dart` as a map keyed by la
 - Firebase is configured for Android and Web; iOS/macOS/Windows/Linux require additional FlutterFire CLI setup
 
 ### Deployment
+
+The live site is on Firebase Hosting; the `hosting` section of `firebase.json` mirrors the headers in `deploy/nginx.conf` (CSP enforced on `/admin/`, report-only elsewhere), so keep the two in step when the CSP changes.
 
 `deploy/` contains a Dockerfile (builds app at `/` and admin at `/admin/`), nginx config (security headers set only at server level — never add `add_header` inside a location), Caddy for HTTPS and `deploy.sh`. See README.
 
