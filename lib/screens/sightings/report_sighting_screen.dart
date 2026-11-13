@@ -1,4 +1,4 @@
-import 'package:stray_pets_mu/utils/jpeg_metadata.dart';
+import 'package:stray_pets_mu/utils/image_upload.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -113,11 +113,10 @@ class _ReportSightingScreenState extends State<ReportSightingScreen> {
 
   Future<void> _pick(ImageSource source) async {
     try {
-      // Small enough to keep the Firestore document well under 1 MB.
-      final picked = await _picker.pickImage(source: source, imageQuality: 60, maxWidth: 1024);
-      if (picked == null) return;
-      // Strip GPS and other EXIF metadata: these posts are public.
-      final bytes = stripJpegMetadata(await picked.readAsBytes());
+      // Resized and compressed to keep the Firestore document well under
+      // 1 MB, and stripped of GPS/EXIF metadata: these posts are public.
+      final bytes = await pickUploadImage(_picker, source);
+      if (bytes == null) return;
       if (mounted) setState(() => _photo = bytes);
     } catch (_) {
       if (mounted) {
@@ -137,7 +136,7 @@ class _ReportSightingScreenState extends State<ReportSightingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_t('sighting_need_location'))));
       return;
     }
-    if (_photo!.lengthInBytes > 600 * 1024) {
+    if (_photo!.lengthInBytes > kMaxUploadImageBytes) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_t('sighting_photo_too_large'))));
       return;
     }

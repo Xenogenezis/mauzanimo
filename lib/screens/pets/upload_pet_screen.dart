@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
-import 'package:stray_pets_mu/utils/jpeg_metadata.dart';
+import 'package:stray_pets_mu/utils/image_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,7 +29,6 @@ class _UploadPetScreenState extends State<UploadPetScreen> {
   bool _dewormed = false;
 bool _isLoading = false;
   bool _submitted = false;
-  XFile? _selectedImage;
   Uint8List? _previewBytes;
   final _picker = ImagePicker();
   final _types = ['dogs', 'cats', 'others'];
@@ -73,35 +72,26 @@ bool _isLoading = false;
   Future<void> _pickFromCamera() async {
     final granted = await _requestCameraPermission();
     if (!granted) return;
-    final picked = await _picker.pickImage(source: ImageSource.camera, imageQuality: 70, maxWidth: 1200);
-    if (picked != null) {
-      final bytes = stripJpegMetadata(await picked.readAsBytes());
-      if (bytes.length > 500 * 1024) {
-        if (mounted) _showSizeError(context);
-        return;
-      }
-      setState(() {
-        _selectedImage = picked;
-        _previewBytes = bytes;
-      });
+    await _pick(ImageSource.camera);
+  }
+
+  /// Photos are resized and compressed automatically (see image_upload.dart),
+  /// and GPS/EXIF metadata is stripped because pet listings are public.
+  Future<void> _pick(ImageSource source) async {
+    final bytes = await pickUploadImage(_picker, source);
+    if (bytes == null || !mounted) return;
+    if (bytes.length > kMaxUploadImageBytes) {
+      // Only reachable for a file that could not be decoded and re-compressed.
+      _showSizeError(context);
+      return;
     }
+    setState(() => _previewBytes = bytes);
   }
 
   Future<void> _pickFromGallery() async {
     final granted = await _requestGalleryPermission();
     if (!granted) return;
-    final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70, maxWidth: 1200);
-    if (picked != null) {
-      final bytes = stripJpegMetadata(await picked.readAsBytes());
-      if (bytes.length > 500 * 1024) {
-        if (mounted) _showSizeError(context);
-        return;
-      }
-      setState(() {
-        _selectedImage = picked;
-        _previewBytes = bytes;
-      });
-    }
+    await _pick(ImageSource.gallery);
   }
 
   String _t(BuildContext context, String en, String fr) {
@@ -114,8 +104,8 @@ bool _isLoading = false;
       SnackBar(
         content: Text(_t(
           context,
-          'Image too large (max 500KB). Please choose a smaller image.',
-          'Image trop volumineuse (max 500KB). Veuillez choisir une image plus petite.',
+          'This photo could not be processed. Please choose another one.',
+          'Cette photo n\'a pas pu etre traitee. Veuillez en choisir une autre.',
         )),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 4),
@@ -171,21 +161,9 @@ bool _isLoading = false;
     setState(() => _isLoading = true);
     try {
       String imageBase64 = '';
-      if (_selectedImage != null) {
-        // XFile works on web too (dart:io File does not). Strip GPS/EXIF
-        // metadata because pet listings are public.
-        final bytes = stripJpegMetadata(await _selectedImage!.readAsBytes());
-        // Check file size - 500KB limit
-        if (bytes.length > 500 * 1024) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(_t(context, 'Image too large. Please select an image under 500KB.', 'Image trop grande. Veuillez selectionner une image de moins de 500KB.'))),
-            );
-          }
-          setState(() => _isLoading = false);
-          return;
-        }
-        imageBase64 = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+      if (_previewBytes != null) {
+        // Already resized, compressed and stripped of metadata when picked.
+        imageBase64 = 'data:image/jpeg;base64,${base64Encode(_previewBytes!)}';
       }
       final user = FirebaseAuth.instance.currentUser;
       await FirebaseFirestore.instance.collection('pets').add({
@@ -263,7 +241,7 @@ bool _isLoading = false;
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppTheme.primary.withOpacity(0.3), width: 2),
           ),
-          child: _selectedImage != null
+          child: _previewBytes != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: Image.memory(_previewBytes!, fit: BoxFit.cover, width: double.infinity))
@@ -276,7 +254,7 @@ bool _isLoading = false;
               ]),
         ),
       ),
-      if (_selectedImage != null) ...[
+      if (_previewBytes != null) ...[
         const SizedBox(height: 8),
         Center(child: TextButton.icon(
           onPressed: _showImageOptions,

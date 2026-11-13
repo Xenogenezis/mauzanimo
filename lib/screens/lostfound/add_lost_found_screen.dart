@@ -1,4 +1,4 @@
-import 'package:stray_pets_mu/utils/jpeg_metadata.dart';
+import 'package:stray_pets_mu/utils/image_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -59,10 +59,10 @@ class _AddLostFoundScreenState extends State<AddLostFoundScreen> {
   }
 
   Future<void> _pickPhoto(ImageSource source) async {
-    final picked = await _picker.pickImage(source: source, imageQuality: 60, maxWidth: 1024);
-    if (picked == null) return;
-    // Strip GPS and other EXIF metadata: these posts are public.
-      final bytes = stripJpegMetadata(await picked.readAsBytes());
+    // Resized, compressed and stripped of GPS/EXIF metadata: these posts are
+    // public and the photo is stored inside the Firestore document.
+    final bytes = await pickUploadImage(_picker, source);
+    if (bytes == null || bytes.length > kMaxUploadImageBytes) return;
     if (mounted) setState(() => _photo = bytes);
   }
   String _type = 'Lost';
