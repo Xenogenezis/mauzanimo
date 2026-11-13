@@ -14,7 +14,6 @@ const Map<String, Map<String, String>> uiStrings = {
     'ui_contact_support': 'Contact Support',
     'ui_email_us': 'Email Us',
     'ui_call_us': 'Call Us',
-    'ui_find_us': 'Find Us',
     // Partners
     'ui_partner_vet': 'Veterinary',
     'ui_partner_shelter': 'Shelter',
@@ -73,7 +72,6 @@ const Map<String, Map<String, String>> uiStrings = {
     'ui_contact_support': 'Contacter l\'assistance',
     'ui_email_us': 'Écrivez-nous',
     'ui_call_us': 'Appelez-nous',
-    'ui_find_us': 'Nous trouver',
     // Partners
     'ui_partner_vet': 'Vétérinaire',
     'ui_partner_shelter': 'Refuge',
@@ -132,7 +130,6 @@ const Map<String, Map<String, String>> uiStrings = {
     'ui_contact_support': 'Kontakte nou',
     'ui_email_us': 'Avoy nou enn email',
     'ui_call_us': 'Telefonn nou',
-    'ui_find_us': 'Kot pou trouv nou',
     // Partners
     'ui_partner_vet': 'Veterinar',
     'ui_partner_shelter': 'Lakaz zanimo',

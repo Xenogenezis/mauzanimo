@@ -35,9 +35,6 @@ class ContactScreen extends StatelessWidget {
           const SizedBox(height: 12),
           const _ContactTile(icon: Icons.chat_outlined, color: Colors.blue,
             title: 'WhatsApp', subtitle: '+230 5704 7576'),
-          const SizedBox(height: 12),
-          _ContactTile(icon: Icons.location_on_outlined, color: Colors.orange,
-            title: AppStrings.get('ui_find_us', lang), subtitle: 'Avenue des Goyaviers, Quatre Bornes, Mauritius'),
         ],
       )),
     );

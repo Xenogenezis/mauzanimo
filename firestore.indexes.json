@@ -173,6 +173,20 @@
       ]
     },
     {
+      "collectionGroup": "user_gamification",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "showOnLeaderboard",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "totalPoints",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "sightings",
       "queryScope": "COLLECTION",
       "fields": [
