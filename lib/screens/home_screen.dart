@@ -14,6 +14,7 @@ import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/widgets/adaptive_nav_scaffold.dart';
 import 'package:stray_pets_mu/screens/notifications/notifications_screen.dart';
 import 'package:stray_pets_mu/widgets/nearby_rescue_banner.dart';
+import 'package:stray_pets_mu/widgets/email_verification_banner.dart';
 import 'package:stray_pets_mu/utils/push_navigation.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -67,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: Column(children: [
+        const EmailVerificationBanner(),
         const NearbyRescueBanner(),
         Expanded(child: _screens[_currentIndex]),
       ]),

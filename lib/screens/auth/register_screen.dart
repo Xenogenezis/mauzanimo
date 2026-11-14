@@ -6,7 +6,8 @@ import 'package:stray_pets_mu/theme/app_theme.dart';
 import 'package:stray_pets_mu/theme/adaptive_colors.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
-import 'package:stray_pets_mu/screens/home_screen.dart';
+import 'package:stray_pets_mu/screens/auth/verify_email_screen.dart';
+import 'package:stray_pets_mu/utils/email_verification.dart';
 import 'package:stray_pets_mu/models/user_role.dart';
 import 'package:flutter/gestures.dart';
 import 'package:stray_pets_mu/screens/info/privacy_screen.dart';
@@ -73,8 +74,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'role': _selectedRole.name,
         'createdAt': FieldValue.serverTimestamp(),
       });
+      // Anyone can type someone else's address, so the account can't post
+      // until the link we email is opened.
+      final sent = await sendVerificationEmail(cred.user!, languageCode: lang);
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => VerifyEmailScreen(replaceWithHome: true, justSent: sent)),
+      );
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = e.message);
     } finally {

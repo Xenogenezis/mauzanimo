@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../repositories/auth_repository.dart';
 import '../models/user_profile.dart';
 import '../utils/result.dart';
+import '../utils/email_verification.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
@@ -43,6 +44,17 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   String? get uid => _user?.uid;
   String? get email => _user?.email;
+
+  /// An email + password account that has not confirmed its address yet.
+  /// Firestore rules block posting until it has (see isVerified()).
+  bool get needsEmailVerification => userNeedsEmailVerification(_user);
+
+  /// Picks up changes made to the signed-in account outside the auth stream,
+  /// such as the email becoming verified.
+  void refreshUser() {
+    _user = _authRepository.currentUser;
+    notifyListeners();
+  }
 
   /// The account has the admin or superAdmin role.
   bool get isAdmin => _userProfile?.isAdmin ?? false;

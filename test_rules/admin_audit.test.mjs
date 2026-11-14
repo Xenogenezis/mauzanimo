@@ -11,7 +11,8 @@ import {
 } from 'firebase/firestore';
 
 let env;
-const db = (uid) => (uid ? env.authenticatedContext(uid) : env.unauthenticatedContext()).firestore();
+// Signed-in test users are verified accounts unless a test says otherwise.
+const db = (uid) => (uid ? env.authenticatedContext(uid, { email_verified: true }) : env.unauthenticatedContext()).firestore();
 
 before(async () => {
   env = await initializeTestEnvironment({

@@ -4,11 +4,23 @@ import 'package:stray_pets_mu/providers/auth_provider.dart';
 import 'package:stray_pets_mu/providers/language_provider.dart';
 import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/screens/auth/login_screen.dart';
+import 'package:stray_pets_mu/screens/auth/verify_email_screen.dart';
 
 class AuthGuard {
   static void requireAuth(BuildContext context, VoidCallback onAuthenticated) {
     final authProvider = context.read<AuthProvider>();
     if (authProvider.isAuthenticated) {
+      if (authProvider.needsEmailVerification) {
+        // The rules refuse posts from unverified email accounts, so ask for
+        // the verification first and carry on once it is done.
+        Navigator.push<bool>(
+          context,
+          MaterialPageRoute(builder: (_) => const VerifyEmailScreen()),
+        ).then((verified) {
+          if (verified == true && context.mounted) onAuthenticated();
+        });
+        return;
+      }
       onAuthenticated();
       return;
     }

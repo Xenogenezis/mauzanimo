@@ -10,6 +10,8 @@ import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/screens/home_screen.dart';
 import 'package:stray_pets_mu/screens/admin/admin_dashboard.dart';
 import 'package:stray_pets_mu/screens/auth/register_screen.dart';
+import 'package:stray_pets_mu/screens/auth/verify_email_screen.dart';
+import 'package:stray_pets_mu/utils/email_verification.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -103,6 +105,12 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
       if (!mounted) return;
+      if (userNeedsEmailVerification(FirebaseAuth.instance.currentUser)) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const VerifyEmailScreen(replaceWithHome: true)),
+        );
+        return;
+      }
       final asAdmin = await _chooseRoleIfAdmin(lang);
       if (!mounted) return;
       final navigator = Navigator.of(context);

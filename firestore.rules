@@ -13,6 +13,18 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // The account's identity has been confirmed: either the email address
+    // was verified through the emailed link, or the sign-in was by phone
+    // (SMS code), Google or Facebook. Email + password accounts are otherwise
+    // free to type anyone's address, so they cannot post until verified.
+    // Mirrors needsEmailVerification() in lib/utils/email_verification.dart.
+    function isVerified() {
+      return isAuthenticated()
+        && (request.auth.token.get('email_verified', false) == true
+            || request.auth.token.get('firebase', {}).get('sign_in_provider', 'password')
+                 in ['phone', 'google.com', 'facebook.com']);
+    }
+
     function userRole() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'adopter');
     }
@@ -35,9 +47,10 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
 
-    // The new doc's owner field must be the caller.
+    // The new doc's owner field must be the caller, and the caller must be
+    // a verified account (see isVerified).
     function createsAsSelf(field) {
-      return isAuthenticated() && request.resource.data.get(field, null) == request.auth.uid;
+      return isVerified() && request.resource.data.get(field, null) == request.auth.uid;
     }
 
     function ownsDoc(field) {
@@ -606,7 +619,7 @@ service cloud.firestore {
     }
 
     match /reports/{reportId} {
-      allow create: if isAuthenticated() && validReport();
+      allow create: if isVerified() && validReport();
       allow read: if ownsDoc('reporterId') || isAdmin();
       allow update, delete: if isAdmin();
     }
@@ -669,7 +682,7 @@ service cloud.firestore {
       allow read, delete: if ownsDoc('toUid');
       allow update: if ownsDoc('toUid') && onlyChanges(['read'])
         && request.resource.data.read is bool;
-      allow create: if isAuthenticated() && validNotificationBase()
+      allow create: if isVerified() && validNotificationBase()
         && (validAdoptionStageNotification() || validSightingNotification());
     }
 
