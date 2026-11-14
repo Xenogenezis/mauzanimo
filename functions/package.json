@@ -1,0 +1,16 @@
+{
+  "name": "mauzanimo-functions",
+  "description": "Cloud Functions for MauZanimo: push notifications for nearby rescue requests.",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.0"
+  }
+}

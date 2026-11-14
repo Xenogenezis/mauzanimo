@@ -200,6 +200,13 @@ class AccountRepository {
       final profileSnap = await _firestore.collection('users').doc(uid).get();
       final collections = <String, Map<String, Map<String, dynamic>>>{};
       for (final plan in accountExportPlan) {
+        if (plan.keyedByUid) {
+          // One document whose id is the uid (e.g. rescue_subscribers).
+          final snap = await _firestore.collection(plan.collection).doc(uid).get();
+          final data = snap.data();
+          collections[plan.collection] = {if (data != null) snap.id: data};
+          continue;
+        }
         final docs = await _ownedDocs(plan.collection, plan.ownerField!, uid);
         collections[plan.collection] = {for (final d in docs) d.id: d.data()};
       }

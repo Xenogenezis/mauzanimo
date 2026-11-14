@@ -23,7 +23,10 @@ flutter build web        # Build web version
 flutter build windows    # Build Windows desktop
 flutter run -d chrome -t lib/main_admin.dart                  # Web admin panel
 flutter build web -t lib/main_admin.dart --base-href /admin/  # Build web admin
-cd test_rules && npm install && npm test   # Firestore rules tests (emulator; needs Java)
+cd test_rules && npm install && npm test   # Firestore rules tests (emulator; needs Java,
+                                           # e.g. Android Studio's jbr/bin on PATH)
+cd functions && npm install && npm test    # Cloud Function unit tests
+firebase deploy --only functions           # needs the Blaze plan
 firebase deploy --only firestore:rules,firestore:indexes
 
 # Firebase Hosting (https://stray-pets-mu.web.app, admin at /admin/).
@@ -89,6 +92,16 @@ lib/
     ├── stories/               # SuccessStoriesScreen, AddStoryScreen
     └── info/                  # About, Contact, Donate, Partners, Volunteer
 ```
+
+**Rescue alerts:** volunteers/rescuers (role `volunteer` and above, shown as
+"Volunteer/Rescuer") see `rescue_reports` in `RescueListScreen` and can opt in to
+alerts for an area + radius (`lib/utils/rescue_alerts.dart`,
+`RescueAlertsProvider`). In-app matching runs on the device and the area stays in
+SharedPreferences. Phone notifications are a separate opt-in: the area and FCM
+tokens go to `rescue_subscribers/{uid}` (owner-read only) and the
+`notifyNearbyRescuers` Cloud Function in `functions/` sends the push when a
+report with a `geo` pin is created. Keep the matching rules in
+`functions/rescue_push.js` and `rescue_alerts.dart` in step.
 
 ### Localization
 

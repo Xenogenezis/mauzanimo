@@ -7,6 +7,8 @@ import 'package:stray_pets_mu/lang/strings_rescue.dart';
 import 'package:stray_pets_mu/models/rescue_report.dart';
 import 'package:stray_pets_mu/models/user_role.dart';
 import 'package:stray_pets_mu/providers/rescue_alerts_provider.dart';
+import 'package:stray_pets_mu/repositories/rescue_push_repository.dart';
+import 'package:stray_pets_mu/utils/push_navigation.dart';
 import 'package:stray_pets_mu/utils/rescue_alerts.dart';
 import 'package:stray_pets_mu/widgets/nearby_rescue_banner.dart';
 
@@ -38,6 +40,29 @@ RescueReport _report(
     );
 
 const _prefs = RescueAlertPrefs(enabled: true, latitude: _plLat, longitude: _plLng, radiusKm: 20);
+
+class _FakePush implements RescuePushGateway {
+  final calls = <String>[];
+  bool isSupported = true;
+  bool allow = true;
+  bool throwOnSubscribe = false;
+
+  @override
+  bool get supported => isSupported;
+
+  @override
+  Future<bool> subscribe(String uid, RescueAlertPrefs prefs) async {
+    calls.add('subscribe $uid ${prefs.radiusKm}km');
+    if (throwOnSubscribe) throw StateError('offline');
+    return allow;
+  }
+
+  @override
+  Future<void> unsubscribe(String uid) async => calls.add('unsubscribe $uid');
+
+  @override
+  Future<void> forgetDevice() async => calls.add('forgetDevice');
+}
 
 void main() {
   group('RescueAlertPrefs', () {
@@ -221,6 +246,154 @@ void main() {
       await p.savePrefs(_prefs.copyWith(enabled: false));
       expect(p.nearby, isEmpty);
       expect(p.unseenCount, 0);
+    });
+  });
+
+  group('phone notifications', () {
+    late StreamController<List<RescueReport>> reports;
+    late _FakePush push;
+
+    RescueAlertsProvider build() => RescueAlertsProvider(() => reports.stream, push: push);
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      reports = StreamController<List<RescueReport>>.broadcast();
+      push = _FakePush();
+    });
+
+    tearDown(() => reports.close());
+
+    final withPush = _prefs.copyWith(pushEnabled: true);
+
+    test('prefs keep the push choice, and wantsPush needs alerts on with an area', () {
+      expect(RescueAlertPrefs.decode(withPush.encode()).pushEnabled, isTrue);
+      expect(withPush.wantsPush, isTrue);
+      expect(withPush.copyWith(enabled: false).wantsPush, isFalse);
+      expect(const RescueAlertPrefs(enabled: true, pushEnabled: true).wantsPush, isFalse);
+      // Settings saved by the first version have no push field.
+      expect(RescueAlertPrefs.decode(_prefs.encode().replaceAll(',"push":false', '')).pushEnabled, isFalse);
+    });
+
+    test('in-app alerts alone never upload anything', () async {
+      final p = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      expect(await p.savePrefs(_prefs), isTrue);
+      expect(push.calls, isEmpty);
+    });
+
+    test('switching push on subscribes with the area; switching it off removes it', () async {
+      final p = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      expect(await p.savePrefs(withPush), isTrue);
+      expect(push.calls, ['subscribe u1 20km']);
+      expect(p.prefs.pushEnabled, isTrue);
+
+      expect(await p.savePrefs(withPush.copyWith(radiusKm: 5)), isTrue);
+      expect(push.calls.last, 'subscribe u1 5km');
+
+      expect(await p.savePrefs(_prefs), isTrue);
+      expect(push.calls.last, 'unsubscribe u1');
+      expect(p.prefs.pushEnabled, isFalse);
+    });
+
+    test('turning alerts off entirely also removes the server copy', () async {
+      final p = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      await p.savePrefs(withPush);
+      await p.savePrefs(withPush.copyWith(enabled: false));
+      expect(push.calls.last, 'unsubscribe u1');
+    });
+
+    test('a refused permission saves everything else with push off', () async {
+      push.allow = false;
+      final p = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      expect(await p.savePrefs(withPush), isFalse);
+      expect(p.prefs.isActive, isTrue);
+      expect(p.prefs.pushEnabled, isFalse);
+      expect(push.calls, ['subscribe u1 20km', 'unsubscribe u1']);
+
+      // The saved copy has push off too.
+      final again = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      expect(again.prefs.pushEnabled, isFalse);
+    });
+
+    test('a subscribe error is treated like a refusal', () async {
+      push.throwOnSubscribe = true;
+      final p = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      expect(await p.savePrefs(withPush), isFalse);
+      expect(p.prefs.pushEnabled, isFalse);
+    });
+
+    test('the token is refreshed on the next app start', () async {
+      final p = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      await p.savePrefs(withPush);
+      push.calls.clear();
+
+      final restarted = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      expect(restarted.prefs.pushEnabled, isTrue);
+      expect(push.calls, ['subscribe u1 20km']);
+    });
+
+    test('signing out stops this phone getting that account\'s pushes', () async {
+      final p = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      await p.savePrefs(withPush);
+      push.calls.clear();
+
+      p.setUser(null, canRescue: false);
+      await pumpEventQueue();
+      expect(push.calls, ['forgetDevice']);
+    });
+
+    test('signing out without push does not touch the device token', () async {
+      final p = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      await p.savePrefs(_prefs);
+      p.setUser(null, canRescue: false);
+      await pumpEventQueue();
+      expect(push.calls, isEmpty);
+    });
+
+    test('where push is unsupported the choice is dropped and nothing is called', () async {
+      push.isSupported = false;
+      final p = build()..setUser('u1', canRescue: true);
+      await pumpEventQueue();
+      expect(p.pushSupported, isFalse);
+      expect(await p.savePrefs(withPush), isTrue);
+      expect(p.prefs.pushEnabled, isFalse);
+      expect(push.calls, isEmpty);
+    });
+
+    test('mergePushTokens keeps the newest five without duplicates', () {
+      expect(mergePushTokens(const [], 'a'), ['a']);
+      expect(mergePushTokens(const ['a', 'b'], 'a'), ['b', 'a']);
+      expect(mergePushTokens(const ['a', 'b', 'c', 'd', 'e'], 'f'), ['b', 'c', 'd', 'e', 'f']);
+      expect(mergePushTokens(const ['a', 5, null, ''], 'b'), ['a', 'b']);
+    });
+
+    test('the subscriber document has exactly the fields the rules allow', () {
+      final doc = buildRescueSubscriber(prefs: withPush, tokens: const ['t'], lang: 'fr', updatedAt: 'now');
+      expect(doc.keys.toSet(), {'enabled', 'geo', 'radiusKm', 'urgentOnly', 'tokens', 'lang', 'updatedAt'});
+      expect(doc['enabled'], isTrue);
+      expect(doc['geo'], isA<GeoPoint>());
+      expect(doc['radiusKm'], 20);
+      expect(doc['lang'], 'fr');
+      expect(buildRescueSubscriber(prefs: withPush, tokens: const [], lang: 'de', updatedAt: 'now')['lang'], 'en');
+    });
+
+    test('only rescue notifications open the rescue list', () {
+      expect(isRescuePush({'type': 'rescue', 'reportId': 'r1'}), isTrue);
+      expect(isRescuePush({'type': 'adoption'}), isFalse);
+      expect(isRescuePush({}), isFalse);
+
+      setPendingRescueOpenForTest(true);
+      expect(takePendingRescueOpen(), isTrue);
+      expect(takePendingRescueOpen(), isFalse);
     });
   });
 

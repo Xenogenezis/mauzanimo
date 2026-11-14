@@ -22,6 +22,8 @@ import 'providers/pet_update_provider.dart';
 import 'providers/recently_viewed_provider.dart';
 import 'providers/notifications_provider.dart';
 import 'providers/rescue_alerts_provider.dart';
+import 'repositories/rescue_push_repository.dart';
+import 'utils/push_navigation.dart';
 import 'models/user_role.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/pet_repository.dart';
@@ -48,6 +50,9 @@ void main() async {
     persistenceEnabled: true,
     cacheSizeBytes: 100 * 1024 * 1024,
   );
+
+  // A tapped rescue notification opens the rescue list (Android only).
+  await initPushNavigation();
 
   final authRepository = AuthRepository();
   final petRepository = PetRepository();
@@ -135,8 +140,12 @@ class MauZanimoApp extends StatelessWidget {
             ),
             // "Rescues near you" for volunteers/rescuers and above.
             ChangeNotifierProxyProvider<AuthProvider, RescueAlertsProvider>(
-              create: (_) => RescueAlertsProvider(RescueRepository().pendingReportsStream),
-              update: (_, auth, p) => (p ?? RescueAlertsProvider(RescueRepository().pendingReportsStream))
+              create: (_) => RescueAlertsProvider(
+                RescueRepository().pendingReportsStream,
+                push: FcmRescuePushGateway(),
+              ),
+              update: (_, auth, p) => (p ??
+                  RescueAlertsProvider(RescueRepository().pendingReportsStream, push: FcmRescuePushGateway()))
                 ..setUser(
                   auth.uid,
                   canRescue: auth.userProfile?.role.canAccess(UserRole.volunteer) ?? false,
@@ -145,6 +154,7 @@ class MauZanimoApp extends StatelessWidget {
           ],
           child: MaterialApp(
             title: 'MauZanimo',
+            navigatorKey: appNavigatorKey,
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,

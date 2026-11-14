@@ -428,6 +428,40 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------------
+    // Rescue push subscriptions (rescue alerts, phase 2)
+    // ---------------------------------------------------------------------
+    // Written by RescuePushRepository when a volunteer/rescuer switches on
+    // phone notifications: the area they cover plus their device tokens.
+    // This is location data, so only the owner can read it (no list, not
+    // even for admins); the notifyNearbyRescuers Cloud Function reads it
+    // with the Admin SDK, which bypasses these rules.
+    function pushTokenOk(tokens, i) {
+      return tokens.size() <= i
+        || (tokens[i] is string && tokens[i].size() > 0 && tokens[i].size() <= 1024);
+    }
+
+    function rescueSubscriberOk() {
+      let d = request.resource.data;
+      return keysOnly(['enabled', 'geo', 'radiusKm', 'urgentOnly', 'tokens', 'lang', 'updatedAt'])
+        && d.enabled is bool
+        && d.geo is latlng
+        && d.radiusKm in [5, 10, 20, 50]
+        && d.urgentOnly is bool
+        && d.tokens is list && d.tokens.size() <= 5
+        && pushTokenOk(d.tokens, 0) && pushTokenOk(d.tokens, 1) && pushTokenOk(d.tokens, 2)
+        && pushTokenOk(d.tokens, 3) && pushTokenOk(d.tokens, 4)
+        && d.lang in ['en', 'fr', 'mfe']
+        && d.updatedAt == request.time;
+    }
+
+    match /rescue_subscribers/{userId} {
+      allow get: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isVolunteerOrAbove() && rescueSubscriberOk();
+      // Switching phone notifications off, or deleting the account.
+      allow delete: if isOwner(userId) || isSuperAdmin();
+    }
+
+    // ---------------------------------------------------------------------
     // Events
     // ---------------------------------------------------------------------
     match /events/{eventId} {

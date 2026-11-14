@@ -14,6 +14,7 @@ import 'package:stray_pets_mu/lang/app_strings.dart';
 import 'package:stray_pets_mu/widgets/adaptive_nav_scaffold.dart';
 import 'package:stray_pets_mu/screens/notifications/notifications_screen.dart';
 import 'package:stray_pets_mu/widgets/nearby_rescue_banner.dart';
+import 'package:stray_pets_mu/utils/push_navigation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +24,18 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final List<Widget> _screens = [const PetListScreen(), const FavouritesScreen(), const ProfileScreen()];
+
+  @override
+  void initState() {
+    super.initState();
+    // The app was opened by tapping a rescue notification.
+    if (takePendingRescueOpen()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) openRescueList(Navigator.of(context));
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>().lang;

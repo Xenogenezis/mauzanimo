@@ -80,11 +80,15 @@ const List<AccountCollectionPlan> accountDeletionPlan = [
   AccountCollectionPlan('fosters', 'fosterUserId', AccountDataAction.keep),
   AccountCollectionPlan('inquiries', 'userId', AccountDataAction.keep),
   AccountCollectionPlan('rescue_reports', 'reporterId', AccountDataAction.keep),
+  // Rescue phone notifications: the rescuer's area and device tokens.
+  AccountCollectionPlan('rescue_subscribers', null, AccountDataAction.delete),
   AccountCollectionPlan('users', null, AccountDataAction.delete),
 ];
 
 /// Collections included in "Download my data" (besides the profile).
 const List<AccountCollectionPlan> accountExportPlan = [
+  // Rescue phone notifications: the area the rescuer chose and device tokens.
+  AccountCollectionPlan('rescue_subscribers', null, AccountDataAction.keep),
   AccountCollectionPlan('pets', 'uploadedBy', AccountDataAction.keep),
   AccountCollectionPlan('lostfound', 'userId', AccountDataAction.keep),
   AccountCollectionPlan('sightings', 'reporterId', AccountDataAction.keep),

@@ -9,9 +9,12 @@ const List<int> rescueAlertRadii = [5, 10, 20, 50];
 
 /// A volunteer/rescuer's "alert me about rescues near me" settings.
 ///
-/// Stored on the device only (SharedPreferences): the area is compared with
-/// rescue reports locally, so a rescuer's location is never uploaded or
-/// visible to other users.
+/// Stored on the device (SharedPreferences): for in-app alerts the area is
+/// compared with rescue reports locally and never leaves the phone.
+///
+/// Only when [pushEnabled] is on is the area also written to the rescuer's
+/// own `rescue_subscribers/{uid}` document, so the server can send a phone
+/// notification; nobody else can read that document.
 class RescueAlertPrefs {
   final bool enabled;
   final double? latitude;
@@ -21,13 +24,20 @@ class RescueAlertPrefs {
   /// Only alert for `high` and `critical` reports.
   final bool urgentOnly;
 
+  /// Also send a phone notification (needs the area on the server).
+  final bool pushEnabled;
+
   const RescueAlertPrefs({
     this.enabled = false,
     this.latitude,
     this.longitude,
     this.radiusKm = 10,
     this.urgentOnly = false,
+    this.pushEnabled = false,
   });
+
+  /// Phone notifications should be registered with the server.
+  bool get wantsPush => isActive && pushEnabled;
 
   bool get hasArea => latitude != null && longitude != null;
 
@@ -40,6 +50,7 @@ class RescueAlertPrefs {
     double? longitude,
     int? radiusKm,
     bool? urgentOnly,
+    bool? pushEnabled,
   }) =>
       RescueAlertPrefs(
         enabled: enabled ?? this.enabled,
@@ -47,6 +58,7 @@ class RescueAlertPrefs {
         longitude: longitude ?? this.longitude,
         radiusKm: radiusKm ?? this.radiusKm,
         urgentOnly: urgentOnly ?? this.urgentOnly,
+        pushEnabled: pushEnabled ?? this.pushEnabled,
       );
 
   String encode() => jsonEncode({
@@ -55,6 +67,7 @@ class RescueAlertPrefs {
         'lng': longitude,
         'radiusKm': radiusKm,
         'urgentOnly': urgentOnly,
+        'push': pushEnabled,
       });
 
   /// Reads what [encode] wrote. Anything unreadable gives the defaults.
@@ -70,11 +83,45 @@ class RescueAlertPrefs {
         longitude: (m['lng'] as num?)?.toDouble(),
         radiusKm: radius is int && rescueAlertRadii.contains(radius) ? radius : 10,
         urgentOnly: m['urgentOnly'] == true,
+        pushEnabled: m['push'] == true,
       );
     } catch (_) {
       return const RescueAlertPrefs();
     }
   }
+}
+
+/// Most device tokens kept per rescuer (mirrors firestore.rules and
+/// functions/rescue_push.js).
+const int maxPushTokens = 5;
+
+/// Adds this device's [token] to the rescuer's stored tokens: no duplicates,
+/// newest last, and the oldest dropped beyond [maxPushTokens].
+List<String> mergePushTokens(Iterable<Object?> existing, String token) {
+  final out = <String>[
+    for (final t in existing)
+      if (t is String && t.isNotEmpty && t != token) t,
+    token,
+  ];
+  return out.length <= maxPushTokens ? out : out.sublist(out.length - maxPushTokens);
+}
+
+/// Registers this device for rescue phone notifications. The app uses
+/// `FcmRescuePushGateway`; tests use a fake.
+abstract class RescuePushGateway {
+  /// Phone notifications exist on this platform (Android app only for now).
+  bool get supported;
+
+  /// Asks for notification permission and stores the rescuer's area and this
+  /// device's token on the server. False when permission was refused or no
+  /// token could be obtained.
+  Future<bool> subscribe(String uid, RescueAlertPrefs prefs);
+
+  /// Removes the rescuer's area and tokens from the server.
+  Future<void> unsubscribe(String uid);
+
+  /// Stops this device receiving pushes for the account that just signed out.
+  Future<void> forgetDevice();
 }
 
 /// A rescue report together with its distance from the rescuer's area.

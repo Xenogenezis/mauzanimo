@@ -23,6 +23,8 @@ class _RescueAlertSettingsScreenState extends State<RescueAlertSettingsScreen> {
   late bool _enabled;
   late int _radiusKm;
   late bool _urgentOnly;
+  late bool _push;
+  bool _saving = false;
   LatLng? _pin;
   // Moves the map; only changes on a GPS fix so taps don't recentre it.
   LatLng? _mapCentre;
@@ -35,6 +37,7 @@ class _RescueAlertSettingsScreenState extends State<RescueAlertSettingsScreen> {
     _enabled = prefs.enabled;
     _radiusKm = prefs.radiusKm;
     _urgentOnly = prefs.urgentOnly;
+    _push = prefs.pushEnabled;
     if (prefs.hasArea) _pin = _mapCentre = LatLng(prefs.latitude!, prefs.longitude!);
   }
 
@@ -62,14 +65,23 @@ class _RescueAlertSettingsScreenState extends State<RescueAlertSettingsScreen> {
       _snack('ra_need_area');
       return;
     }
-    await context.read<RescueAlertsProvider>().savePrefs(RescueAlertPrefs(
+    setState(() => _saving = true);
+    final pushOk = await context.read<RescueAlertsProvider>().savePrefs(RescueAlertPrefs(
           enabled: _enabled,
           latitude: _pin?.latitude,
           longitude: _pin?.longitude,
           radiusKm: _radiusKm,
           urgentOnly: _urgentOnly,
+          pushEnabled: _enabled && _push,
         ));
     if (!mounted) return;
+    setState(() => _saving = false);
+    if (!pushOk) {
+      // Everything else was saved; phone notifications stayed off.
+      setState(() => _push = false);
+      _snack('ra_push_failed');
+      return;
+    }
     _snack('ra_saved');
     Navigator.pop(context);
   }
@@ -79,6 +91,7 @@ class _RescueAlertSettingsScreenState extends State<RescueAlertSettingsScreen> {
     final lang = context.watch<LanguageProvider>().lang;
     String t(String key) => AppStrings.get(key, lang);
     final heading = TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textStrong);
+    final pushSupported = context.watch<RescueAlertsProvider>().pushSupported;
 
     return Scaffold(
       appBar: AppBar(title: Text(t('ra_settings_title'))),
@@ -137,17 +150,35 @@ class _RescueAlertSettingsScreenState extends State<RescueAlertSettingsScreen> {
               activeThumbColor: AppTheme.primary,
               onChanged: (v) => setState(() => _urgentOnly = v),
             ),
+            if (pushSupported)
+              SwitchListTile(
+                key: const ValueKey('ra-push'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(t('ra_push')),
+                subtitle: Text(t('ra_push_desc')),
+                value: _enabled && _push,
+                activeThumbColor: AppTheme.primary,
+                onChanged: _enabled ? (v) => setState(() => _push = v) : null,
+              ),
             const SizedBox(height: 12),
-            _Note(icon: Icons.lock_outline, text: t('ra_privacy')),
-            const SizedBox(height: 8),
-            _Note(icon: Icons.info_outline, text: t('ra_no_push')),
+            _Note(
+              icon: Icons.lock_outline,
+              text: t(pushSupported && _enabled && _push ? 'ra_push_privacy' : 'ra_privacy'),
+            ),
+            if (!pushSupported) ...[
+              const SizedBox(height: 8),
+              _Note(icon: Icons.info_outline, text: t('ra_no_push')),
+            ],
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 key: const ValueKey('ra-save'),
-                onPressed: _save,
-                child: Text(t('ra_save')),
+                onPressed: _saving ? null : _save,
+                child: _saving
+                    ? const SizedBox(
+                        height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(t('ra_save')),
               ),
             ),
           ],

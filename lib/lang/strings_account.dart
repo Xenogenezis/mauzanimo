@@ -57,7 +57,7 @@ const Map<String, Map<String, String>> accountStrings = {
         'MauZanimo is a community platform that helps rehome animals in Mauritius. This page explains what personal data we collect, why, and your rights under the Mauritius Data Protection Act 2017.',
     'privacy_collect_title': 'What we collect',
     'privacy_collect_body':
-        '• Account: name, email, phone number (optional), role and sign-in details.\n• Content you post: pets for adoption, lost & found reports, sightings, stories, photos and descriptions.\n• Location: the place or GPS position you choose to attach to a post or sighting.\n• Activity: saved pets, adoption and foster applications, inquiries, event registrations and impact points.',
+        '• Account: name, email, phone number (optional), role and sign-in details.\n• Content you post: pets for adoption, lost & found reports, sightings, stories, photos and descriptions.\n• Location: the place or GPS position you choose to attach to a post, sighting or rescue report. If you are a volunteer/rescuer and switch on rescue phone notifications, the area you choose to cover and your phone\'s notification token are stored so we can alert you; switching them off deletes this.\n• Activity: saved pets, adoption and foster applications, inquiries, event registrations and impact points.',
     'privacy_why_title': 'Why we use it',
     'privacy_why_body':
         'To run the app: show animals for adoption, put adopters in touch with rehomers, reunite lost pets, follow up adoptions for the animals\' welfare, organise events and keep the community safe from abuse.',
@@ -126,7 +126,7 @@ const Map<String, Map<String, String>> accountStrings = {
         'MauZanimo est une plateforme communautaire qui aide à replacer les animaux à Maurice. Cette page explique quelles données personnelles nous collectons, pourquoi, et vos droits selon le Data Protection Act 2017 de Maurice.',
     'privacy_collect_title': 'Ce que nous collectons',
     'privacy_collect_body':
-        '• Compte : nom, e-mail, numéro de téléphone (facultatif), rôle et informations de connexion.\n• Vos publications : animaux à adopter, annonces perdus/trouvés, signalements, histoires, photos et descriptions.\n• Localisation : le lieu ou la position GPS que vous choisissez d\'ajouter à une annonce ou un signalement.\n• Activité : favoris, demandes d\'adoption et de famille d\'accueil, demandes d\'information, inscriptions aux événements et points d\'impact.',
+        '• Compte : nom, e-mail, numéro de téléphone (facultatif), rôle et informations de connexion.\n• Vos publications : animaux à adopter, annonces perdus/trouvés, signalements, histoires, photos et descriptions.\n• Localisation : le lieu ou la position GPS que vous choisissez d\'ajouter à une annonce, un signalement ou une demande de sauvetage. Si vous êtes bénévole/sauveteur et activez les notifications de sauvetage sur le téléphone, la zone que vous choisissez de couvrir et le jeton de notification de votre téléphone sont enregistrés pour vous alerter ; les désactiver supprime ces données.\n• Activité : favoris, demandes d\'adoption et de famille d\'accueil, demandes d\'information, inscriptions aux événements et points d\'impact.',
     'privacy_why_title': 'Pourquoi nous les utilisons',
     'privacy_why_body':
         'Pour faire fonctionner l\'application : présenter les animaux à adopter, mettre en contact adoptants et particuliers qui replacent un animal, retrouver les animaux perdus, assurer le suivi des adoptions pour le bien-être des animaux, organiser des événements et protéger la communauté contre les abus.',
@@ -195,7 +195,7 @@ const Map<String, Map<String, String>> accountStrings = {
         'MauZanimo se enn platfom kominoter ki ed bann zanimo trouv enn nouvo lakaz Moris. Sa paz-la explike ki done personel nou ranase, kifer, ek ou bann drwa dapre Data Protection Act 2017 Moris.',
     'privacy_collect_title': 'Ki nou ranase',
     'privacy_collect_body':
-        '• Kont: nom, imel, nimero telefonn (si ou anvi), rol ek detay koneksion.\n• Seki ou poste: zanimo pou adopsion, pos perdi/trouve, siyalman, zistwar, foto ek deskripsion.\n• Plas: landrwa ouswa pozision GPS ki ou swazir pou azout lor enn pos ouswa siyalman.\n• Aktivite: zanimo sove, demann adopsion ek fami dakey, kestion, linskripsion levennman ek pwin linpak.',
+        '• Kont: nom, imel, nimero telefonn (si ou anvi), rol ek detay koneksion.\n• Seki ou poste: zanimo pou adopsion, pos perdi/trouve, siyalman, zistwar, foto ek deskripsion.\n• Plas: landrwa ouswa pozision GPS ki ou swazir pou azout lor enn pos, enn siyalman ouswa enn demann sovtaz. Si ou enn volonter/sovter ek ou aktiv notifikasion sovtaz lor telefonn, zonn ki ou swazir pou kouver ek token notifikasion ou telefonn anrezistre pou averti ou; si ou tegn zot, sa bann done-la efase.\n• Aktivite: zanimo sove, demann adopsion ek fami dakey, kestion, linskripsion levennman ek pwin linpak.',
     'privacy_why_title': 'Kifer nou servi zot',
     'privacy_why_body':
         'Pou fer aplikasion-la marse: montre bann zanimo pou adopsion, met adopter an kontak ar dimounn ki pe rann zanimo, retrouv zanimo perdi, swiv bann adopsion pou bien-et zanimo, organiz levennman ek protez kominote kont abi.',
